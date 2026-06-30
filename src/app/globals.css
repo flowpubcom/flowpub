@@ -1,0 +1,294 @@
+@import "tailwindcss";
+
+/* ──────────────────────────────────────────────────────────────────────────
+   FlowPub · capa de tokens
+   «tinta, grana y amate» — códice mesoamericano. Default = SO; voltea oscuro
+   en [data-theme="dark"]. NUNCA hardcodees hex fuera de esta capa.
+   @theme inline mapea las utilidades de Tailwind a variables de runtime, así
+   el cambio de tema fluye solo (bg-surface, text-ink, border-line, …).
+   ────────────────────────────────────────────────────────────────────────── */
+@theme inline {
+  /* paleta + roles semánticos → utilidades de color */
+  --color-tinta: var(--tinta);
+  --color-grana: var(--grana);
+  --color-grana-700: var(--grana-700);
+  --color-grana-wash: var(--grana-wash);
+  --color-ocre: var(--ocre);
+  --color-amate: var(--amate);
+  --color-amate-2: var(--amate-2);
+  --color-papel: var(--papel);
+  --color-champagne: var(--champagne);
+  --color-ok: var(--ok);
+
+  --color-ink: var(--ink);
+  --color-ink-on: var(--ink-on);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-2: var(--line-2);
+  --color-line-soft: var(--line-soft);
+  --color-glass: var(--glass);
+  --color-wave: var(--wave);
+
+  /* tipografía: Fraunces = la voz · Hanken = el chrome · Space Mono = los datos */
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-hanken);
+  --font-mono: var(--font-space-mono);
+
+}
+
+/* Radios y easing (literales): en un @theme NO-inline para que se emitan a
+   :root — así funcionan tanto como utilidades (rounded-card, ease-flow) como
+   con var() directo (var(--ease-flow), var(--radius-card)). */
+@theme {
+  --radius-md: 8px;
+  --radius-lg: 14px;
+  --radius-card: 16px;
+  --radius-tile: 24px;
+  --radius-pill: 999px;
+  --ease-flow: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  /* paleta cruda (FIJA en ambos temas) */
+  --tinta: #1a1714;
+  --grana: #c0303a;
+  --grana-700: #9a2530;
+  --ocre: #d98a3d;
+  --amate: #f2efe8;
+  --amate-2: #e6dfd0;
+  --papel: #fbfaf6;
+  --champagne: #f6d49a;
+  --ok: #2e9a5b;
+
+  /* roles semánticos — CLARO */
+  --ink: #1a1714;
+  --ink-on: #f2efe8;
+  --text-2: #6e685d;
+  --text-3: #9c968a;
+  --surface: #fbfaf6;
+  --surface-2: #f8f5ef;
+  --surface-3: #f2efe8;
+  --line: rgba(26, 23, 20, 0.12);
+  --line-2: rgba(26, 23, 20, 0.24);
+  --line-soft: rgba(26, 23, 20, 0.08);
+  --hover: rgba(26, 23, 20, 0.04);
+  --glass: rgba(251, 250, 246, 0.82);
+  --grana-wash: #f6e6e4;
+  --wave: rgba(26, 23, 20, 0.16);
+
+  /* fondo de página (gradiente radial) */
+  --bg-1: #f4f1ea;
+  --bg-2: #ede7da;
+  --bg-3: #e6dfd0;
+
+  /* sombras (las de marca; window se oscurece en dark) */
+  --shadow-card: 0 1px 2px rgba(26, 23, 20, 0.05);
+  --shadow-hover: 0 18px 36px -18px rgba(26, 23, 20, 0.3);
+  --shadow-window: 0 30px 70px -28px rgba(26, 23, 20, 0.42);
+  --shadow-grana: 0 8px 20px -8px rgba(192, 48, 58, 0.6);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  /* roles semánticos — OSCURO («códice de noche») */
+  --ink: #f2efe8;
+  --ink-on: #1a1714;
+  --text-2: #b3ab9d;
+  --text-3: #867f72;
+  --surface: #1e1a16;
+  --surface-2: #191510;
+  --surface-3: #2a241d;
+  --line: rgba(242, 239, 232, 0.12);
+  --line-2: rgba(242, 239, 232, 0.22);
+  --line-soft: rgba(242, 239, 232, 0.08);
+  --hover: rgba(242, 239, 232, 0.06);
+  --glass: rgba(20, 17, 14, 0.72);
+  --grana-wash: rgba(192, 48, 58, 0.18);
+  --wave: rgba(242, 239, 232, 0.18);
+
+  --bg-1: #1e1913;
+  --bg-2: #141110;
+  --bg-3: #0e0c0a;
+
+  --shadow-window: 0 30px 70px -28px rgba(0, 0, 0, 0.65);
+
+  color-scheme: dark;
+}
+
+/* ── base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-hanken);
+    color: var(--ink);
+    background:
+      radial-gradient(
+        130% 130% at 50% 0%,
+        var(--bg-1) 0%,
+        var(--bg-2) 52%,
+        var(--bg-3) 100%
+      )
+      fixed;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition:
+      background-color 0.4s var(--ease-flow),
+      color 0.4s var(--ease-flow);
+  }
+
+  /* Focus ring = grana, nunca azul default. */
+  :focus-visible {
+    outline: 2px solid var(--grana);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: var(--grana-wash);
+    color: var(--ink);
+  }
+
+  /* scrollbar discreto, a tono con el códice */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-2) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--line-2);
+    border-radius: 999px;
+  }
+}
+
+/* ── utilidades de marca ────────────────────────────────────────────────────
+   `glass` = superficie esmerilada del chrome (top bars, sheets). */
+@utility glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@utility hover-tint {
+  &:hover {
+    background: var(--hover);
+  }
+}
+
+/* ── keyframes de la marca ──────────────────────────────────────────────────
+   Movimiento calmo, sin bounce. Más (ripple/eq/aperture) llegan con el
+   Reproductor (Fase 6). */
+@keyframes fp-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.92;
+  }
+  50% {
+    transform: scale(1.045);
+    opacity: 1;
+  }
+}
+
+@keyframes fp-drift {
+  0% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(8px, -14px);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+/* avance de la línea-vírgula (progreso de audio) */
+@keyframes fp-flow {
+  to {
+    stroke-dashoffset: -100;
+  }
+}
+
+/* barras del visualizador de grabación */
+@keyframes fp-bar {
+  0%,
+  100% {
+    transform: scaleY(0.28);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* shimmer de placeholders en streaming/carga */
+@keyframes fp-shine {
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* pop sutil al confirmar (like, publicar) */
+@keyframes fp-pop {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* entrada de overlays/diálogos */
+@keyframes fp-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fp-modal {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fp-breathe {
+  animation: fp-breathe 6s var(--ease-flow) infinite;
+}
+
+/* ── accesibilidad: respeta prefers-reduced-motion (apaga TODO) ────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

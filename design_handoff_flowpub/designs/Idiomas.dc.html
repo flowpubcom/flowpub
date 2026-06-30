@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#171410;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#F6E6E4}
+  [data-scroll]::-webkit-scrollbar{width:7px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+  [data-chips]::-webkit-scrollbar{display:none}
+  [data-root]{
+    --ink:#1A1714;--ink-on:#F2EFE8;--text-2:#6E685D;--text-3:#9C968A;
+    --surface:#FBFAF6;--surface-2:#F8F5EF;--surface-3:#F2EFE8;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%);
+    --line:rgba(26,23,20,.12);--line-1:rgba(26,23,20,.1);--line-soft:rgba(26,23,20,.08);--line-2:rgba(26,23,20,.24);--line-14:rgba(26,23,20,.14);
+    --hover:rgba(26,23,20,.04);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:#F6E6E4;--ocre:#D98A3D;--wave:rgba(26,23,20,.16);
+    --shadow-window:0 30px 70px -28px rgba(26,23,20,.42);--shadow-card:0 1px 2px rgba(26,23,20,.05);
+  }
+  [data-root][data-theme="dark"]{
+    --ink:#F2EFE8;--ink-on:#1A1714;--text-2:#B3AB9D;--text-3:#867F72;
+    --surface:#1E1A16;--surface-2:#191510;--surface-3:#2A241D;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#1E1913 0%,#141110 55%,#0E0C0A 100%);
+    --line:rgba(242,239,232,.12);--line-1:rgba(242,239,232,.1);--line-soft:rgba(242,239,232,.07);--line-2:rgba(242,239,232,.22);--line-14:rgba(242,239,232,.14);
+    --hover:rgba(242,239,232,.06);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:rgba(192,48,58,.18);--ocre:#D98A3D;--wave:rgba(242,239,232,.2);
+    --shadow-window:0 30px 70px -28px rgba(0,0,0,.65);--shadow-card:0 1px 2px rgba(0,0,0,.3);
+  }
+  @keyframes fp-breathe{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.05) rotate(-2.5deg)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div data-root ref="{{ setRoot }}" style="position:relative;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);background:var(--bg-grad);transition:background .4s ease">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="g-amate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EFE8"/><stop offset="1" stop-color="#E6DFD0"/></linearGradient>
+    <pattern id="p-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#1A1714" stroke-width="1.1"/></pattern>
+    <filter id="f-noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.16"/></feComponentTransfer></filter>
+  </defs></svg>
+
+  <header style="position:relative;z-index:2;max-width:1640px;margin:0 auto;padding:26px 40px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="line-height:0;display:inline-block;animation:fp-breathe 6s ease-in-out infinite;transform-origin:50% 50%"><svg width="30" height="30" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span></div>
+      <h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:0">Idiomas — <span style="font-style:italic">internacional</span> desde el día uno</h1>
+      <p style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;color:var(--text-2);margin:8px 0 0;max-width:64ch">FlowPub detecta el idioma de tu sistema y adopta ES o EN. Cambia el idioma aquí y mira cómo se traduce la interfaz en vivo. El <b>contenido</b> de cada Flow se queda en su idioma original.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:3px">
+          <button data-action="lang" data-lang="auto" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:7px 13px;border:none;border-radius:99px;cursor:pointer;background:var(--ink);color:var(--ink-on)">Auto</button>
+          <button data-action="lang" data-lang="es" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:7px 13px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3)">ES</button>
+          <button data-action="lang" data-lang="en" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:7px 13px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3)">EN</button>
+        </div>
+        <div style="display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:3px">
+          <button data-set="light" onClick="{{ onTheme }}" aria-label="Tema claro" style="display:flex;align-items:center;justify-content:center;width:34px;height:30px;border:none;border-radius:99px;cursor:pointer;background:var(--ink);color:var(--ink-on)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+          <button data-set="dark" onClick="{{ onTheme }}" aria-label="Tema oscuro" style="display:flex;align-items:center;justify-content:center;width:34px;height:30px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);text-align:right;line-height:1.7">pantalla 10 · i18n<br>detección · ES / EN</div>
+    </div>
+  </header>
+
+  <!-- detection banner -->
+  <div style="position:relative;z-index:2;max-width:1640px;margin:14px auto 0;padding:0 40px">
+    <div style="display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line-2);border-radius:14px;padding:13px 18px;box-shadow:var(--shadow-card)">
+      <span style="width:34px;height:34px;flex:0 0 auto;border-radius:99px;background:var(--grana-wash);color:var(--grana-700);display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></span>
+      <div style="flex:1"><span data-i18n="banner" style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--ink)">Detectamos el idioma de tu sistema</span><br><span style="font-family:'Hanken Grotesk',sans-serif;font-size:13px;color:var(--text-2)"><span data-i18n="bannerNote">navigator.language</span> · <span data-oslang style="font-family:'Space Mono',monospace;color:var(--grana-700)">—</span></span></div>
+      <span data-i18n="bannerTag" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;color:var(--ink-on);background:var(--ink);padding:6px 13px;border-radius:99px">Interfaz en Español</span>
+    </div>
+  </div>
+
+  <div data-scroll style="position:relative;z-index:2;display:flex;gap:48px;align-items:flex-start;justify-content:flex-start;padding:22px 40px 80px;flex-wrap:nowrap;overflow-x:auto">
+
+    <!-- ============ DESKTOP mini-app ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Desktop · 1080</div>
+      <div style="width:1080px;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line-14);box-shadow:var(--shadow-window)">
+        <div style="height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--surface-2);border-bottom:1px solid var(--line-1)"><div style="display:flex;gap:8px"><span style="width:11px;height:11px;border-radius:99px;background:#E0837F"></span><span style="width:11px;height:11px;border-radius:99px;background:#E7C07A"></span><span style="width:11px;height:11px;border-radius:99px;background:#A9C79A"></span></div><div style="flex:1;display:flex;justify-content:center"><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);background:var(--surface);border:1px solid var(--line-1);padding:5px 16px;border-radius:99px">flowpub.lat</span></div><div style="width:54px"></div></div>
+        <div style="display:grid;grid-template-columns:230px 1fr;height:620px">
+          <!-- rail -->
+          <nav style="border-right:1px solid var(--line-1);background:var(--surface-2);padding:24px 16px;display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;align-items:center;gap:9px;padding:0 8px 20px"><svg width="24" height="24" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-family:'Fraunces',serif;font-size:20px;font-weight:500"><span style="font-style:italic">Flow</span>Pub</span></div>
+            <span style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;background:var(--surface-3);font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--ink)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg><span data-i18n="nav.pub">El Pub</span></span>
+            <span style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-2)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span data-i18n="nav.explore">Explorar</span></span>
+            <span style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-2)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg><span data-i18n="nav.messages">Mensajes</span></span>
+            <span style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-2)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span data-i18n="nav.notifs">Notificaciones</span></span>
+            <span style="display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-2)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span data-i18n="nav.profile">Perfil</span></span>
+            <div style="margin-top:auto"><button style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px;border:none;border-radius:99px;background:var(--grana);color:#fff;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-i18n="record">Grabar un Flow</span></button></div>
+          </nav>
+          <!-- center -->
+          <main data-scroll style="overflow-y:auto;padding:22px 28px">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px"><span data-i18n="filters" style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);margin-right:4px">Filtrar por tema</span></div>
+            <div data-chips style="display:flex;gap:8px;margin-bottom:22px;overflow-x:auto">
+              <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:7px 15px;border-radius:99px;border:1px solid var(--ink);background:var(--ink);color:var(--ink-on)"><span data-i18n="t.all">Todos</span></span>
+              <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.art">Arte</span></span>
+              <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.science">Ciencia</span></span>
+              <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.books">Libros</span></span>
+              <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.culture">Cultura</span></span>
+            </div>
+            <!-- Flow card -->
+            <article style="max-width:560px;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)">
+              <div style="position:relative;aspect-ratio:16/9"><svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block"><rect width="400" height="225" fill="url(#g-amate)"/><g opacity=".96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:multiply" opacity=".5"/></svg>
+                <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:6px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:6px;height:6px;border-radius:99px;background:#C0303A"></span><span data-i18n="audio">Audio</span></span><span style="font-family:'Space Mono',monospace;font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">9 <span data-i18n="min">min</span></span></div>
+              </div>
+              <div style="padding:20px 22px">
+                <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:24px;line-height:1.12;margin:0 0 8px">Nueve minutos sobre el barro</h3>
+                <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.5;color:var(--text-2);margin:0 0 8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Hoy quiero hablar de algo que llevo pensando entre el barro y los datos: cómo lo que se moldea con las manos también guarda memoria.</p>
+                <div style="display:flex;align-items:center;gap:7px;margin:0 0 16px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span data-i18n="contentNote" style="font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;color:var(--text-3)">El contenido del Flow se queda en su idioma original</span><button data-action="translate" style="font-family:'Hanken Grotesk',sans-serif;font-size:11.5px;font-weight:600;color:var(--grana);background:transparent;border:none;cursor:pointer;text-decoration:underline;padding:0"><span data-i18n="translate">Traducir</span></button></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--line-1)">
+                  <div style="display:flex;align-items:center;gap:10px"><span style="width:32px;height:32px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:14px">J</span><span style="line-height:1.25"><span style="font-weight:600;font-size:13px">Julio</span><br><span data-i18n="ago" style="font-size:12px;color:var(--text-3)">hace 2 h</span></span></div>
+                  <div style="display:flex;align-items:center;gap:14px;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500">
+                    <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>128</span>
+                    <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg><span data-i18n="comment">Comentar</span></span>
+                    <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg><span data-i18n="share">Compartir</span></span>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </main>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PHONE mini-app ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Teléfono · 390</div>
+      <div style="width:412px;height:840px;border-radius:52px;background:#1A1714;padding:11px;box-shadow:0 30px 70px -28px rgba(0,0,0,.5)">
+        <div style="position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column">
+          <div style="height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink)"><span>9:41</span><span style="position:absolute;left:50%;top:9px;transform:translateX(-50%);width:104px;height:28px;background:#1A1714;border-radius:99px"></span><span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 12px;flex:0 0 auto"><div style="display:flex;align-items:center;gap:8px"><svg width="24" height="24" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-family:'Fraunces',serif;font-size:20px;font-weight:500"><span style="font-style:italic">Flow</span>Pub</span></div><span style="width:30px;height:30px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:14px">A</span></div>
+          <div data-chips style="display:flex;gap:7px;overflow-x:auto;padding:0 20px 12px;flex:0 0 auto">
+            <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid var(--ink);background:var(--ink);color:var(--ink-on)"><span data-i18n="t.all">Todos</span></span>
+            <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.art">Arte</span></span>
+            <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.culture">Cultura</span></span>
+            <span style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);color:var(--text-2)"><span data-i18n="t.science">Ciencia</span></span>
+          </div>
+          <div data-scroll style="flex:1;overflow-y:auto;padding:4px 16px 16px">
+            <article style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)">
+              <div style="position:relative;aspect-ratio:16/9"><svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block"><rect width="400" height="225" fill="url(#g-amate)"/><g opacity=".96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g></svg><div style="position:absolute;left:11px;bottom:11px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:5px;font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:5px;height:5px;border-radius:99px;background:#C0303A"></span><span data-i18n="audio">Audio</span></span><span style="font-family:'Space Mono',monospace;font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">9 <span data-i18n="min">min</span></span></div></div>
+              <div style="padding:16px 17px">
+                <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:20px;line-height:1.14;margin:0 0 7px">Nueve minutos sobre el barro</h3>
+                <p style="font-family:'Fraunces',serif;font-size:14.5px;line-height:1.45;color:var(--text-2);margin:0 0 10px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Cómo lo que se moldea con las manos también guarda memoria, y por qué la voz es el primer molde.</p>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span data-i18n="contentNoteShort" style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;color:var(--text-3)">Contenido en su idioma original</span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--line-1)">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:28px;height:28px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:12px">J</span><span style="line-height:1.2"><span style="font-weight:600;font-size:12px">Julio</span><br><span data-i18n="ago" style="font-size:11px;color:var(--text-3)">hace 2 h</span></span></div>
+                  <div style="display:flex;align-items:center;gap:12px;color:var(--text-2)"><span style="display:flex;align-items:center;gap:5px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>128</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></div>
+                </div>
+              </div>
+            </article>
+            <button style="width:100%;margin-top:16px;display:flex;align-items:center;justify-content:center;gap:9px;padding:14px;border:none;border-radius:99px;background:var(--grana);color:#fff;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:600"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg><span data-i18n="record">Grabar un Flow</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  setRoot = (el) => { this._root = el; };
+  blip = (type) => {
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      if (A.state === 'suspended') A.resume();
+      const o = A.createOscillator(), g = A.createGain(); o.connect(g); g.connect(A.destination);
+      const now = A.currentTime; const f = { tick: 540, pop: 700, click: 400, soft: 320 }[type] || 440;
+      o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.05, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      o.start(now); o.stop(now + 0.14);
+    } catch (e) {}
+  };
+  applyTheme = (theme) => {
+    if (!this._root) return;
+    if (theme === 'dark') this._root.setAttribute('data-theme', 'dark'); else this._root.removeAttribute('data-theme');
+    this._root.querySelectorAll('[data-set]').forEach((b) => { const on = b.dataset.set === theme; b.style.background = on ? 'var(--ink)' : 'transparent'; b.style.color = on ? 'var(--ink-on)' : 'var(--text-3)'; });
+    try { localStorage.setItem('fp-theme', theme); } catch (e) {}
+  };
+  onTheme = (e) => { this.applyTheme(e.currentTarget.dataset.set); this.blip('tick'); };
+
+  DICT = {
+    es: {
+      banner: 'Detectamos el idioma de tu sistema', bannerNote: 'navigator.language', bannerTag: 'Interfaz en Español',
+      'nav.pub': 'El Pub', 'nav.explore': 'Explorar', 'nav.messages': 'Mensajes', 'nav.notifs': 'Notificaciones', 'nav.profile': 'Perfil',
+      record: 'Grabar un Flow', filters: 'Filtrar por tema',
+      't.all': 'Todos', 't.art': 'Arte', 't.science': 'Ciencia', 't.books': 'Libros', 't.culture': 'Cultura',
+      audio: 'Audio', min: 'min', ago: 'hace 2 h', comment: 'Comentar', share: 'Compartir',
+      contentNote: 'El contenido del Flow se queda en su idioma original', contentNoteShort: 'Contenido en su idioma original', translate: 'Traducir',
+    },
+    en: {
+      banner: 'We detected your system language', bannerNote: 'navigator.language', bannerTag: 'Interface in English',
+      'nav.pub': 'The Pub', 'nav.explore': 'Explore', 'nav.messages': 'Messages', 'nav.notifs': 'Notifications', 'nav.profile': 'Profile',
+      record: 'Record a Flow', filters: 'Filter by topic',
+      't.all': 'All', 't.art': 'Art', 't.science': 'Science', 't.books': 'Books', 't.culture': 'Culture',
+      audio: 'Audio', min: 'min', ago: '2h ago', comment: 'Comment', share: 'Share',
+      contentNote: "The Flow's content stays in its original language", contentNoteShort: 'Content in its original language', translate: 'Translate',
+    },
+  };
+
+  detectLang = () => {
+    const l = (navigator.language || 'es').toLowerCase();
+    return l.startsWith('en') ? 'en' : 'es';
+  };
+
+  setLang = (lang, fromAuto) => {
+    const resolved = lang === 'auto' ? this.detectLang() : lang;
+    const d = this.DICT[resolved];
+    this._root.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.dataset.i18n; if (d[k] != null) el.textContent = d[k]; });
+    // banner note shows the raw navigator code + resolved
+    const code = navigator.language || (resolved === 'en' ? 'en-US' : 'es-MX');
+    this._root.querySelectorAll('[data-oslang]').forEach((s) => { s.textContent = `${code} → ${resolved.toUpperCase()}`; });
+    this._root.querySelectorAll('[data-i18n="bannerNote"]').forEach((s) => { s.textContent = lang === 'auto' ? (resolved === 'en' ? 'Automatic, from your OS' : 'Automático, según tu sistema') : (resolved === 'en' ? 'Manually selected' : 'Seleccionado manualmente'); });
+    // active button styling
+    this._root.querySelectorAll('[data-action="lang"]').forEach((b) => {
+      const on = b.dataset.lang === lang;
+      b.style.background = on ? 'var(--ink)' : 'transparent';
+      b.style.color = on ? 'var(--ink-on)' : 'var(--text-3)';
+    });
+    document.documentElement.setAttribute('lang', resolved);
+    if (!fromAuto) this.blip('tick');
+  };
+
+  componentDidMount() {
+    try { const t = localStorage.getItem('fp-theme'); if (t === 'dark') this.applyTheme('dark'); } catch (e) {}
+    if (this._root) {
+      this._root.addEventListener('click', this.onClick);
+      this.setLang('auto', true);
+    }
+  }
+  componentWillUnmount() { if (this._root) this._root.removeEventListener('click', this.onClick); }
+
+  onClick = (e) => {
+    const t = e.target.closest('[data-action]');
+    if (!t || !this._root.contains(t)) return;
+    if (t.dataset.action === 'lang') this.setLang(t.dataset.lang);
+    else if (t.dataset.action === 'translate') { t.textContent = (document.documentElement.getAttribute('lang') === 'en') ? 'Translated ✓' : 'Traducido ✓'; t.style.color = 'var(--ok, #2E9A5B)'; this.blip('pop'); }
+  };
+
+  renderVals() { return { setRoot: this.setRoot, onTheme: this.onTheme }; }
+}
+</script>
+</body>
+</html>

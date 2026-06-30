@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#EDE7DA;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#F6E6E4}
+  [data-scroll]::-webkit-scrollbar{width:8px;height:8px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:rgba(26,23,20,.16);border-radius:99px}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  textarea,input{font-family:'Hanken Grotesk',sans-serif}
+  @keyframes fp-drift{0%{transform:translateY(0)}50%{transform:translateY(-22px)}100%{transform:translateY(0)}}
+  @keyframes fp-breathe{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.05) rotate(-2.5deg)}}
+  @keyframes fp-glow{0%,100%{opacity:.5}50%{opacity:1}}
+  @keyframes fp-bar{0%,100%{transform:scaleY(.28)}50%{transform:scaleY(1)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</helmet>
+
+<div data-root ref="{{ setRoot }}" style="position:relative;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;color:#1A1714;background:radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%)">
+
+  <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden">
+    <div style="position:absolute;top:16%;left:7%;width:7px;height:7px;border-radius:99px;background:#C0303A;opacity:.13;animation:fp-drift 12s ease-in-out infinite"></div>
+    <div style="position:absolute;top:74%;left:4%;width:5px;height:5px;border-radius:99px;background:#1A1714;opacity:.1;animation:fp-drift 13s ease-in-out infinite 1.6s"></div>
+    <div style="position:absolute;top:82%;left:93%;width:6px;height:6px;border-radius:99px;background:#C0303A;opacity:.12;animation:fp-drift 16s ease-in-out infinite .4s"></div>
+  </div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <linearGradient id="g-amate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EFE8"/><stop offset="1" stop-color="#E6DFD0"/></linearGradient>
+    <pattern id="p-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#1A1714" stroke-width="1.1"/></pattern>
+    <filter id="f-noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.16"/></feComponentTransfer></filter>
+  </defs></svg>
+
+  <header style="position:relative;z-index:2;max-width:1680px;margin:0 auto;padding:26px 40px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="line-height:0;display:inline-block;animation:fp-breathe 6s ease-in-out infinite;transform-origin:50% 50%"><svg width="30" height="30" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="#1A1714" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span>
+      </div>
+      <h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:0">Un <span style="font-style:italic">Flow</span> abierto — leer, escuchar, comentar</h1>
+      <p style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;color:#6E685D;margin:8px 0 0;max-width:62ch">Se lee la versión pulida, pero el <b>transcript original</b> está a un toque. Los comentarios pueden ser de texto o de <b style="color:#C0303A">voz</b> —y cada comentario de voz trae su <b>“ver transcript”</b>.</p>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:12px;color:#9C968A;text-align:right;line-height:1.7">pantalla 03 · lectura<br>artículo · audio · comentarios</div>
+  </header>
+
+  <div data-scroll style="position:relative;z-index:2;display:flex;gap:48px;align-items:flex-start;justify-content:flex-start;padding:24px 40px 80px;flex-wrap:nowrap;overflow-x:auto">
+
+    <!-- ============ DESKTOP — reading + comments ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9C968A;margin:0 0 12px 6px">Desktop · 1180</div>
+      <div style="width:1180px;border-radius:18px;overflow:hidden;background:#FBFAF6;border:1px solid rgba(26,23,20,.14);box-shadow:0 30px 70px -28px rgba(26,23,20,.42)">
+        <div style="height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:rgba(242,239,232,.72);backdrop-filter:blur(10px);border-bottom:1px solid rgba(26,23,20,.1)">
+          <div style="display:flex;gap:8px"><span style="width:11px;height:11px;border-radius:99px;background:#E0837F"></span><span style="width:11px;height:11px;border-radius:99px;background:#E7C07A"></span><span style="width:11px;height:11px;border-radius:99px;background:#A9C79A"></span></div>
+          <div style="flex:1;display:flex;justify-content:center"><span style="font-family:'Space Mono',monospace;font-size:12px;color:#9C968A;background:#FBFAF6;border:1px solid rgba(26,23,20,.1);padding:5px 16px;border-radius:99px">flowpub.lat/julio/nueve-minutos-sobre-el-barro</span></div>
+          <div style="width:54px"></div>
+        </div>
+
+        <div data-readroot data-scroll style="height:792px;overflow-y:auto">
+          <div style="max-width:720px;margin:0 auto;padding:44px 32px 64px">
+
+            <!-- article head -->
+            <div style="display:flex;gap:8px;margin-bottom:18px">
+              <span style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9A2530;background:#F6E6E4;padding:5px 12px;border-radius:99px">Arte</span>
+              <span style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6E685D;border:1px solid rgba(26,23,20,.2);padding:5px 12px;border-radius:99px">Cultura</span>
+            </div>
+            <h2 style="font-family:'Fraunces',serif;font-weight:400;font-size:46px;line-height:1.08;letter-spacing:-.02em;margin:0 0 22px">Nueve minutos sobre el barro</h2>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:22px;border-bottom:1px solid rgba(26,23,20,.1);margin-bottom:24px">
+              <div style="display:flex;align-items:center;gap:12px">
+                <span style="width:46px;height:46px;border-radius:99px;background:#1A1714;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:19px">J</span>
+                <div style="line-height:1.3"><div style="font-weight:600;font-size:15px">Julio</div><div style="font-family:'Space Mono',monospace;font-size:12px;color:#9C968A">hace 2 h · 9 min de audio</div></div>
+              </div>
+              <button data-action="follow" style="font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:9px 20px;border-radius:99px;border:1px solid #1A1714;background:transparent;color:#1A1714;cursor:pointer;transition:.15s" style-hover="background:#1A1714;color:#F2EFE8">Seguir</button>
+            </div>
+
+            <!-- cover -->
+            <div style="border-radius:16px;overflow:hidden;border:1px solid rgba(26,23,20,.1);aspect-ratio:16/9;margin-bottom:18px">
+              <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true"><rect width="400" height="225" fill="url(#g-amate)"/><g opacity="0.96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:multiply" opacity=".5"/></svg>
+            </div>
+
+            <!-- audio player (signature) -->
+            <div style="display:flex;align-items:center;gap:16px;background:#F8F5EF;border:1px solid rgba(26,23,20,.1);border-radius:99px;padding:9px 18px 9px 9px;margin-bottom:28px">
+              <button data-action="play" aria-label="Reproducir" style="flex:0 0 auto;width:48px;height:48px;border-radius:99px;background:#C0303A;color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M8 5v14l11-7z"/></svg></span></button>
+              <svg viewBox="0 0 520 36" preserveAspectRatio="none" style="flex:1;height:36px;min-width:0" aria-hidden="true"><path d="M4 18 C 60 6 90 30 150 18 S 250 6 310 18 S 410 30 470 18 S 510 12 516 18" fill="none" stroke="rgba(26,23,20,.16)" stroke-width="2.5" stroke-linecap="round"/><path data-prog d="M4 18 C 60 6 90 30 150 18 S 250 6 300 18" fill="none" stroke="#C0303A" stroke-width="2.5" stroke-linecap="round"/><circle cx="300" cy="18" r="5" fill="#C0303A"/></svg>
+              <span style="font-family:'Space Mono',monospace;font-size:13px;color:#6E685D;white-space:nowrap">03:41 / 09:00</span>
+            </div>
+
+            <!-- view toggle -->
+            <div style="display:inline-flex;background:#F2EFE8;border-radius:99px;padding:4px;margin-bottom:20px">
+              <button data-art="pub" data-action="arttoggle" style="padding:8px 18px;border:none;border-radius:99px;background:#FBFAF6;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1A1714;box-shadow:0 1px 2px rgba(26,23,20,.08)">Publicación</button>
+              <button data-art="raw" data-action="arttoggle" style="padding:8px 18px;border:none;border-radius:99px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;color:#6E685D">Transcript original</button>
+            </div>
+
+            <!-- article: published -->
+            <div data-article="pub" style="font-family:'Fraunces',serif">
+              <p style="font-size:19px;line-height:1.75;color:#1A1714;margin:0 0 20px">Llevo días pensando en algo que une dos cosas que parecían lejanas: <strong>el barro y la voz</strong>.</p>
+              <p style="font-size:19px;line-height:1.75;color:#1A1714;margin:0 0 20px">Cuando uno trabaja con las manos, el material guarda memoria: cada presión, cada duda queda registrada en la superficie. No hay manera de mentirle al barro. La voz funciona igual —es el <em>primer molde</em> de lo que pensamos, antes de que la escritura lo endurezca y lo vuelva definitivo.</p>
+              <blockquote style="margin:28px 0;padding:4px 0 4px 22px;border-left:3px solid #C0303A;font-style:italic;font-size:23px;line-height:1.4;color:#1A1714">Hablar es dar forma sin borrar el gesto.</blockquote>
+              <p style="font-size:19px;line-height:1.75;color:#1A1714;margin:0 0 20px">Por eso grabar en vez de escribir cambia lo que decimos. Aparecen las pausas, las correcciones en voz alta, el cuerpo. Lo que en un texto sería un error, en el audio es una <em>huella</em>.</p>
+              <p style="font-size:19px;line-height:1.75;color:#1A1714;margin:0 0 12px">Tres cosas que el barro me enseñó y que valen para la voz:</p>
+              <ul style="font-size:19px;line-height:1.7;color:#1A1714;margin:0 0 20px;padding-left:22px">
+                <li style="margin:0 0 8px">Lo imperfecto comunica más que lo pulido.</li>
+                <li style="margin:0 0 8px">El tiempo de secado importa: hay ideas que no se deben apurar.</li>
+                <li style="margin:0 0 8px">Lo que haces con las manos, lo entiendes distinto.</li>
+              </ul>
+              <p style="font-size:19px;line-height:1.75;color:#1A1714;margin:0">Si llegaste hasta aquí, grábate algo hoy. No para publicarlo necesariamente. Solo para oír de qué forma piensas cuando nadie corrige.</p>
+            </div>
+            <!-- article: raw transcript -->
+            <div data-article="raw" style="display:none;background:#F8F5EF;border:1px solid rgba(26,23,20,.08);border-radius:14px;padding:24px 26px">
+              <p style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9C968A;margin:0 0 14px">Transcript sin pulir · lo que se dijo</p>
+              <p style="font-family:'Fraunces',serif;font-size:18px;line-height:1.8;color:#6E685D;margin:0">eh… hola. quería hablar un poco de algo que me ha estado dando vueltas, sobre el barro, ¿no? sobre cómo cuando uno trabaja con las manos, este, el material como que… guarda algo, guarda memoria, cada que lo aprietas queda ahí, y no le puedes mentir, ¿no? y yo pensaba que la voz es parecido, es como el primer molde de lo que uno piensa, antes de escribirlo, porque al escribir como que ya lo endureces… y por eso grabar es distinto, salen las pausas, te corriges en voz alta, está el cuerpo ahí. lo que en un texto sería un error aquí es como una huella, me late mucho eso. y bueno, tres cosas que aprendí del barro que sirven para la voz: que lo imperfecto comunica más, que hay que dejar secar las ideas, y que lo que haces con las manos lo entiendes diferente. ya, eso, gracias.</p>
+            </div>
+
+            <!-- engagement -->
+            <div style="display:flex;align-items:center;gap:6px;margin:30px 0 8px;padding:16px 0;border-top:1px solid rgba(26,23,20,.1);border-bottom:1px solid rgba(26,23,20,.1)">
+              <button data-action="postlike" style="display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px" style-hover="background:rgba(26,23,20,.04)"><svg viewBox="0 0 24 24" fill="none" stroke="#6E685D" stroke-width="1.8" style="width:19px;height:19px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>128</span></button>
+              <button style="display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px" style-hover="background:rgba(26,23,20,.04)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:19px;height:19px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg><span data-cc>3</span></button>
+              <button style="display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px" style-hover="background:rgba(26,23,20,.04)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:19px;height:19px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>Compartir</button>
+              <button style="margin-left:auto;display:flex;align-items:center;gap:8px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;padding:8px 14px;border-radius:99px" style-hover="background:rgba(26,23,20,.04)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:19px;height:19px"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>Guardar</button>
+            </div>
+
+            <!-- comments -->
+            <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:22px;margin:32px 0 18px">Comentarios</h3>
+
+            <!-- composer -->
+            <div data-composer style="background:#F8F5EF;border:1px solid rgba(26,23,20,.1);border-radius:16px;padding:14px;margin-bottom:26px">
+              <div style="display:flex;gap:6px;margin-bottom:12px">
+                <button data-ctab="write" data-action="ctab" style="display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;border:none;background:#FBFAF6;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1A1714;box-shadow:0 1px 2px rgba(26,23,20,.08)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Escribir</button>
+                <button data-ctab="voice" data-action="ctab" style="display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:99px;border:none;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;color:#6E685D"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Comentar con voz</button>
+              </div>
+              <!-- write panel -->
+              <div data-cpanel="write">
+                <div style="display:flex;gap:10px">
+                  <span style="width:38px;height:38px;flex:0 0 auto;border-radius:99px;background:#1A1714;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">A</span>
+                  <textarea data-ctext rows="2" placeholder="Comparte lo que te dejó este Flow…" style="flex:1;border:1px solid rgba(26,23,20,.16);border-radius:12px;padding:11px 13px;font-size:14px;resize:none;outline:none;background:#fff"></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:10px"><button data-action="sendtext" style="padding:9px 20px;border-radius:99px;border:none;background:#1A1714;color:#F2EFE8;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600" style-hover="background:#000">Publicar comentario</button></div>
+              </div>
+              <!-- voice panel -->
+              <div data-cpanel="voice" style="display:none">
+                <div data-cvoice="idle" style="display:flex;align-items:center;gap:14px;padding:6px 4px">
+                  <button data-action="recstart" aria-label="Grabar comentario" style="width:52px;height:52px;flex:0 0 auto;border-radius:99px;border:1px solid rgba(26,23,20,.24);background:#FBFAF6;cursor:pointer;display:flex;align-items:center;justify-content:center" style-active="transform:scale(.95)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#C0303A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+                  <div><div style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;color:#1A1714">Graba tu comentario</div><div style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;color:#9C968A">Se transcribe solo; quien lea verá el audio y podrá abrir el transcript.</div></div>
+                </div>
+                <div data-cvoice="rec" style="display:none;align-items:center;gap:14px;padding:8px 6px">
+                  <button data-action="recstop" aria-label="Detener" style="width:52px;height:52px;flex:0 0 auto;border-radius:99px;border:none;background:#C0303A;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -8px rgba(192,48,58,.7)"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="3"/></svg></button>
+                  <div style="flex:1;display:flex;align-items:center;gap:3px;height:34px">
+                    <div style="width:3px;height:30px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite"></div><div style="width:3px;height:30px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .1s"></div><div style="width:3px;height:30px;border-radius:9px;background:#D98A3D;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .2s"></div><div style="width:3px;height:30px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .3s"></div><div style="width:3px;height:30px;border-radius:9px;background:#1A1714;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .4s"></div><div style="width:3px;height:30px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .5s"></div><div style="width:3px;height:30px;border-radius:9px;background:#D98A3D;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .6s"></div><div style="width:3px;height:30px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .7s"></div>
+                  </div>
+                  <span data-rectimer style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#C0303A;white-space:nowrap">00:00</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- comment list -->
+            <div data-comments style="display:flex;flex-direction:column;gap:22px"></div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PHONE — reading + comments ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#9C968A;margin:0 0 12px 6px">Teléfono · 390</div>
+      <div style="width:412px;height:840px;border-radius:52px;background:#1A1714;padding:11px;box-shadow:0 30px 70px -28px rgba(26,23,20,.5)">
+        <div data-readroot style="position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:#FBFAF6;display:flex;flex-direction:column">
+          <div style="height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font-family:'Space Mono',monospace;font-size:13px;color:#1A1714"><span>9:41</span><span style="position:absolute;left:50%;top:9px;transform:translateX(-50%);width:104px;height:28px;background:#1A1714;border-radius:99px"></span><span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="#1A1714"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="1" y="1" width="17" height="9" rx="2.5" stroke="#1A1714" stroke-width="1" opacity=".5"/><rect x="2.5" y="2.5" width="12" height="6" rx="1" fill="#1A1714"/></svg></span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px 12px;flex:0 0 auto;border-bottom:1px solid rgba(26,23,20,.08)">
+            <button style="width:36px;height:36px;border-radius:99px;border:none;background:#F2EFE8;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1A1714"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>
+            <span style="font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;color:#9C968A">Flow</span>
+            <button style="width:36px;height:36px;border-radius:99px;border:none;background:#F2EFE8;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#1A1714"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+          </div>
+
+          <div data-scroll style="flex:1;overflow-y:auto;padding:18px 18px 96px">
+            <div style="display:flex;gap:7px;margin-bottom:12px"><span style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9A2530;background:#F6E6E4;padding:4px 10px;border-radius:99px">Arte</span><span style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6E685D;border:1px solid rgba(26,23,20,.2);padding:4px 10px;border-radius:99px">Cultura</span></div>
+            <h2 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.1;letter-spacing:-.02em;margin:0 0 16px">Nueve minutos sobre el barro</h2>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px"><span style="width:38px;height:38px;border-radius:99px;background:#1A1714;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">J</span><div style="flex:1;line-height:1.3"><div style="font-weight:600;font-size:14px">Julio</div><div style="font-family:'Space Mono',monospace;font-size:11px;color:#9C968A">hace 2 h · 9 min</div></div><button data-action="follow" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:7px 15px;border-radius:99px;border:1px solid #1A1714;background:transparent;color:#1A1714;cursor:pointer">Seguir</button></div>
+            <div style="border-radius:14px;overflow:hidden;border:1px solid rgba(26,23,20,.1);aspect-ratio:16/9;margin-bottom:14px"><svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true"><rect width="400" height="225" fill="url(#g-amate)"/><g opacity="0.96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g></svg></div>
+            <div style="display:flex;align-items:center;gap:12px;background:#F8F5EF;border:1px solid rgba(26,23,20,.1);border-radius:99px;padding:6px 14px 6px 6px;margin-bottom:20px"><button data-action="play" aria-label="Reproducir" style="flex:0 0 auto;width:40px;height:40px;border-radius:99px;background:#C0303A;color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M8 5v14l11-7z"/></svg></span></button><svg viewBox="0 0 300 26" preserveAspectRatio="none" style="flex:1;height:26px;min-width:0" aria-hidden="true"><path d="M3 13 C 50 4 80 22 140 13 S 230 4 297 13" fill="none" stroke="rgba(26,23,20,.16)" stroke-width="2" stroke-linecap="round"/><path d="M3 13 C 50 4 80 22 120 13" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg><span style="font-family:'Space Mono',monospace;font-size:11px;color:#6E685D;white-space:nowrap">9:00</span></div>
+
+            <div style="display:inline-flex;background:#F2EFE8;border-radius:99px;padding:3px;margin-bottom:16px"><button data-art="pub" data-action="arttoggle" style="padding:6px 14px;border:none;border-radius:99px;background:#FBFAF6;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;color:#1A1714;box-shadow:0 1px 2px rgba(26,23,20,.08)">Publicación</button><button data-art="raw" data-action="arttoggle" style="padding:6px 14px;border:none;border-radius:99px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;color:#6E685D">Transcript</button></div>
+
+            <div data-article="pub" style="font-family:'Fraunces',serif">
+              <p style="font-size:17px;line-height:1.7;color:#1A1714;margin:0 0 16px">Llevo días pensando en algo que une dos cosas que parecían lejanas: <strong>el barro y la voz</strong>.</p>
+              <p style="font-size:17px;line-height:1.7;color:#1A1714;margin:0 0 16px">Cuando uno trabaja con las manos, el material guarda memoria. La voz funciona igual —es el <em>primer molde</em> de lo que pensamos, antes de que la escritura lo endurezca.</p>
+              <blockquote style="margin:20px 0;padding:2px 0 2px 18px;border-left:3px solid #C0303A;font-style:italic;font-size:19px;line-height:1.4;color:#1A1714">Hablar es dar forma sin borrar el gesto.</blockquote>
+              <p style="font-size:17px;line-height:1.7;color:#1A1714;margin:0">Lo que en un texto sería un error, en el audio es una <em>huella</em>. Si llegaste hasta aquí, grábate algo hoy.</p>
+            </div>
+            <div data-article="raw" style="display:none;background:#F8F5EF;border:1px solid rgba(26,23,20,.08);border-radius:12px;padding:16px 18px">
+              <p style="font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#9C968A;margin:0 0 10px">Transcript sin pulir</p>
+              <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.75;color:#6E685D;margin:0">eh… hola. quería hablar de algo que me da vueltas, sobre el barro, cómo cuando uno trabaja con las manos el material guarda memoria, y pensaba que la voz es parecido, es el primer molde de lo que uno piensa antes de escribirlo… eso, gracias.</p>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:4px;margin:22px 0;padding:12px 0;border-top:1px solid rgba(26,23,20,.1);border-bottom:1px solid rgba(26,23,20,.1)">
+              <button data-action="postlike" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:6px 10px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="#6E685D" stroke-width="1.8" style="width:18px;height:18px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>128</span></button>
+              <button style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:6px 10px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg><span data-cc>3</span></button>
+              <button style="margin-left:auto;display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:#6E685D;padding:6px 10px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>
+            </div>
+
+            <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:19px;margin:18px 0 14px">Comentarios</h3>
+            <div data-comments style="display:flex;flex-direction:column;gap:18px"></div>
+          </div>
+
+          <!-- bottom composer bar -->
+          <div data-composer style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 26px;background:rgba(251,250,246,.92);backdrop-filter:blur(14px);border-top:1px solid rgba(26,23,20,.1);display:flex;align-items:center;gap:10px">
+            <input data-ctext placeholder="Comenta…" style="flex:1;border:1px solid rgba(26,23,20,.16);border-radius:99px;padding:11px 16px;font-size:14px;outline:none;background:#fff" />
+            <button data-action="sendtext" aria-label="Enviar" style="width:42px;height:42px;flex:0 0 auto;border-radius:99px;border:none;background:#1A1714;color:#F2EFE8;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+            <button data-action="recstart" aria-label="Comentar con voz" style="width:42px;height:42px;flex:0 0 auto;border-radius:99px;border:none;background:#C0303A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  setRoot = (el) => { this._root = el; };
+
+  blip = (type) => {
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      if (A.state === 'suspended') A.resume();
+      const o = A.createOscillator(), g = A.createGain();
+      o.connect(g); g.connect(A.destination);
+      const now = A.currentTime;
+      const f = { tick: 540, pop: 700, click: 400, soft: 320, rec: 220 }[type] || 440;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.05, now + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      o.start(now); o.stop(now + 0.14);
+    } catch (e) {}
+  };
+
+  esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  textComment = (name, initial, color, text) => `
+    <article style="display:flex;gap:12px">
+      <span style="width:38px;height:38px;flex:0 0 auto;border-radius:99px;background:${color};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">${initial}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px"><span style="font-weight:600;font-size:14px">${name}</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9C968A">ahora</span></div>
+        <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.55;color:#1A1714;margin:0 0 8px">${this.esc(text)}</p>
+        <div style="display:flex;gap:14px"><button data-action="clike" data-on="0" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:#9C968A;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>0</span></button><button style="background:transparent;border:none;cursor:pointer;color:#9C968A;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0">Responder</button></div>
+      </div>
+    </article>`;
+
+  voiceComment = (name, initial, color, dur, transcript) => `
+    <article style="display:flex;gap:12px">
+      <span style="width:38px;height:38px;flex:0 0 auto;border-radius:99px;background:${color};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">${initial}</span>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px"><span style="font-weight:600;font-size:14px">${name}</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:#9C968A">ahora</span><span style="display:inline-flex;align-items:center;gap:5px;font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;color:#9A2530;background:#F6E6E4;padding:2px 8px;border-radius:99px">Voz</span></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#F8F5EF;border:1px solid rgba(26,23,20,.1);border-radius:99px;padding:5px 14px 5px 5px;max-width:340px">
+          <button data-action="cplay" aria-label="Reproducir" style="flex:0 0 auto;width:34px;height:34px;border-radius:99px;background:#1A1714;color:#F2EFE8;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M8 5v14l11-7z"/></svg></span></button>
+          <svg viewBox="0 0 260 22" preserveAspectRatio="none" style="flex:1;height:22px;min-width:0" aria-hidden="true"><path d="M3 11 C 40 3 70 19 110 11 S 200 3 257 11" fill="none" stroke="rgba(26,23,20,.18)" stroke-width="2" stroke-linecap="round"/></svg>
+          <span style="font-family:'Space Mono',monospace;font-size:12px;color:#6E685D;white-space:nowrap">${dur}</span>
+        </div>
+        <button data-action="vtrans" style="display:flex;align-items:center;gap:6px;margin-top:8px;background:transparent;border:none;cursor:pointer;color:#6E685D;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9C968A" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Ver transcript<svg data-chevron width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9C968A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform .2s"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div data-vtrans style="display:none;margin-top:8px;padding:12px 14px;border-radius:12px;background:#F2EFE8;border:1px solid rgba(26,23,20,.08)">
+          <p style="font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#9C968A;margin:0 0 6px">Transcript del audio</p>
+          <p style="font-family:'Fraunces',serif;font-size:15px;line-height:1.6;color:#6E685D;margin:0">${this.esc(transcript)}</p>
+        </div>
+        <div style="display:flex;gap:14px;margin-top:10px"><button data-action="clike" data-on="0" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:#9C968A;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:15px;height:15px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>0</span></button><button style="background:transparent;border:none;cursor:pointer;color:#9C968A;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0">Responder</button></div>
+      </div>
+    </article>`;
+
+  seed = (list) => {
+    list.innerHTML =
+      this.textComment('María', 'M', '#9A2530', 'Esto me recordó a una maestra de cerámica que decía justo eso: que el barro no perdona la prisa. Gracias por ponerlo en palabras (y en voz).')
+      + this.voiceComment('Tomás', 'T', '#1A1714', '0:42', 'Oye Julio, qué bueno esto. Yo justo ando grabando mis caminatas y no me atrevía a publicarlas, pero lo del molde y la huella me convenció. Va una desde la sierra, saludos.')
+      + this.textComment('Inés', 'I', '#D98A3D', 'Me quedo con “dejar secar las ideas”. Aplica a todo.');
+  };
+
+  componentDidMount() {
+    if (this._root) {
+      this._root.querySelectorAll('[data-comments]').forEach((l) => this.seed(l));
+      this._root.addEventListener('click', this.onClickRoot);
+    }
+  }
+  componentWillUnmount() {
+    if (this._root) this._root.removeEventListener('click', this.onClickRoot);
+    clearInterval(this._rint);
+  }
+
+  toggleArt = (btn) => {
+    const root = btn.closest('[data-readroot]');
+    const which = btn.dataset.art;
+    root.querySelectorAll('[data-art]').forEach((b) => {
+      const on = b === btn;
+      b.style.background = on ? '#FBFAF6' : 'transparent';
+      b.style.color = on ? '#1A1714' : '#6E685D';
+      b.style.fontWeight = on ? '600' : '500';
+      b.style.boxShadow = on ? '0 1px 2px rgba(26,23,20,.08)' : 'none';
+    });
+    root.querySelectorAll('[data-article]').forEach((a) => {
+      const on = a.dataset.article === which;
+      a.style.display = on ? 'block' : 'none';
+      if (on && a.animate) a.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 240 });
+    });
+    this.blip('tick');
+  };
+
+  ctab = (btn) => {
+    const comp = btn.closest('[data-composer]');
+    const which = btn.dataset.ctab;
+    comp.querySelectorAll('[data-ctab]').forEach((b) => {
+      const on = b === btn;
+      b.style.background = on ? '#FBFAF6' : 'transparent';
+      b.style.color = on ? '#1A1714' : '#6E685D';
+      b.style.fontWeight = on ? '600' : '500';
+      b.style.boxShadow = on ? '0 1px 2px rgba(26,23,20,.08)' : 'none';
+    });
+    comp.querySelectorAll('[data-cpanel]').forEach((p) => { p.style.display = p.dataset.cpanel === which ? 'block' : 'none'; });
+    this.blip('tick');
+  };
+
+  sendText = (btn) => {
+    const root = btn.closest('[data-readroot]');
+    const comp = btn.closest('[data-composer]');
+    const ta = comp.querySelector('[data-ctext]');
+    const val = (ta.value || '').trim();
+    if (!val) { if (ta.animate) ta.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: 220 }); ta.focus(); return; }
+    const list = root.querySelector('[data-comments]');
+    list.insertAdjacentHTML('afterbegin', this.textComment('Tú', 'A', '#C0303A', val));
+    ta.value = '';
+    const node = list.firstElementChild;
+    if (node && node.animate) node.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.22,1,.36,1)' });
+    const cc = root.querySelector('[data-cc]'); if (cc) cc.textContent = String(parseInt(cc.textContent, 10) + 1);
+    this.blip('pop');
+  };
+
+  recStart = (btn) => {
+    const comp = btn.closest('[data-composer]');
+    this._recComp = comp;
+    // desktop has idle/rec blocks; phone uses an overlay timer on the bar
+    const idle = comp.querySelector('[data-cvoice="idle"]');
+    const rec = comp.querySelector('[data-cvoice="rec"]');
+    if (rec) {
+      if (idle) idle.style.display = 'none';
+      rec.style.display = 'flex';
+      const tm = rec.querySelector('[data-rectimer]');
+      this._rt = 0;
+      clearInterval(this._rint);
+      this._rint = setInterval(() => { this._rt += 1; if (tm) tm.textContent = this.fmt(this._rt); if (this._rt >= 90) this.recStop(); }, 250);
+    } else {
+      // phone: switch to a transient recording bar in place
+      this._phoneRec(comp);
+    }
+    this.blip('rec');
+  };
+
+  _phoneRec = (comp) => {
+    comp.dataset.recState = '1';
+    comp._saved = comp.innerHTML;
+    comp.innerHTML = `
+      <button data-action="recstop" aria-label="Detener" style="width:42px;height:42px;flex:0 0 auto;border-radius:99px;border:none;background:#C0303A;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="3"/></svg></button>
+      <div style="flex:1;display:flex;align-items:center;gap:3px;height:28px">
+        <div style="width:3px;height:24px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite"></div><div style="width:3px;height:24px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .1s"></div><div style="width:3px;height:24px;border-radius:9px;background:#D98A3D;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .2s"></div><div style="width:3px;height:24px;border-radius:9px;background:#1A1714;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .3s"></div><div style="width:3px;height:24px;border-radius:9px;background:#C0303A;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .4s"></div><div style="width:3px;height:24px;border-radius:9px;background:#D98A3D;transform-origin:center;animation:fp-bar 1s ease-in-out infinite .5s"></div>
+      </div>
+      <span data-rectimer style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#C0303A">00:00</span>`;
+    const tm = comp.querySelector('[data-rectimer]');
+    this._rt = 0; clearInterval(this._rint);
+    this._rint = setInterval(() => { this._rt += 1; if (tm) tm.textContent = this.fmt(this._rt); if (this._rt >= 90) this.recStop(); }, 250);
+  };
+
+  recStop = () => {
+    clearInterval(this._rint);
+    const comp = this._recComp; if (!comp) return;
+    const dur = this.fmt(Math.max(1, this._rt || 1));
+    const root = comp.closest('[data-readroot]');
+    const list = root.querySelector('[data-comments]');
+    list.insertAdjacentHTML('afterbegin', this.voiceComment('Tú', 'A', '#C0303A', dur, 'Nada, que me encantó lo que dijiste del molde y la huella. Lo voy a usar en mi taller del sábado. Gracias Julio, sigue grabando.'));
+    const node = list.firstElementChild;
+    if (node && node.animate) node.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'cubic-bezier(.22,1,.36,1)' });
+    const cc = root.querySelector('[data-cc]'); if (cc) cc.textContent = String(parseInt(cc.textContent, 10) + 1);
+    // restore composer
+    if (comp.dataset.recState === '1') { comp.innerHTML = comp._saved; comp.dataset.recState = '0'; }
+    else {
+      const idle = comp.querySelector('[data-cvoice="idle"]');
+      const rec = comp.querySelector('[data-cvoice="rec"]');
+      if (rec) rec.style.display = 'none';
+      if (idle) idle.style.display = 'flex';
+      // back to write tab
+      const wtab = comp.querySelector('[data-ctab="write"]'); if (wtab) this.ctab(wtab);
+    }
+    this._recComp = null;
+    this.blip('pop');
+  };
+
+  vtrans = (btn) => {
+    const box = btn.parentElement;
+    const panel = box.querySelector('[data-vtrans]');
+    const chev = btn.querySelector('[data-chevron]');
+    if (!panel) return;
+    const open = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : 'block';
+    if (chev) chev.style.transform = open ? 'rotate(0)' : 'rotate(180deg)';
+    if (!open && panel.animate) panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
+    this.blip('tick');
+  };
+
+  clike = (btn) => {
+    const on = btn.getAttribute('data-on') === '1';
+    btn.setAttribute('data-on', on ? '0' : '1');
+    const path = btn.querySelector('svg path');
+    const cnt = btn.querySelector('[data-count]');
+    if (path) { path.setAttribute('fill', on ? 'none' : '#C0303A'); path.setAttribute('stroke', on ? 'currentColor' : '#C0303A'); }
+    if (cnt) cnt.textContent = String(parseInt(cnt.textContent, 10) + (on ? -1 : 1));
+    btn.style.color = on ? '#9C968A' : '#C0303A';
+    if (!on && btn.animate) btn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.25)' }, { transform: 'scale(1)' }], { duration: 260 });
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  postlike = (btn) => {
+    const on = btn.getAttribute('data-on') === '1';
+    btn.setAttribute('data-on', on ? '0' : '1');
+    const path = btn.querySelector('svg path');
+    const cnt = btn.querySelector('[data-count]');
+    if (path) { path.setAttribute('fill', on ? 'none' : '#C0303A'); path.setAttribute('stroke', on ? '#6E685D' : '#C0303A'); }
+    if (cnt) cnt.textContent = String(parseInt(cnt.textContent, 10) + (on ? -1 : 1));
+    btn.style.color = on ? '#6E685D' : '#C0303A';
+    if (!on && btn.animate) btn.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.18)' }, { transform: 'scale(1)' }], { duration: 260 });
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  follow = (btn) => {
+    const on = btn.getAttribute('data-on') === '1';
+    btn.setAttribute('data-on', on ? '0' : '1');
+    btn.textContent = on ? 'Seguir' : 'Siguiendo';
+    btn.style.background = on ? 'transparent' : '#1A1714';
+    btn.style.color = on ? '#1A1714' : '#F2EFE8';
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  cplay = (btn) => {
+    const playing = btn.getAttribute('data-playing') === '1';
+    btn.setAttribute('data-playing', playing ? '0' : '1');
+    const ic = btn.querySelector('[data-icon]');
+    if (ic) ic.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M8 5v14l11-7z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    this.blip('click');
+  };
+
+  play = (btn) => this.cplay(btn);
+
+  onClickRoot = (e) => {
+    const t = e.target.closest('[data-action]');
+    if (!t || !this._root.contains(t)) return;
+    const a = t.dataset.action;
+    if (a === 'arttoggle') this.toggleArt(t);
+    else if (a === 'ctab') this.ctab(t);
+    else if (a === 'sendtext') this.sendText(t);
+    else if (a === 'recstart') this.recStart(t);
+    else if (a === 'recstop') this.recStop();
+    else if (a === 'vtrans') this.vtrans(t);
+    else if (a === 'clike') this.clike(t);
+    else if (a === 'postlike') this.postlike(t);
+    else if (a === 'follow') this.follow(t);
+    else if (a === 'cplay') this.cplay(t);
+    else if (a === 'play') this.play(t);
+  };
+
+  componentDidUpdate() {}
+
+  renderVals() {
+    return { setRoot: this.setRoot };
+  }
+}
+</script>
+</body>
+</html>

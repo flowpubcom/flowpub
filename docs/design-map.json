@@ -1,0 +1,1996 @@
+{
+  "generatedFrom": "design_handoff_flowpub (workflow flowpub-design-map)",
+  "screens": [
+    {
+      "screen": "El Pub (Timeline / Feed)",
+      "purpose": "Infinite feed of Flows (voice recordings) showing the home timeline; public browsing without account required. The central social discovery surface of FlowPub.",
+      "layoutDesktop": "3-column grid (1200px desktop frame): Left rail 236px (nav), center column flex 1fr (timeline content), right rail 296px (sidebar). Desktop grid = grid-template-columns: 236px 1fr 296px. Height 760px viewport (window chrome 46px + scroll). Header max-width 1640px, margin auto, padding 26px 40px. Center column overflow-y auto with sticky glass header (top: 0, z-index: 5, 16px padding vertical). Timeline padding 24px 28px 40px, gap 22px between cards. Card width expands to fill column width minus padding. Right sidebar overflow-y auto.",
+      "layoutPhone": "Single column mobile layout (412px container in 390px logical frame, 840px height). Flex column: status bar 46px (Space Mono 13px) → logo bar 20px padding (FlowPub + icons) → horizontal scrollable tag chips 12px padding → scrollable timeline (flex 1, padding 4px 16px 110px, gap 18px) → bottom FAB nav bar 88px fixed glass sheet (5 buttons + center 62px record FAB). All elements vertical stack. Timeline cards responsively shrink; player buttons/counts scaled down (11-12px vs 12-13px desktop).",
+      "components": [
+        {
+          "name": "Flow Card",
+          "detail": "background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow-card); transition: transform .18s, box-shadow .18s. Hover: transform translateY(-3px), box-shadow: var(--shadow-hover). Internal padding: 22px 24px. Structure: 16:9 SVG cover image (aspect-ratio: 16/9) → title (Fraunces 500, 25px) → excerpt (Fraunces, 16px, texto-sec, -webkit-line-clamp 2) → mini player (38px button + vírgula SVG line + duration mono) → footer divider (border-top 1px line-1) → byline (avatar 34px, name 14px 600, time/tag 12px texto-3) + action bar (like, comment, share buttons)."
+        },
+        {
+          "name": "Mini Audio Player",
+          "detail": "display: flex; gap: 14px; align-items: center; background: var(--surface-2); border: 1px solid var(--line-1); border-radius: 99px; padding: 7px 14px 7px 7px. Play button: width/height 38px, border-radius 99px, background var(--ink), color var(--ink-on), flex 0 0 auto. Vírgula SVG line (viewBox 0 0 300 26) with dual paths: background wave (stroke var(--wave)), progress stroke (grana #C0303A). Duration display: Space Mono 12px, var(--text-2), white-space nowrap."
+        },
+        {
+          "name": "Tag Filter Chips",
+          "detail": "display: flex; gap: 8px; overflow-x: auto; sticky top 0 container. Each chip: font-family Hanken Grotesk, font-size 13px, padding 7px 15px, border-radius 99px, border 1px solid. Active: background var(--ink), color var(--ink-on), font-weight 600, border var(--ink). Inactive: background transparent, color var(--text-2), border var(--line-2), font-weight 500. Hover on inactive: border var(--ink), color var(--ink). Transition .15s. Desktop inside sticky glass header (background var(--glass), backdrop-filter blur 12px, border-bottom 1px var(--line-soft), padding 16px 28px). Phone: horizontal scroll, padding 0 20px 12px, gap 7px, smaller buttons (6px 14px)."
+        },
+        {
+          "name": "Left Rail Navigation",
+          "detail": "position absolute left, width 236px, flex-direction column, padding 26px 18px, gap 6px, border-right 1px var(--line-1), background var(--surface-2). Logo pill: display flex, gap 9px, margin-bottom 22px. Nav buttons: display flex, gap 13px, padding 11px 14px, border-radius 12px, font-size 15px, text-align left. Active (data-on=1): background var(--surface-3), color var(--ink), font-weight 600. Inactive: background transparent, color var(--text-2), font-weight 500, hover background var(--hover). Record button at bottom (margin-top auto): width 100%, padding 13px, border-radius 99px, background var(--grana), color white, box-shadow 0 8px 20px -8px rgba(192,48,58,.6), hover background var(--grana-700), active scale(.97)."
+        },
+        {
+          "name": "Right Sidebar",
+          "detail": "width 296px, border-left 1px var(--line-1), padding 24px 22px, background var(--surface-2), display flex flex-direction, gap 24px. Section header: Hanken Grotesk 11px 600 uppercase, letter-spacing .14em, color var(--text-3), margin 0 0 14px. Trending tags: each row flex space-between, tag name Fraunces 17px var(--ink), count Space Mono 12px var(--text-3). Follow buttons: padding 6px 14px, border-radius 99px, border 1px var(--line-2), font-size 12px 600, background transparent, hover background var(--ink) + color var(--ink-on), transition .15s."
+        },
+        {
+          "name": "Avatar Badge",
+          "detail": "width/height 34px (desktop) or 30px (phone), border-radius 99px. Default: background var(--ink), color var(--ink-on). Themed: background var(--grana) or var(--ocre) or var(--ink), color white or #1A1714. Font-family Fraunces italic, font-size 15px (34px avatar) or 13px (30px avatar), center-aligned."
+        },
+        {
+          "name": "Like Button",
+          "detail": "display flex, gap 6px, align-items center, background transparent, border none, cursor pointer, color var(--text-2), font-family Hanken Grotesk 13px 500, padding 6px 9px, border-radius 99px. Inactive heart SVG (stroke only), active heart SVG (fill #C0303A, stroke #C0303A), color changes to #C0303A on active. Animate on active: scale(1) → scale(1.28) → scale(1), duration 280ms, easing cubic-bezier(.22,1,.36,1). Hover: background var(--hover)."
+        },
+        {
+          "name": "Generated Cover SVG",
+          "detail": "4 cover art directions via SVG templates (Escher/LeWitt isometric cubes, Turrell radial glow, Flavin neon bars, Collage 90s). Each is 400x225 viewBox, preserveAspectRatio xMidYMid slice. All use feTurbulence grain (baseFrequency .9, numOctaves 2, opacity .5-.7, mix-blend-mode multiply/overlay). Applies SVG filters: f-noise (fractal noise), f-glow (8px Gaussian blur). Position absolute, 12px 12px badges bottom-left (Audio label + duration). Badges: background rgba(251,250,246,.92), display inline-flex, gap 6px, padding 4px 10px, border-radius 99px, Hanken Grotesk 12px 600. Duration Space Mono 12px. Dot indicator color #C0303A."
+        },
+        {
+          "name": "Header / Page Title",
+          "detail": "position relative, max-width 1640px, margin 0 auto, padding 26px 40px 8px, display flex align-items flex-end justify-content space-between gap 24px. Logo section: FlowMark SVG 30px (breathing animation fp-breathe 6s infinite) + Fraunces 24px 500, letter-spacing -.01em. Title: Fraunces 30px 400, line-height 1.05, letter-spacing -.02em, margin 0. Right controls: theme toggle buttons (36x30px, border-radius 99px) + metadata (Space Mono 12px, line-height 1.7)."
+        },
+        {
+          "name": "Theme Toggle",
+          "detail": "display inline-flex, align-items center, gap 0, background var(--surface), border 1px var(--line-2), border-radius 99px, padding 3px. Two buttons (light/dark): 36x30px, border none, cursor pointer, border-radius 99px, transition .15s. Active: background var(--ink), color var(--ink-on). Inactive: background transparent, color var(--text-3)."
+        },
+        {
+          "name": "Auth Modal",
+          "detail": "position fixed, inset 0, z-index 50, display none (default), background rgba(10,8,6,.55), backdrop-filter blur(6px). Panel: width 380px, max-width 90vw, background var(--surface), border 1px var(--line), border-radius 20px, box-shadow var(--shadow-window), padding 34px 30px, text-align center. Headline Fraunces 500 24px, margin 0 0 8px. Body Hanken Grotesk 14px var(--text-2), margin 0 0 22px. Button (Google): width 100%, display flex, gap 10px, padding 12px, border-radius 99px, border 1px rgba(120,120,120,.4), background white, color #1A1714, font-size 15px 600. Button (Email): width 100%, padding 12px, border-radius 99px, background var(--grana), color white, font-size 15px 600, hover var(--grana-700). Dismiss link: font-size 13px, color var(--text-3), text-decoration underline."
+        }
+      ],
+      "tokensObserved": [
+        "#1A1714",
+        "#F2EFE8",
+        "#6E685D",
+        "#9C968A",
+        "#C0303A",
+        "#9A2530",
+        "#D98A3D",
+        "#FBFAF6",
+        "#F8F5EF",
+        "#F2EFE8",
+        "#E6DFD0",
+        "rgba(26,23,20,.12)",
+        "rgba(26,23,20,.1)",
+        "rgba(26,23,20,.08)",
+        "rgba(26,23,20,.24)",
+        "rgba(26,23,20,.14)",
+        "rgba(26,23,20,.04)",
+        "rgba(26,23,20,.16)",
+        "rgba(251,250,246,.82)",
+        "rgba(242,239,232,.72)",
+        "0 30px 70px -28px rgba(26,23,20,.42)",
+        "0 1px 2px rgba(26,23,20,.05)",
+        "0 18px 36px -18px rgba(26,23,20,.3)",
+        "Fraunces 400/500 (font-family)",
+        "Hanken Grotesk 400/500/600",
+        "Space Mono 400/700",
+        "font-size: 30px (header title)",
+        "font-size: 25px (card title)",
+        "font-size: 16px (excerpt)",
+        "font-size: 14px (byline name)",
+        "font-size: 12px (meta/duration)",
+        "font-size: 13px (chip text)",
+        "font-size: 11px (eyebrow/label)",
+        "letter-spacing: -.01em (Fraunces)",
+        "letter-spacing: -.02em (header title)",
+        "letter-spacing: .14em (uppercase eyebrow)",
+        "border-radius: 16px (cards)",
+        "border-radius: 12px (nav buttons)",
+        "border-radius: 99px (pills/buttons)",
+        "padding: 22px 24px (card body)",
+        "padding: 16px 28px (sticky header)",
+        "gap: 22px (timeline cards)",
+        "gap: 14px (player elements)",
+        "line-height: 1.05 (title)",
+        "line-height: 1.5 (excerpt)",
+        "cubic-bezier(.22,1,.36,1) (easing)",
+        "transition: .15s (button states)",
+        "transition: .18s (card hover)",
+        "animation: fp-drift 11-16s infinite (particles)",
+        "animation: fp-breathe 6s infinite (logo)"
+      ],
+      "interactions": [
+        {
+          "trigger": "hover on Flow card",
+          "effect": "transform translateY(-3px), box-shadow var(--shadow-hover), transition .18s"
+        },
+        {
+          "trigger": "click on tag chip (inactive → active)",
+          "effect": "background changes var(--ink), color var(--ink-on), border var(--ink), font-weight 600, all other chips revert; cards filter by tag with opacity 0→1 animation (duration 240ms, cubic-bezier(.22,1,.36,1)); blip sound (tick 540Hz)"
+        },
+        {
+          "trigger": "click on like button (inactive)",
+          "effect": "heart SVG fill #C0303A, stroke #C0303A; color changes to #C0303A; count ±1; button animates scale(1) → scale(1.28) → scale(1) (duration 280ms); blip sound (pop 700Hz)"
+        },
+        {
+          "trigger": "click on like button (active → inactive)",
+          "effect": "heart SVG reverts to stroke only; color reverts var(--text-2); count -1; blip sound (soft 320Hz)"
+        },
+        {
+          "trigger": "click play button on mini player",
+          "effect": "data-playing toggles 0↔1; SVG icon swaps play→pause; progress stroke animates via stroke-dashoffset (4s linear) to simulate playback; blip sound (click 400Hz)"
+        },
+        {
+          "trigger": "click comment button",
+          "effect": "blip sound (click 400Hz); presumed navigation to comment thread (not shown in this frame)"
+        },
+        {
+          "trigger": "click share button",
+          "effect": "blip sound (click 400Hz); presumed share dialog or copy link"
+        },
+        {
+          "trigger": "click theme toggle (light/dark)",
+          "effect": "applyTheme() sets data-theme on root; all CSS variables flip via [data-theme='dark'] selectors; button active states update; localStorage saved; blip sound (tick 540Hz); animation .4s ease on background gradient"
+        },
+        {
+          "trigger": "click Grabar un Flow button (not authenticated)",
+          "effect": "auth modal display changes none→flex with opacity animation (0→1, 180ms ease-out); background blur (.55 opacity, 6px blur)"
+        },
+        {
+          "trigger": "click Grabar un Flow button (authenticated)",
+          "effect": "presumed navigation to recording screen"
+        },
+        {
+          "trigger": "click Seguir button (on right sidebar)",
+          "effect": "data-on toggles 0↔1; button text changes 'Seguir'↔'Siguiendo'; background changes transparent↔var(--ink); color changes var(--ink)↔var(--ink-on); blip sound (pop 700Hz when active, soft 320Hz when inactive)"
+        },
+        {
+          "trigger": "scroll timeline (center column)",
+          "effect": "cards fade in with opacity animation as they enter viewport; sticky header (glass + blur) remains on top (position sticky, top 0, z-index 5)"
+        },
+        {
+          "trigger": "page load",
+          "effect": "ambient particles animate fp-drift with varying delays (0.4s, 0.8s, 1.6s, 2.2s); FlowMark logo animates fp-breathe 6s infinite; if theme in localStorage, applyTheme() called; particles have opacity .12-.2; all animation respects prefers-reduced-motion"
+        },
+        {
+          "trigger": "hover on nav button (inactive)",
+          "effect": "background changes var(--hover), transition .15s"
+        },
+        {
+          "trigger": "click on nav button",
+          "effect": "all siblings data-on set to 0, background transparent, color var(--text-2), font-weight 500; clicked button data-on set to 1, background var(--surface-3), color var(--ink), font-weight 600; blip sound (click 400Hz)"
+        },
+        {
+          "trigger": "click record button FAB (phone)",
+          "effect": "scale(.94) active state; blip sound (click 400Hz)"
+        }
+      ],
+      "copyStrings": [
+        "El Pub — el timeline de las voces",
+        "Tema claro",
+        "Tema oscuro",
+        "pantalla 01 · timeline",
+        "desktop + teléfono · claro / oscuro",
+        "Desktop · 1200",
+        "Teléfono · 390",
+        "flowpub.lat",
+        "El Pub",
+        "Explorar",
+        "Mensajes",
+        "Notificaciones",
+        "Perfil",
+        "Grabar un Flow",
+        "Habla. FlowPub lo vuelve publicación.",
+        "Todos",
+        "Arte",
+        "Ciencia",
+        "Libros",
+        "Cultura",
+        "Tecnología",
+        "Viajes",
+        "Cine",
+        "Naturaleza",
+        "Nueve minutos sobre el barro",
+        "Hoy quiero hablar de algo que llevo pensando entre el barro y los datos: cómo lo que se moldea con las manos también guarda memoria, y por qué la voz es el primer molde.",
+        "Audio",
+        "9 min",
+        "Reproducir",
+        "9:00",
+        "Julio",
+        "hace 2 h · Arte",
+        "hace 1 d · Cultura",
+        "hace 4 h · Ciencia",
+        "Cuando una voz se vuelve archivo",
+        "No es lo mismo escribir que hablar. La transcripción guarda las palabras, pero el audio guarda las dudas, las pausas, el cuerpo de quien habla.",
+        "6 min",
+        "6:00",
+        "María",
+        "La ciencia también se cuenta en voz alta",
+        "Pasé años escribiendo papers que nadie leía completos. Hoy grabé en siete minutos la idea que de verdad importa, y por fin suena a lo que es.",
+        "7 min",
+        "7:00",
+        "Inés",
+        "Hoy en el Pub",
+        "1.2k flows",
+        "860 flows",
+        "540 flows",
+        "Voces para seguir",
+        "Renata",
+        "Libros · Cine",
+        "Seguir",
+        "Tomás",
+        "Viajes · Naturaleza",
+        "9:41",
+        "Un mapa hablado de la ciudad",
+        "Caminé sin Google Maps por una ciudad que no conocía y grabé lo que me iban diciendo los desconocidos.",
+        "5 min",
+        "5:00",
+        "hace 8 h",
+        "Pub",
+        "Mensajes",
+        "Para grabar un Flow, entra a FlowPub",
+        "Cualquiera puede escuchar el Pub. Para publicar tu voz, crea tu cuenta —toma menos de un minuto.",
+        "Continuar con Google",
+        "Crear cuenta con correo",
+        "Ahora no, sigo escuchando"
+      ],
+      "stateAndData": "{\n  \"session\": {\n    \"loggedIn\": boolean,\n    \"user\": { id, username, displayName, avatarColor, lang, theme },\n    \"theme\": 'light' | 'dark' (from localStorage 'fp-theme' or OS prefers-color-scheme)\n  },\n  \"timeline\": {\n    \"flows\": [\n      {\n        \"id\": string,\n        \"title\": string,\n        \"excerpt\": string (first 2 lines),\n        \"authorId\": string,\n        \"authorName\": string,\n        \"authorAvatar\": string,\n        \"authorAvatarColor\": hex | null,\n        \"duration\": number (seconds),\n        \"publishedAt\": timestamp,\n        \"tag\": 'Arte' | 'Cultura' | 'Ciencia' | ... (primary tag),\n        \"coverKind\": 'escher' | 'turrell' | 'flavin' | 'collage',\n        \"coverSvg\": SVG string,\n        \"likeCount\": number,\n        \"commentCount\": number,\n        \"liked\": boolean (per user)\n      },\n      ...\n    ]\n  },\n  \"ui\": {\n    \"activeTag\": 'Todos' | 'Arte' | 'Cultura' | ... (chip filter),\n    \"visibleFlows\": Flow[] (filtered by activeTag),\n    \"authModalOpen\": boolean,\n    \"themeMode\": 'light' | 'dark'\n  },\n  \"interaction\": {\n    \"playingCard\": { cardId, elapsed, duration },\n    \"followState\": { userId, isFollowing } (per user in sidebar),\n    \"likeState\": { flowId, liked } (per card)\n  },\n  \"realtime\": {\n    \"flows\": subscribed via Supabase Realtime (new flows, live like/comment counts),\n    \"notifications\": unread count badge on Mensajes nav button\n  }\n}",
+      "discrepanciesOrGotchas": "{\n  \"discrepancies\": [\n    \"Token conflict: README specifies --line-soft as rgba(26,23,20,.08), but inline CSS on sticky header uses rgba(26,23,20,.08) consistently. No discrepancy, but ensure .08 and .1 are distinct in implementation (subtle difference).\",\n    \"Avatar background colors: Desktop cards show hardcoded hex for themed avatars (e.g., María #9A2530, Inés #D98A3D) rather than using CSS variables. These appear to be persona-specific overrides, not semantic palette. Confirm whether these are deterministic (hash(username) → color picker) or manually assigned in admin.\",\n    \"Phone version has slightly different padding/sizing: tag chips are 6px 14px (vs 7px 15px desktop), card padding 16px 17px (vs 22px 24px desktop), font sizes scale down (20px title vs 25px). Implement responsive breakpoint consistently.\",\n    \"Microinteraction sounds use Web Audio API (AudioContext, sine wave oscillator) with hardcoded frequencies: tick 540Hz, pop 700Hz, click 400Hz, soft 320Hz. Durations 140ms max. Ensure global mute control is provided (spec mentions 'provide a global mute' but no UI shown in this frame).\",\n    \"Follow button state machine: 'Seguir' text flips to 'Siguiendo' on click, but no indication shown for async confirm (assumes optimistic update, no loader). Clarify if server-round-trip is required or local state.\"\n  ],\n  \"gotchas\": [\n    \"Theme persistence: localStorage key is 'fp-theme'. Fails silently if localStorage unavailable (wrapped in try/catch). Ensure SSR hydration doesn't cause flash of unstyled content on theme switch.\",\n    \"Sticky glass header with backdrop-filter blur(12px): performance impact on scroll in long lists. Consider debouncing or will-change: backdrop-filter in CSS.\",\n    \"SVG cover images use SVG filters (feTurbulence, feGaussianBlur) which may not render identically across browsers. Test glow filter (filter url(#f-glow)) on all cover kinds.\",\n    \"Like animation scale(1.28) happens *after* data-on toggle, so if network lag occurs, animation may fire before server confirms. Confirm if state is optimistic or pessimistic.\",\n    \"Chip filter animation: cards are shown/hidden via display: none (not opacity). Ensure cards animate in with opacity/transform, not just appear. Current spec uses card.animate() with {opacity: 0, transform: 'translateY(6px)'} but this requires Element.animate() API support (check IE11 compat if needed).\",\n    \"vírgula progress line uses SVG stroke-dasharray/stroke-dashoffset. Manual animation via style.transition = '... 4s linear' then setAttribute(). If real playback binding is added, ensure sync doesn't jump (use requestAnimationFrame or <audio> timeupdate event).\",\n    \"Right sidebar 'Hoy en el Pub' counts are hardcoded (1.2k, 860, 540). Implement as live feed of trending tags from admin-managed list.\",\n    \"No pagination shown for timeline; implies infinite scroll with virtualization needed for performance.\",\n    \"Auth modal Google button uses embedded Google logo SVG (4-color static icon). Ensure compliance with Google branding guidelines if replacing.\",\n    \"Particles (ambient drifting background): 5 divs with hardcoded top/left positions (14%, 30%, 66%, 80%, 48%). Position them via absolute inset with CSS variables for responsiveness.\"\n  ]\n}"
+    },
+    {
+      "screen": "Grabar un Flow — Pantalla 02 (Crear/Máquina de Estados)",
+      "purpose": "Pantalla de grabación de audio + edición de contenido: flujo interactivo de 5 pasos (record → recording → processing → edit → published) con máquina de estados sincronizada entre desktop (compositor en paso 3/Editar) y teléfono (simulación interactiva).",
+      "layoutDesktop": "Dos frames horizontales en scroll (gap 48px, padding 40px lateral). Desktop compositor: 1180px ancho, layout grid 2-col (392px left sidebar + fill right). Left: portada generada (aspect 16/9, 14px radius), botón regenerar, reproductor audio con waveform interactivo, toggle transcript. Right: editor full-height con toolbar markdown, title input, body textarea (Fraunces serif), tags multiselect (máx 3), botones guardar/publicar. Header 46px chrome-style. Status indicator bar (steps 1-4 con checkmarks/números, step 3 activo en rojo #C0303A).",
+      "layoutPhone": "Teléfono 412px ancho × 840px alto, container 42px border-radius, 11px padding, background #1A1714. Status bar overlay fijo arriba (46px). Dentro: 5 pantallas [data-step] en absolute inset, cada una flex-col. Cada paso anima opacity 0→1 + translateY(8px)→0 (cubic-bezier .22,1,.36,1, 300ms). Step steps: record, recording, processing, edit, published. Todo scroll vertical, color fondo #FBFAF6.",
+      "components": [
+        {
+          "name": "Record Button (Principal)",
+          "detail": "120px × 120px, radius 99px, border 1px rgba(26,23,20,.24), background #FBFAF6, shadow 0 10px 30px -12px rgba(26,23,20,.3). Icon micrófono #C0303A 40px. Active: scale(.95). Sound: blip('rec')"
+        },
+        {
+          "name": "Stop Button",
+          "detail": "78px × 78px, radius 99px, border none, background #C0303A, shadow 0 10px 26px -8px rgba(192,48,58,.8). Icon square (stop) #fff 26px. Active: scale(.94). Sound: blip('click')"
+        },
+        {
+          "name": "Live Waveform Bars",
+          "detail": "11 barras: 4px ancho × 40px alto, radius 99px. Colores #C0303A (6x), #D98A3D (3x), #1A1714 (2x). Animación fp-bar (scaleY .28→1, 1.1s ease-in-out, staggered 0–1.05s)"
+        },
+        {
+          "name": "Toolbar Button",
+          "detail": "34px × 34px desktop / 32px × 32px phone, radius 8px / 7px, border none, background transparent. Hover: rgba(26,23,20,.06). Font Hanken Grotesk 13–15px. Color #6E685D."
+        },
+        {
+          "name": "Tag Button Selected",
+          "detail": "padding 6px 14px (desktop) / 6px 13px (phone), radius 99px, font 13px Hanken Grotesk 600, background #1A1714, color #F2EFE8, border 1px #1A1714"
+        },
+        {
+          "name": "Tag Button Unselected",
+          "detail": "padding 6px 14px, radius 99px, font 13px Hanken Grotesk 500, background transparent, color #6E685D, border 1px rgba(26,23,20,.24)"
+        },
+        {
+          "name": "Cover Art Container",
+          "detail": "16:9 aspect ratio, radius 14px, border 1px rgba(26,23,20,.1), overflow hidden. SVG 4 variantes (Turrell glow, Flavin bars, abstract shapes, geometric)"
+        },
+        {
+          "name": "Transcript Panel",
+          "detail": "display none → block toggle, radius 12px, padding 16px (desktop) / 14px (phone), background #F2EFE8, border 1px rgba(26,23,20,.08)"
+        },
+        {
+          "name": "View Toggle Buttons",
+          "detail": "Paired flex container background #F2EFE8, radius 99px, padding 3px. Botón activo: #FBFAF6 + shadow 0 1px 2px rgba(26,23,20,.08)"
+        }
+      ],
+      "tokensObserved": [
+        "#1A1714 (text/dark)",
+        "#F2EFE8 (cream)",
+        "#FBFAF6 (off-white)",
+        "#C0303A (primary red)",
+        "#D98A3D (secondary orange)",
+        "#E6DFD0 (light tan)",
+        "#9A2530 (dark red)",
+        "#6E685D (gray text)",
+        "#9C968A (light gray)",
+        "#E0837F (chrome red)",
+        "#E7C07A (chrome yellow)",
+        "#A9C79A (chrome green)",
+        "rgba(26,23,20,.16) (scrollbar)",
+        "rgba(26,23,20,.1/. 08)",
+        "font-size: 24px (logo), 30px (h1 desktop), 23px (h1 phone), 18px (textarea), 17px (textarea phone), 14.5px (transcript), 14px (ui text), 13px (body), 12px (mono), 11px (labels), font-weight: 700 (bold), 600 (semi-bold), 500 (medium), 400 (regular)",
+        "font-family: Fraunces (serif), Hanken Grotesk (sans), Space Mono (mono)",
+        "letter-spacing: -.02em (heading), -.01em (subtitle), .14em (uppercase labels)",
+        "line-height: 1.05 (tight), 1.2, 1.3, 1.6, 1.65, 1.7",
+        "border-radius: 99px (buttons), 52px (phone outer), 42px (phone inner), 18px (frame), 14px (cover), 12px (panels), 8px/7px (toolbar)",
+        "box-shadow: 0 30px 70px -28px rgba(26,23,20,.42), 0 10px 30px -12px rgba(26,23,20,.3), 0 10px 26px -8px rgba(192,48,58,.8), 0 12px 30px -16px rgba(26,23,20,.3), 0 8px 20px -8px rgba(192,48,58,.7), 0 1px 2px rgba(26,23,20,.08)",
+        "transition: .12s, .2s, .4s",
+        "backdrop-filter: blur(10px)",
+        "mix-blend-mode: multiply, overlay"
+      ],
+      "interactions": [
+        {
+          "trigger": "click grabar (record button)",
+          "effect": "goStep('recording'), blip('rec'), timer inicia 00:00, live transcript stream palabras con fade-in, elapsed color rojo #C0303A si >= 8min"
+        },
+        {
+          "trigger": "click detener (stop button)",
+          "effect": "clearInterval timers, blip('click'), goStep('processing'), titulo 'Puliendo tu voz' → 'Generando la portada' (1.1s), goStep('edit') + blip('pop') @2.3s total"
+        },
+        {
+          "trigger": "click Regenerar portada",
+          "effect": "cycle COVERS[4], animate [opacity .3 + scale(.985)] → [1, 1], duration 360ms cubic-bezier(.22,1,.36,1), blip('pop')"
+        },
+        {
+          "trigger": "tag click (sel=0)",
+          "effect": "si < 3 tags: scale 1→1.12→1 (220ms), blip('pop'); else shake translateX -4→4→0 (240ms), blip('soft')"
+        },
+        {
+          "trigger": "tag unclick (sel=1)",
+          "effect": "no limit, scale 1→1.12→1, blip('soft'), update contador"
+        },
+        {
+          "trigger": "toolbar markdown (h2, bold, italic, etc)",
+          "effect": "insert wrap **sel** o * * o ## etc, blip('tick'), cursor repositiona al inicio del texto"
+        },
+        {
+          "trigger": "toggle vista (edit/preview)",
+          "effect": "mdToHtml() genera HTML from markdown, swap display textarea ↔ preview div, active button fondo #FBFAF6, blip('tick')"
+        },
+        {
+          "trigger": "transcript toggle",
+          "effect": "chevron rotate 0→180°, panel fadeIn [opacity 0→1] 220ms, blip('tick')"
+        },
+        {
+          "trigger": "publicar (publish)",
+          "effect": "blip('click'), goStep('processing'), 'Publicando...' 'Subiendo tu voz al Pub', goStep('published') + blip('pop') @1.5s"
+        },
+        {
+          "trigger": "volver atrás (back/cancel/record another)",
+          "effect": "goStep('record'), blip('soft')"
+        },
+        {
+          "trigger": "play/pause audio (desktop)",
+          "effect": "toggle data-playing 0↔1, swap icono play ↔ pause, blip('click')"
+        },
+        {
+          "trigger": "live transcript scroll",
+          "effect": "palabras fade in opacity 1 (último), .5 (3 prev), 1 (más antiguas); auto-scroll scrollTop = scrollHeight"
+        }
+      ],
+      "copyStrings": [
+        "FlowPub",
+        "Grabar un Flow — del habla a la publicación",
+        "El teléfono es interactivo: toca grabar y recorre el flujo completo.",
+        "A la izquierda, el mismo paso de edición en el compositor de escritorio.",
+        "pantalla 02 · crear",
+        "grabar · pulir · editar · publicar",
+        "Desktop · compositor · editar",
+        "flowpub.lat/componer",
+        "Grabar",
+        "Pulir",
+        "Editar",
+        "Publicar",
+        "Portada generada",
+        "Regenerar portada",
+        "Tu audio",
+        "Ver transcript original",
+        "Transcript · sin pulir",
+        "eh… hola, quería hablar un poco...",
+        "Nueve minutos sobre el barro",
+        "Hanken Grotesk font",
+        "Fraunces serif font",
+        "Space Mono monospace",
+        "Temas · elige hasta 3",
+        "2 / 3",
+        "Arte",
+        "Cultura",
+        "Ciencia",
+        "Libros",
+        "Deportes",
+        "Tecnología",
+        "Cocina",
+        "Cine",
+        "Naturaleza",
+        "Guardar borrador",
+        "Publicar Flow",
+        "Teléfono · interactivo",
+        "Nuevo Flow",
+        "Habla. Nosotros lo volvemos publicación.",
+        "09:00",
+        "Toca para grabar. Tienes hasta 9 minutos; di lo que quieras, con tus pausas.",
+        "REC",
+        "00:00 / 09:00",
+        "Transcribiendo en vivo",
+        "Cancelar",
+        "Puliendo tu voz…",
+        "Quitando muletillas y dándole forma de artículo.",
+        "Editar tu Flow",
+        "Atrás",
+        "Viajes",
+        "Editar",
+        "Previa",
+        "Temas · hasta 3",
+        "2 / 3",
+        "Tu Flow está en el Pub",
+        "Ya puede escucharse y leerse. La gente podrá comentarlo con voz o texto.",
+        "Ver en el Pub",
+        "Grabar otro",
+        "9:41"
+      ],
+      "stateAndData": "State machine: step ∈ {record, recording, processing, edit, published}. Data: elapsed (seconds, timer), _wi (word index for live transcript), _ci (cover index 0-3), _tk/_rv (interval IDs). Recording: WORDS array (40 words), timer ticks every 380ms, live transcript ticks every 360ms, max 540s (9min). Title input (value: \"Nueve minutos sobre el barro\"), markdown body textarea, tags array (selected 2/3 max), cover SVG rotation. Desktop: same title + body + tags state sync. Audio: playback state (playing boolean). Processing: intermediate states with animated text updates. Published: final state con linkto El Pub.dc.html.",
+      "discrepanciesOrGotchas": "\n1. Timer format: display color changes #6E685D → #C0303A cuando elapsed >= 480s (8min), pero max es 540s. Esto no está documentado en README.\n2. Sonidos específicos (5 tipos): 'rec'(220Hz), 'pop'(700Hz), 'click'(400Hz), 'soft'(320Hz), 'tick'(540Hz). Sine wave, gain envelope exponential decay 0.0001→0.05 en 6ms, luego decay 0.05→0.0001 en 130ms (total 140ms). NO hay sonidos en el design system README — es implementación de esta pantalla.\n3. Live transcript: append spans dinámicamente, fade in a opacity 1 para últimas 3 palabras, older words pasan a 1.0 brightness (no .5), esto es lógica UX específica.\n4. Toolbar markdown: wrap patterns hardcoded (bold '**', italic '*', h2 '## ', quote '> ', ul '- ', link '[...](...)'). mdToHtml() converter es custom (no external Markdown lib).\n5. Waveform SVG interactivo: path data-prog con stroke-dasharray animado (fp-flow animation stroke-dashoffset -100, 1.6s linear infinite) — esto es animación visual, no audio real.\n6. Cover rotation: cicla 4 SVGs estáticos (COVERS array), NO generadas dinámicamente (aunque UI dice \"Generar\").\n7. Grid layout phone edit step: usa [data-tagbox] para scope textarea/tags (same class used in desktop y phone, permite reuso de lógica onToolbar/onTag).\n8. Scrollbar custom: [data-scroll] con webkit-scrollbar styling (thumb rgba(26,23,20,.16) radius 99px, 8px width).\n9. Prefers-reduced-motion: @media regla desactiva ALL animations/transitions en navegadores con ese setting.\n10. Waveform progreso: animate chart progresa con data-prog path stroke, pero NO sincronizado con playback real (mocked).\n"
+    },
+    {
+      "screen": "Flow abierto (lectura + comentarios) — Desktop 1180px + Mobile 412px",
+      "purpose": "Read published/original-transcript article with audio, toggle views, like, comment (text/voice), see voice comments with transcripts, follow author",
+      "layoutDesktop": "Max-width: 1180px. Header: 26px top + 40px horizontal padding, flex row items-end justify-between. Content scroll area: 792px height, centered max-width 720px within. Reading area: 44px top + 32px sides + 64px bottom padding. Composer inline in flow. Comment list flex column gap 22px. Browser chrome: 46px top bar + 1px border-bottom.",
+      "layoutPhone": "Width: 412px inside 52px rounded black frame. Height: 840px. Top status bar: 46px (time, signal, battery). Top nav bar: 46px (back, \"Flow\", share). Main scroll area: flex-1 with 18px horizontal padding, 96px bottom padding (for floating composer). Floating composer bar: position absolute bottom, 12px padding top/16px sides/26px bottom, 46px total height in composer state, transforms on recording.",
+      "components": [
+        {
+          "name": "Header (main)",
+          "detail": "Flex row, gap 24px, items-flex-end justify-space-between. Logo: 30x30 SVG breathing animation (fp-breathe 6s), Fraunces italic 24px font-weight 500 letter-spacing -0.01em. H1: Fraunces 30px font-weight 400 line-height 1.05 letter-spacing -0.02em. Description p: Hanken Grotesk 14px color #6E685D max-width 62ch, margin 8px top. Right label: Space Mono 12px #9C968A line-height 1.7."
+        },
+        {
+          "name": "Browser frame (desktop)",
+          "detail": "Width 1180px, border-radius 18px, border 1px rgba(26,23,20,.14), box-shadow 0 30px 70px -28px rgba(26,23,20,.42). Top bar: height 46px, padding 0 18px, gap 14px, background rgba(242,239,232,.72) backdrop-filter blur(10px), border-bottom 1px rgba(26,23,20,.1). URL pill: Space Mono 12px, background #FBFAF6, border 1px rgba(26,23,20,.1), padding 5px 16px, border-radius 99px."
+        },
+        {
+          "name": "Phone frame",
+          "detail": "Width 412px, height 840px, border-radius 52px, background #1A1714 (phone bezel), padding 11px, box-shadow 0 30px 70px -28px rgba(26,23,20,.5). Inner container: border-radius 42px, flex column, overflow hidden background #FBFAF6. Status bar: height 46px, flex items-center justify-between, padding 0 28px 0 30px, Space Mono 13px. Notch: width 104px height 28px centered top."
+        },
+        {
+          "name": "Article header (tags + title + author)",
+          "detail": "Tags: Hanken Grotesk 12px font-weight 600 letter-spacing 0.08em uppercase, padding 5px 12px, border-radius 99px. 'Arte' tag: color #9A2530 background #F6E6E4. 'Cultura' tag: color #6E685D border 1px rgba(26,23,20,.2). H2 title: Fraunces 46px (desktop) / 30px (phone) font-weight 400 line-height 1.08 letter-spacing -0.02em margin 0 0 22px. Author row: gap 12px, items-center justify-space-between, padding-bottom 22px border-bottom 1px rgba(26,23,20,.1). Avatar: 46px circle background #1A1714, Fraunces italic 19px (or 15px mobile). Follow button: Hanken Grotesk 13px font-weight 600 padding 9px 20px border-radius 99px border 1px #1A1714 transparent bg hover: bg #1A1714 color #F2EFE8."
+        },
+        {
+          "name": "Cover image",
+          "detail": "Border-radius 16px, overflow hidden, border 1px rgba(26,23,20,.1), aspect-ratio 16/9, margin-bottom 18px. SVG with gradients: id 'g-amate' (linear #F2EFE8 to #E6DFD0), pattern id 'p-hatch' (45 deg lines), filter id 'f-noise' (turbulence fractal)."
+        },
+        {
+          "name": "Audio player (main)",
+          "detail": "Flex items-center gap 16px, background #F8F5EF, border 1px rgba(26,23,20,.1), border-radius 99px, padding 9px 18px 9px 9px. Play button: width 48px height 48px border-radius 99px background #C0303A color #fff, cursor pointer. Progress SVG: flex-1 min-width 0, viewBox 0 0 520 36. Timeline display: Space Mono 13px #6E685D '03:41 / 09:00'."
+        },
+        {
+          "name": "View toggle (Publicación / Transcript original)",
+          "detail": "Inline-flex background #F2EFE8 border-radius 99px padding 4px margin-bottom 20px. Active button: background #FBFAF6 color #1A1714 font-weight 600 box-shadow 0 1px 2px rgba(26,23,20,.08). Inactive: background transparent color #6E685D font-weight 500."
+        },
+        {
+          "name": "Article text (published)",
+          "detail": "Fraunces serif. Desktop: 19px line-height 1.75 margin 0 0 20px. Phone: 17px line-height 1.7 margin 0 0 16px. Blockquote: 23px (desktop) / 19px (phone) italic font-style italic line-height 1.4, padding 4px 0 4px 22px, border-left 3px solid #C0303A, margin 28px 0. UL: padding-left 22px, li margin 0 0 8px."
+        },
+        {
+          "name": "Transcript box (raw unpublished)",
+          "detail": "Background #F8F5EF, border 1px rgba(26,23,20,.08), border-radius 14px (desktop) / 12px (phone), padding 24px 26px (desktop) / 16px 18px (phone). Label: Hanken Grotesk 11px (desktop) / 10px (phone) font-weight 600 letter-spacing 0.12em uppercase #9C968A margin 0 0 14px. Text: Fraunces 18px (desktop) / 16px (phone) line-height 1.8 / 1.75, color #6E685D."
+        },
+        {
+          "name": "Engagement buttons (like/reply/share/save)",
+          "detail": "Flex items-center gap 6px, padding 16px 0, border-top/bottom 1px rgba(26,23,20,.1), margin 30px 0 8px. Each button: flex items-center gap 8px, background transparent border none cursor pointer, color #6E685D, Hanken Grotesk 14px font-weight 600, padding 8px 14px, border-radius 99px, style-hover background rgba(26,23,20,.04). SVG: 19px stroke-width 1.8. Right-aligned save button: margin-left auto. Counter spans: [data-count], [data-cc]."
+        },
+        {
+          "name": "Comments section header",
+          "detail": "H3: Fraunces 22px font-weight 500 margin 32px 0 18px (desktop) / 19px margin 18px 0 14px (phone)."
+        },
+        {
+          "name": "Comment composer (desktop 2-tab)",
+          "detail": "Background #F8F5EF, border 1px rgba(26,23,20,.1), border-radius 16px, padding 14px, margin-bottom 26px. Tab row: flex gap 6px margin-bottom 12px. Write tab (active): background #FBFAF6 box-shadow 0 1px 2px rgba(26,23,20,.08). Voice tab: background transparent. Write panel: flex gap 10px. Avatar: 38px circle #1A1714 Fraunces italic 15px. Textarea: flex-1 border 1px rgba(26,23,20,.16) border-radius 12px padding 11px 13px font-size 14px, placeholder 'Comparte lo que te dejó este Flow…'. Publish button: Hanken Grotesk 13px font-weight 600, padding 9px 20px, border-radius 99px, background #1A1714 color #F2EFE8, style-hover bg #000."
+        },
+        {
+          "name": "Voice recording state (desktop composer)",
+          "detail": "[data-cvoice='idle']: flex items-center gap 14px padding 6px 4px. Record button: 52px circle border 1px rgba(26,23,20,.24) background #FBFAF6 cursor pointer, SVG 22px stroke #C0303A. Text: 'Graba tu comentario' Hanken Grotesk 14px font-weight 600, subtext 12px color #9C968A. [data-cvoice='rec']: display none initially, when active: flex items-center gap 14px padding 8px 6px. Stop button: 52px circle border none background #C0303A box-shadow 0 8px 20px -8px rgba(192,48,58,.7). Visualizer: flex gap 3px height 34px, 7 bars width 3px height 30px border-radius 9px, colors #C0303A (5x), #D98A3D (2x), #1A1714 (1x), animation fp-bar 1s infinite with stagger. Timer: Space Mono 13px font-weight 700 #C0303A."
+        },
+        {
+          "name": "Text comment item",
+          "detail": "Article flex gap 12px. Avatar: 38px circle (varies per user), Fraunces italic 15px color #F2EFE8. Content div flex-1. Name row: flex items-baseline gap 8px, name font-weight 600 14px, timestamp Space Mono 11px #9C968A 'ahora'. Text body: Fraunces 16px line-height 1.55 color #1A1714 margin 0 0 8px. Action buttons: flex gap 14px, like button (empty heart outline), 'Responder' text."
+        },
+        {
+          "name": "Voice comment item",
+          "detail": "Article flex gap 12px. Avatar: 38px circle. Name row: flex items-baseline gap 8px. 'Voz' badge: Hanken Grotesk 11px font-weight 600 color #9A2530 background #F6E6E4 padding 2px 8px border-radius 99px. Audio player box: flex items-center gap 12px, background #F8F5EF border 1px rgba(26,23,20,.1) border-radius 99px padding 5px 14px 5px 5px max-width 340px. Play button: 34px circle background #1A1714 color #F2EFE8. Waveform: SVG flex-1 height 22px. Duration: Space Mono 12px #6E685D. Transcript toggle: flex gap 6px, button (empty by default), 'Ver transcript' text, chevron SVG 13px. Transcript panel (data-vtrans): display none initially, margin-top 8px padding 12px 14px, border-radius 12px, background #F2EFE8 border 1px rgba(26,23,20,.08). Label: Hanken Grotesk 10px font-weight 600 letter-spacing 0.1em uppercase #9C968A. Text: Fraunces 15px line-height 1.6 color #6E685D."
+        },
+        {
+          "name": "Composer (mobile floating bar)",
+          "detail": "Position absolute left 0 right 0 bottom 0, padding 12px 16px 26px, background rgba(251,250,246,.92) backdrop-filter blur(14px), border-top 1px rgba(26,23,20,.1), flex items-center gap 10px. Input: flex-1 border 1px rgba(26,23,20,.16) border-radius 99px padding 11px 16px font-size 14px background #fff outline none. Send button: 42px circle border none background #1A1714 color #F2EFE8. Rec button: 42px circle background #C0303A color #fff. In recording mode: transforms inner HTML to show stop button (42px circle #C0303A), visualizer bars (3px width, various colors, fp-bar animation), timer (Space Mono 13px font-weight 700 #C0303A)."
+        }
+      ],
+      "tokensObserved": [
+        "#1A1714 (dark brown, text/frames)",
+        "#F2EFE8 (off-white, inverse)",
+        "#C0303A (red accent, call-to-action/recording)",
+        "#D98A3D (orange, secondary accent)",
+        "#9A2530 (darker red, tag backgrounds)",
+        "#6E685D (medium gray, secondary text)",
+        "#9C968A (light gray, tertiary text/labels)",
+        "#EDE7DA (background tan)",
+        "#E6DFD0 (gradient/lighter tan)",
+        "#F4F1EA (gradient top)",
+        "#FBFAF6 (near-white, cards)",
+        "#F8F5EF (light beige, subtle bg)",
+        "#F6E6E4 (very light pink, tag bg)",
+        "#F2EFE8 (selection bg, inverse)",
+        "Fraunces serif: 400, 500, 600, italic variants; sizes 19px (body), 23px (blockquote), 30px (h1), 46px (article title), 24px (logo)",
+        "Hanken Grotesk sans: 400, 500, 600; sizes 11px, 12px, 13px, 14px, 15px, 19px, 22px, 30px",
+        "Space Mono monospace: 400, 700; sizes 11px, 12px, 13px",
+        "letter-spacing: -0.02em (headings), -0.01em (logo), 0.08em (tags), 0.12em (labels), 0.14em (uppercase nav)",
+        "line-height: 1.05 (h1), 1.08 (article h2), 1.1 (mobile h2), 1.3 (author info), 1.4 (blockquote), 1.55-1.75 (body), 1.7-1.8 (comments)",
+        "border-radius: 99px (pills/circles), 18px (desktop frame), 52px (phone bezel), 42px (phone inner), 16px/14px (cards), 12px (inputs)",
+        "padding: 26px top (header), 40px horizontal (header), 44px top (article), 32px sides (article), 64px bottom (article), 11px 13px (inputs), 5px 12px (tags), 9px 20px (buttons)",
+        "gap: 6px, 8px, 10px, 12px, 14px, 16px, 18px, 22px, 24px, 48px",
+        "box-shadow: 0 30px 70px -28px rgba(26,23,20,.42) (frame), 0 1px 2px rgba(26,23,20,.08) (subtle), 0 8px 20px -8px rgba(192,48,58,.7) (red record button)",
+        "opacity: 0.1, 0.08, 0.14, 0.16, 0.18, 0.24 for borders/overlays",
+        "animation: fp-drift 12-16s ease-in-out (background particles), fp-breathe 6s ease-in-out (logo), fp-bar 1s ease-in-out staggered (visualizer), fp-glow keyframes not used in this screen, all with prefers-reduced-motion: reduce fallback"
+      ],
+      "interactions": [
+        {
+          "trigger": "hover on follow button",
+          "effect": "background #1A1714, color #F2EFE8 (via style-hover). On click: toggle state, text changes 'Seguir' ↔ 'Siguiendo', bg/color swaps, sound blip('pop') or blip('soft') if toggling off. Animation: none."
+        },
+        {
+          "trigger": "click article toggle (Publicación / Transcript original)",
+          "effect": "Active button: bg #FBFAF6, color #1A1714, font-weight 600, box-shadow. Inactive: bg transparent, color #6E685D, font-weight 500. Article divs swap display: block/none. Fade-in animation on active article: opacity 0→1 over 240ms. Sound: blip('tick')."
+        },
+        {
+          "trigger": "click play button (main audio)",
+          "effect": "Toggle [data-playing] state. SVG icon toggles between play (triangle) and pause (two rects). Sound: blip('click'). Progress bar path [data-prog] updates dynamically (not shown in static HTML)."
+        },
+        {
+          "trigger": "click like (post engagement button)",
+          "effect": "Toggle [data-on] state. SVG path: fill from none→#C0303A, stroke from #6E685D→#C0303A when liked. Count increments. Button color: #6E685D→#C0303A. Animation on like: scale(1)→scale(1.18)→scale(1) over 260ms. Sound: blip('pop') on like, blip('soft') on unlike."
+        },
+        {
+          "trigger": "click comment like (within comment)",
+          "effect": "Same as post like but scale(1)→scale(1.25)→scale(1) over 260ms. Color toggle: #9C968A↔#C0303A. Sound: blip('pop') or blip('soft')."
+        },
+        {
+          "trigger": "switch composer tab (Escribir / Comentar con voz)",
+          "effect": "Active button: bg #FBFAF6 box-shadow. Inactive: bg transparent. Panels: [data-cpanel] display swap block/none. Sound: blip('tick')."
+        },
+        {
+          "trigger": "enter text in comment textarea + submit",
+          "effect": "Validation: if empty, textarea shake animation (translateX -4px→4px over 220ms) + focus. If valid: new comment inserted at top of [data-comments] list with HTML from textComment() template. Comment animates in: opacity 0→1, translateY -8px→0 over 320ms cubic-bezier(.22,1,.36,1). Textarea cleared. Comment count incremented. Sound: blip('pop')."
+        },
+        {
+          "trigger": "click record button (voice comment, desktop)",
+          "effect": "[data-cvoice='idle'] display none, [data-cvoice='rec'] display flex. Visualizer bars appear with fp-bar animation staggered 0-0.7s. Timer starts counting 00:00 upward, updates every 250ms, stops at 90s auto-stop. Sound: blip('rec') at start."
+        },
+        {
+          "trigger": "click record button (voice comment, mobile)",
+          "effect": "[data-recState] set to '1', composer innerHTML replaced with: stop button, visualizer bars, timer. Timer counts 00:00 upward. Sound: blip('rec')."
+        },
+        {
+          "trigger": "stop recording (click stop button)",
+          "effect": "Timer clears. Formatted duration captured. New voice comment inserted at top of [data-comments] with voiceComment() template including duration. Comment animates in: opacity 0→1, translateY -8px→0 over 320ms cubic-bezier(.22,1,.36,1). On desktop: [data-cvoice] panels swap back (rec→none, idle→flex), switch to write tab. On mobile: composer innerHTML restored from _saved. Comment count incremented. Sound: blip('pop')."
+        },
+        {
+          "trigger": "click 'Ver transcript' in voice comment",
+          "effect": "[data-vtrans] panel toggles display none/block. Chevron SVG rotates 0→180deg or vice versa. Panel fades in: opacity 0→1 over 220ms if opening. Sound: blip('tick')."
+        },
+        {
+          "trigger": "click play in voice comment",
+          "effect": "Toggle [data-playing] state 0↔1. SVG icon swaps play↔pause (two-rect icon). Sound: blip('click'). (Actual playback not implemented in this prototype; UI only.)"
+        },
+        {
+          "trigger": "prefers-reduced-motion: reduce",
+          "effect": "All animations and transitions disabled globally (*{animation:none!important;transition:none!important})."
+        }
+      ],
+      "copyStrings": [
+        "Un Flow abierto — leer, escuchar, comentar",
+        "Se lee la versión pulida, pero el transcript original está a un toque. Los comentarios pueden ser de texto o de voz —y cada comentario de voz trae su \"ver transcript\".",
+        "pantalla 03 · lectura",
+        "artículo · audio · comentarios",
+        "Desktop · 1180",
+        "flowpub.lat/julio/nueve-minutos-sobre-el-barro",
+        "Arte",
+        "Cultura",
+        "Nueve minutos sobre el barro",
+        "Julio",
+        "hace 2 h · 9 min de audio",
+        "Seguir",
+        "03:41 / 09:00",
+        "Publicación",
+        "Transcript original",
+        "Llevo días pensando en algo que une dos cosas que parecían lejanas: el barro y la voz.",
+        "Cuando uno trabaja con las manos, el material guarda memoria: cada presión, cada duda queda registrada en la superficie. No hay manera de mentirle al barro. La voz funciona igual —es el primer molde de lo que pensamos, antes de que la escritura lo endurezca y lo vuelva definitivo.",
+        "Hablar es dar forma sin borrar el gesto.",
+        "Por eso grabar en vez de escribir cambia lo que decimos. Aparecen las pausas, las correcciones en voz alta, el cuerpo. Lo que en un texto sería un error, en el audio es una huella.",
+        "Por eso grabar en vez de escribir cambia lo que decimos. Aparecen las pausas, las correcciones en voz alta, el cuerpo. Lo que en un texto sería un error, en el audio es una huella.",
+        "Tres cosas que el barro me enseñó y que valen para la voz:",
+        "Lo imperfecto comunica más que lo pulido.",
+        "El tiempo de secado importa: hay ideas que no se deben apurar.",
+        "Lo que haces con las manos, lo entiendes distinto.",
+        "Si llegaste hasta aquí, grábate algo hoy. No para publicarlo necesariamente. Solo para oír de qué forma piensas cuando nadie corrige.",
+        "Transcript sin pulir · lo que se dijo",
+        "eh… hola. quería hablar un poco de algo que me ha estado dando vueltas, sobre el barro, ¿no? sobre cómo cuando uno trabaja con las manos...",
+        "Comentarios",
+        "Escribir",
+        "Comentar con voz",
+        "Comparte lo que te dejó este Flow…",
+        "Publicar comentario",
+        "Graba tu comentario",
+        "Se transcribe solo; quien lea verá el audio y podrá abrir el transcript.",
+        "128",
+        "3",
+        "Compartir",
+        "Guardar",
+        "Teléfono · 390",
+        "9:41",
+        "Flow",
+        "9 min",
+        "Comenta…",
+        "María",
+        "Esto me recordó a una maestra de cerámica que decía justo eso: que el barro no perdona la prisa. Gracias por ponerlo en palabras (y en voz).",
+        "Tomás",
+        "Oye Julio, qué bueno esto. Yo justo ando grabando mis caminatas y no me atrevía a publicarlas, pero lo del molde y la huella me convenció. Va una desde la sierra, saludos.",
+        "Inés",
+        "Me quedo con \"dejar secar las ideas\". Aplica a todo.",
+        "Tú",
+        "Nada, que me encantó lo que dijiste del molde y la huella. Lo voy a usar en mi taller del sábado. Gracias Julio, sigue grabando.",
+        "0:42",
+        "Transcript del audio"
+      ],
+      "stateAndData": "{\n\"articlePublished\": { \"display\": \"block | none\", \"toggles via data-art='pub'/'raw' buttons\" },\n\"articleRaw\": { \"display\": \"block | none\", \"toggles via data-art='pub'/'raw' buttons\" },\n\"composerTab\": { \"active\": \"write | voice\", \"toggles via data-ctab buttons\" },\n\"composerWritePanel\": { \"display\": \"block | none\" },\n\"composerVoicePanel\": { \"display\": \"block | none\" },\n\"voiceRecordingState\": { \"desktop\": \"[data-cvoice='idle'|'rec']\", \"mobile\": \"[data-recState='0'|'1']\" },\n\"recordingTimer\": { \"[data-rectimer]\": \"MM:SS, updates every 250ms, stops at 90s\" },\n\"commentList\": { \"[data-comments]\": \"flex-column gap 22px, populated dynamically by seed() with 3 examples (2 text, 1 voice)\" },\n\"postLikeState\": { \"button[data-action='postlike']\": \"[data-on='0|1'], SVG fill/stroke toggle, count++, scale animation\" },\n\"commentLikeState\": { \"button[data-action='clike']\": \"[data-on='0|1'] per comment, SVG fill/stroke toggle, count++, scale animation\" },\n\"followState\": { \"button[data-action='follow']\": \"[data-on='0|1'], text 'Seguir'↔'Siguiendo', bg/color swap\" },\n\"voiceTranscriptExpanded\": { \"button[data-action='vtrans']\": \"[data-vtrans] display toggle, chevron rotation\" },\n\"playbackState\": { \"button[data-action='play'|'cplay']\": \"[data-playing='0|1'], SVG icon toggle\" },\n\"audioProgress\": { \"[data-prog]\": \"SVG path stroke color #C0303A, circle cx updates (not implemented in this prototype)\" },\n\"commentTextarea\": { \"[data-ctext]\": \"value trimmed on submit, cleared after post, placeholder 'Comparte/Comenta…'\" },\n\"textComment template\": \"(name, initial, color, text) => rendered article with avatar, metadata, text body, like/reply buttons\",\n\"voiceComment template\": \"(name, initial, color, dur, transcript) => rendered article with avatar, 'Voz' badge, audio player box, 'Ver transcript' toggle, transcript panel, like/reply buttons\"\n}",
+      "discrepanciesOrGotchas": "1. AUDIO PLAYER SVG PROGRESS: The main audio player has a complex path [data-prog] that appears hand-crafted but is not actually animated in this prototype—only the static SVG is shown with a play button toggle. A real implementation must wire this to actual audio playback (Web Audio API or HTML5 audio element).\n\n2. VOICE RECORDING AUTO-STOP: Desktop voice recording auto-stops at 90s (90 * 250ms ticks), but mobile implementation in _phoneRec() has same 90s limit. No explicit user feedback for auto-stop (no toast/alert).\n\n3. SOUND DESIGN: blip() function uses Web Audio API (oscillator + gain) with specific frequencies: tick=540Hz, pop=700Hz, click=400Hz, soft=320Hz, rec=220Hz. Envelope: 0.0001→0.05 gain over 6ms, then exponential decay to 0.0001 over 130ms (total 136ms duration). No actual sound files referenced—fully synthesized.\n\n4. ANIMATION EASING: Comment insertion uses cubic-bezier(.22,1,.36,1) which is nearly equivalent to a bounce-out curve, not documented in README. Toggle animations use default linear/ease timings except where specified.\n\n5. PHONE RESPONSIVE: Phone view width 412px (screen width) is hardcoded in HTML; no CSS media queries shown. Desktop and phone are separate rendered instances side-by-side in this design handoff, not responsive breakpoints.\n\n6. COMPOSER BEHAVIOR DESKTOP vs MOBILE: Desktop has [data-cpanel] tab panels that toggle. Mobile has a floating position:absolute bar that replaces its innerHTML entirely during recording (stored in _saved backup). This is a significant structural difference.\n\n7. GRADIENT BACKGROUND: Body uses radial-gradient(120% 90% at 50% -10%, #F4F1EA 0%, #EDE7DA 55%, #E6DFD0 100%) with no animation or interaction—static only.\n\n8. BACKDROP FILTER SUPPORT: Composer uses backdrop-filter: blur(14px) on mobile—requires browser support or graceful fallback.\n\n9. SCROLLBAR STYLING: [data-scroll] elements have webkit-scrollbar-thumb with rgba(26,23,20,.16), no standard scrollbar API styling. Not cross-browser.\n\n10. COMMENT SEEDING: seed() method hardcodes 3 example comments (Maria text, Tomás voice, Inés text) injected on componentDidMount. Voice comment dur='0:42' does not format with leading zero (should be '00:42' to match fmt() output). Transcript text in seed() is truncated example, not full audio transcript.\n\n11. TIMESTAMPS: Comments show 'ahora' (now) timestamp hardcoded. No dynamic relative time (e.g., '2m ago', '1h ago') implemented.\n\n12. BUTTON HOVER STATES: Desktop buttons use style-hover attribute which is not standard HTML—framework-specific syntax (likely Vue/Svelte/custom DSL). Real implementation must handle hover via :hover or JS.\n\n13. MOBILE STATUS BAR: Notch is hardcoded SVG mockup centered at top. Signal/battery icons are static SVG, not reactive.\n\n14. MISSING DYNAMIC AUDIO: No actual audio file URLs in the HTML. Play buttons are UI-only; no audio context wired to comments or main audio player.\n\n15. TRANSCRIPT TOGGLE CHEVRON: Only rotates visually; no actual text expansion/collapse animation on the transcript panel itself (panel fades in but text does not animate height).\n\n16. COLOR SYSTEM DISCREPANCY: Some color hex values used inline (#C0303A, #D98A3D, #1A1714, #9A2530) do not appear in a published design tokens file/README. Assumed to be correct but not formally validated against system documentation."
+    },
+    {
+      "screen": "Reproductor (now-playing inmersivo)",
+      "purpose": "Pantalla inmersiva de reproducción de audio/podcast con cover animada living, glass player overlay y transcript karaoke palabra-por-palabra sincronizado",
+      "layoutDesktop": "Feed card contenedor: width 560px, border-radius 18px, box-shadow 0 30px 70px -28px rgba(0,0,0,.42 light / .65 dark). Header: 44px altura con traffic lights (RGB #E0837F #E7C07A #A9C79A) y título Space Mono 11px. Imagen hero: 16:10 aspect ratio (560×350px), position relative overflow hidden. Reproducción vive sobre imagen (position absolute bottom 14px left/right 14px). Play centrado: top 42% left 50% transform translate(-50% -50%). Glass bar inferior: border-radius 16px padding 11px 14px backdrop-filter blur(16px). Body: padding 20px 22px con título Fraunces 23px 500 y transcript. Metadata footer: flex space-between con avatar 32px y equalizer 3 barras",
+      "layoutPhone": "Full-bleed phone viewport: 412×840px, border-radius 52px, padding 11px (contenedor black #1A1714). Reproductor: width 100% height 100% border-radius 42px overflow hidden. Top status bar: 46px, flex space-between, Time (Space Mono 13px) + carrier/signal en center. Header glass: top 52px left/right 16px, 3 elementos (minimize btn, label Reproduciendo·Arte 12px 600, share btn). Living cover: full viewport inset 0. Play centrado: top 30% left 50% (200×200px container). Glass info sheet: position absolute bottom 18px left 12px right 12px border-radius 28px padding 22px 20px. Bottom controls: flex justify-center gap 26px (back 15s, play 56×56px, forward 15s)",
+      "components": [
+        {
+          "name": "Play Button (Large/Center)",
+          "detail": "92×92px (phone) / 70×70px (desktop). border-radius 99px. border 1px rgba(242,239,232,.35). background rgba(251,250,246,.16) + backdrop-filter blur(16px). color #fff. box-shadow 0 10px 40px -10px rgba(0,0,0,.6) (phone only). SVG play icon 30×30px (phone) / 24×24px (desktop) margin-left 2-3px. Pressed state: transform scale(.95)"
+        },
+        {
+          "name": "Play Button (Inline)",
+          "detail": "38×38px (glass bar) / 56×56px (control bar). border-radius 99px. background #F2EFE8 (solid white). color #1A1714 (dark text). SVG icon 13-20px con margin-left 2px. No border. Pressed: transform scale(.95)"
+        },
+        {
+          "name": "Glass Container",
+          "detail": "border-radius 28px (phone) / 16px (desktop). padding 22px 20px (phone) / 11px 14px (glass bar). background rgba(251,250,246,.1) (phone) / rgba(20,16,12,.42) (desktop). backdrop-filter blur(20px) (phone) / blur(16px) (desktop). border 1px rgba(242,239,232,.18) (phone) / rgba(242,239,232,.16) (desktop). box-shadow 0 -14px 50px -24px rgba(0,0,0,.7) (phone only)"
+        },
+        {
+          "name": "Ripple Rings",
+          "detail": "3 anillos concéntricos. border-radius 99px. border 2px rgba(246,212,154,.6). width/height 96px (phone) / 72px (desktop). animation fp-ripple 2.6s ease-out infinite (staggered .9s y 1.8s)"
+        },
+        {
+          "name": "Aperture Rings",
+          "detail": "3 tamaños: 300×300 (outer), 212×212 (mid), 130×130 (inner phone). border-radius 64/48/34px. border 2px rgba(246,212,154,.5/.35). animation fp-aperture 5s ease-in-out infinite (staggered .4s / .8s)"
+        },
+        {
+          "name": "Breathing Glow",
+          "detail": "360×360px (phone) / 300×300px (desktop). position top 30%/46% left 50% margin -180px/-150px 0 0 -180px/-150px. border-radius 99px. background radial-gradient(circle, #E8954B 0%, #C0303A 42-44%, transparent 72%). filter blur(26px/24px). opacity .85. animation fp-glow 4.6s ease-in-out infinite"
+        },
+        {
+          "name": "Rotating Dashed Ring",
+          "detail": "340×340px (phone). border-radius 99px. border 1px dashed rgba(246,212,154,.22). animation fp-spin 30s linear infinite"
+        },
+        {
+          "name": "Karaoke Transcript",
+          "detail": "Fraunces 16px (phone) / 15px (desktop) line-height 1.5. color rgba(242,239,232,.4) (unfocused). Min-height 48px (phone) / 44px (desktop). Words rendered con [data-w] span con transition color .3s ease, text-shadow .3s ease. Active word: color #F6D49A text-shadow 0 0 18px rgba(246,212,154,.6)"
+        },
+        {
+          "name": "Equalizer Bars",
+          "detail": "4 barras (phone) / 3 barras (desktop). width 3px height 24px (phone) / 18px (desktop) border-radius 9px. Colors: alternancia #F6D49A (gold) / #EC7079 (pink) / #F6D49A / #EC7079 (phone) | var(--grana) / var(--ocre) (desktop). animation fp-eq .9s ease-in-out infinite (staggered .2s / .35s / .5s)"
+        },
+        {
+          "name": "Progress Bar (Curved SVG)",
+          "detail": "SVG path curved 300×22px (wavy C-curve path). Background stroke rgba(242,239,232,.25/.28) stroke-width 2.4/2.2 stroke-linecap round. Foreground [data-prog] stroke #F6D49A. Animated via stroke-dasharray + stroke-dashoffset (0 to 100%)"
+        },
+        {
+          "name": "Status Bar (Phone)",
+          "detail": "height 46px z-index 6. flex space-between. Time left (Space Mono 13px #F2EFE8). Center: fake notch (104×28px black border-radius 99px). Signal right: 4-bar SVG #F2EFE8"
+        },
+        {
+          "name": "Glass Header Bar",
+          "detail": "top 52px. flex space-between. Minimize btn 40×40px border-radius 99px border 1px rgba(242,239,232,.2) background rgba(20,16,12,.4) backdrop-filter blur(10px). Label: Hanken Grotesk 12px 600 uppercase #F2EFE8 .85 opacity background rgba(20,16,12,.4) padding 7px 14px border-radius 99px. Share btn: same as minimize"
+        },
+        {
+          "name": "Avatar Circle",
+          "detail": "width 38px height 38px border-radius 99px background #F2EFE8 color #1A1714. Fraunces italic 16px (phone) / 14px (desktop). Display flex align-center justify-center"
+        },
+        {
+          "name": "Author Metadata",
+          "detail": "Phone: display flex gap 11px margin-bottom 14px. Avatar 38px + flex col: Fraunces 20px 500 + Hanken Grotesk 12px .65 opacity. Desktop: flex space-between avatar 32px + name/date 13px .6 opacity + equalizer"
+        },
+        {
+          "name": "Control Buttons (Back/Forward)",
+          "detail": "background transparent border none. color rgba(242,239,232,.85). SVG 24×24px stroke-width 1.8. Display flex align-center justify-center"
+        }
+      ],
+      "tokensObserved": [
+        "#F2EFE8 (light ink-on)",
+        "#1A1714 (dark ink)",
+        "#F6D49A (gold/accent playing)",
+        "#C0303A (grana/red)",
+        "#E8954B (orange glow)",
+        "#EC7079 (pink/eq bar)",
+        "#0E0B09 (dark scrim)",
+        "#171410 (body bg dark)",
+        "#120F0C (deepest dark)",
+        "rgba(242,239,232,.4) - dim text",
+        "rgba(242,239,232,.85/.8/.65) - text opacity levels",
+        "rgba(20,16,12,.4/.42) - glass bg",
+        "rgba(251,250,246,.16/.1) - glass light",
+        "rgba(246,212,154,.6/.5/.35/.22) - glow accent levels",
+        "font-family: Fraunces (serif, 400/500/600, italic variants)",
+        "font-family: Hanken Grotesk (sans, 400/500/600)",
+        "font-family: Space Mono (monospace, 400/700)",
+        "font-size: 30px (h1)",
+        "font-size: 20px (title play)",
+        "font-size: 16px (transcript)",
+        "font-size: 13px (status bar)",
+        "font-size: 12px (labels)",
+        "line-height: 1.5 (transcript)",
+        "line-height: 1.25 (metadata)",
+        "letter-spacing: -.02em (headings)",
+        "letter-spacing: -.01em (branding)",
+        "letter-spacing: .12em (uppercase labels)",
+        "border-radius: 99px (circles)",
+        "border-radius: 52px (phone frame)",
+        "border-radius: 42px (player viewport)",
+        "border-radius: 28px (glass sheet)",
+        "border-radius: 16px (desktop card/bar)",
+        "box-shadow: 0 30px 70px -28px rgba(0,0,0,.42 light / .65 dark)",
+        "box-shadow: 0 10px 40px -10px rgba(0,0,0,.6) (play button)",
+        "box-shadow: 0 -14px 50px -24px rgba(0,0,0,.7) (glass sheet)",
+        "box-shadow: 0 0 60px 10px rgba(232,149,75,.6) (glow)",
+        "backdrop-filter: blur(20px / 16px / 10px)",
+        "filter: blur(26px / 24px) (glow)",
+        "filter: url(#f-noise) overlay .5 opacity (grain)",
+        "mix-blend-mode: overlay (grain)",
+        "animation-duration: 2.6s (ripple)",
+        "animation-duration: 4.6s (glow)",
+        "animation-duration: 5s (aperture)",
+        "animation-duration: 30s (spin)",
+        "animation-duration: 6s (sheen)",
+        "animation-duration: 5s-6.4s (rise particles)",
+        "animation-duration: .9s (eq bars)",
+        "animation-duration: .3s (karaoke transition)",
+        "transition: transform .12s (play button)",
+        "transition: background .4s ease (theme)",
+        "animation-play-state: paused|running (controlled by JS)"
+      ],
+      "interactions": [
+        {
+          "trigger": "Click data-action='play' button",
+          "effect": "Toggle playing state. Swap icon play↔pause (bars SVG). Start setInterval 320ms +2 to TOTAL (540). Animate [data-anim] elements: animationPlayState running. Play sound blip type 'pop' (440Hz sine .006s attack .13s decay)"
+        },
+        {
+          "trigger": "Karaoke word sync",
+          "effect": "Progress calculation frac = elapsed / TOTAL. Word index = floor(frac × WORDS.length). Current word: color #F6D49A text-shadow 0 0 18px rgba(246,212,154,.6) opacity 1. Previous: inherit color opacity 1. Future: default color no shadow"
+        },
+        {
+          "trigger": "Progress bar drag (SVG stroke-dasharray)",
+          "effect": "calculatestroke-dashoffset = dasharray × (1 - frac). Updates on each 320ms interval tick. Curved path preserves stroke rendering"
+        },
+        {
+          "trigger": "Theme toggle (light/dark button)",
+          "effect": "Set data-theme='dark' on root. Update CSS variables --ink, --ink-on, --text-2, --text-3, --surface, --line, --shadow-window. Button style: active bg var(--ink) color var(--ink-on), inactive transparent. Play blip type 'tick' (540Hz). localStorage.setItem('fp-theme')"
+        },
+        {
+          "trigger": "Minimize button (phone header)",
+          "effect": "No logic visible in HTML—expected to collapse/dismiss player"
+        },
+        {
+          "trigger": "Share button (phone header)",
+          "effect": "No logic visible—expected to open share sheet"
+        },
+        {
+          "trigger": "Back/Forward 15s buttons",
+          "effect": "No logic visible—expected to adjust box._el by ±15s (in frame units ~47 frames @ 320ms intervals)"
+        },
+        {
+          "trigger": "Time display",
+          "effect": "Updates via fmt() = floor(s/60):pad(s%60,2). Display in Space Mono 12px"
+        },
+        {
+          "trigger": "Hover play button",
+          "effect": "No explicit CSS—expected :hover scale or brightness effect (not in inline styles)"
+        },
+        {
+          "trigger": "Animation keyframes",
+          "effect": "fp-ripple (2.6s): scale .55→2.6, opacity .55→0. fp-glow (4.6s): scale 1→1.14→1, opacity .78→1→.78. fp-aperture (5s): scale 1→1.07→1. fp-shard (6-8.5s): translateY 0→-16px→0, rotate 0→10→0. fp-sheen (6s): translateX -130%→260% skewX -18deg. fp-rise (5-6.4s): translateY 10px→-130px, opacity 0→.6→0. fp-eq (900ms): scaleY .28→1→.28. fp-spin (30s): rotate 0→360. prefers-reduced-motion:reduce disables all animations"
+        }
+      ],
+      "copyStrings": [
+        "Reproduciendo — la portada cobra vida",
+        "Toca play: el reproductor vive sobre la imagen en glass y la portada se activa",
+        "Reproduciendo · Arte",
+        "Teléfono · toca play ↓",
+        "Nueve minutos sobre el barro",
+        "Julio · Arte",
+        "Desktop · misma idea en el feed",
+        "flowpub.lat · el reproductor vive en la portada",
+        "Minimizar",
+        "Compartir",
+        "Reproducir",
+        "Atrás 15s",
+        "Adelante 15s",
+        "El play vive sobre la portada; al reproducir, la imagen se activa y el transcript se ilumina.",
+        "pantalla 05 · reproductor, glass · movimiento · karaoke",
+        "El barro guarda memoria; la voz es el primer molde de lo que pensamos, antes de que la escritura lo endurezca. [karaoke words]"
+      ],
+      "stateAndData": "State managed in JavaScript class Component. Root ref via setRoot callback. Player state: [data-player] dataset data-playing='0|1'. Elapsed time: box._el (0 to TOTAL=540 frames @ 320ms = 9 min). Word array WORDS[22] = ['El','barro',...]. Animations: [data-anim] elements controlled via animationPlayState paused|running. Play icons: [data-playicon] swapped SVG content (play triangle vs pause bars). Progress: [data-prog] SVG paths with calculated stroke-dashoffset. Time display: [data-time] textContent = formatted elapsed. Karaoke: [data-karaoke] children [data-w] span styling updated per word index. Theme: localStorage fp-theme, root data-theme attribute, CSS variables scoped to [data-root][data-theme] selectors. Audio context A = window.AudioContext || webkitAudioContext with blip() method for sound effects (tick 540Hz, pop 700Hz, click 400Hz, soft 320Hz) using OscillatorNode + GainNode exponential ramps",
+      "discrepanciesOrGotchas": "1. No visible logic for back/forward skip buttons in HTML—buttons exist but click handlers missing; component expects this to be added. 2. Minimize/Share buttons have no handlers in data-dc-script—placeholder only. 3. SVG progress path getTotalLength() fallback to 300 if unavailable (line 290); path rendering may not match exact curve pixel-perfectly depending on browser SVG rendering. 4. Audio blip() catches all exceptions silently (line 226)—no user feedback if AudioContext unavailable. 5. Karaoke WORDS array hardcoded in component; no endpoint/data binding for dynamic content visible. 6. Phone notch (104×28px fake element line 102) is hardcoded black—no adaptation to actual device notch or theme dark mode. 7. Both phone and desktop player cards use identical living cover animation logic; CSS values differ slightly (300 vs 360px glow, different gradient positions) but animations are duped rather than parameterized. 8. Glass morphism backdrop-filter blur values inconsistent: main sheet 20px, glass bar 16px, mini buttons 10px—no design token unification. 9. No touch gestures for swipe (forward/back), pinch (zoom), or long-press documented. 10. Grain filter (f-noise turbulence .9 baseFrequency) may perform poorly on older browsers; no fallback. 11. Missing responsive breakpoints/media queries for tablet/intermediate sizes between 412px (phone) and 560px (desktop). 12. Text overflow handling on long titles/metadata not visible (no text-overflow/ellipsis in inline styles). 13. Theme persistence via localStorage may fail in private browsing mode (line 237 try/catch swallows error silently). 14. CSS variable scoping requires root [data-root] attribute—if React component doesn't maintain this properly, theme + design tokens break. 15. Karaoke color #F6D49A (gold) is hex literal in JS (line 299) not mapped to CSS variable—diverges from design token system. 16. Sound effect frequencies (pop 700Hz, tick 540Hz) not documented in spec/design system—purely in code.\""
+    },
+    {
+      "screen": "Onboarding (auth + 3 temas + perfil)",
+      "purpose": "Pantalla de bienvenida interactiva que guía al usuario por registro (auth), selección de 3 temas y creación de perfil antes de entrar al Pub",
+      "layoutDesktop": "Desktop 1080x680px: Layout de dos columnas. Columna izquierda (460px, fixed): brand hipnótico con gradiente radial animado (#15110E fondo), logo breathing, tagline. Columna derecha (flex 1): steparea con overflow-y auto. Header 26px top, padding 40px horizontal. Pasos absolutely positioned en steparea, sólo uno visible (display flex/none). Max-width container 1640px centrado, padding 40px.",
+      "layoutPhone": "Teléfono 412x840px (en frame 390 de ancho + borders): Status bar top 46px fija (tiempo 9:41, barras señal/batería). Brand de bienvenida al tope (56% height), centrado. Sheet glass translúcido con blur bottom (glass auth, rounded 28px). Pasos absolutely positioned (inset 0), uno visible. Scroll por steparea.",
+      "components": [
+        {
+          "name": "Blob animado",
+          "detail": "3 blobs radial-gradient (grana #C0303A, ocre #D98A3D, grana-700 #9A2530) con blur 34-40px, animaciones fp-blob1/2/3 (14s/17s/12s ease-in-out), opacity .45-.6"
+        },
+        {
+          "name": "Logo FlowPub",
+          "detail": "SVG 74px (desktop) / 70px (phone) / 30px (header), stroke #F2EFE8, stroke-width 11-12, 'Flow' italic Fraunces 500, 'Pub' regular, animación fp-breathe 6s infinite"
+        },
+        {
+          "name": "Botón tema picker",
+          "detail": "Inline-flex, border-radius 99px, 36x30px, background toggled (dark: var(--ink), light: transparent), border 1px var(--line-2), transition .15s"
+        },
+        {
+          "name": "Chip tema seleccionado",
+          "detail": "span inline, Hanken Grotesk 13px weight 600, color var(--grana-700) #9A2530, background var(--grana-wash) #F6E6E4 (light) / rgba(192,48,58,.18) (dark), padding 6px 13px, border-radius 99px"
+        },
+        {
+          "name": "Button auth (Google)",
+          "detail": "width auto, padding 14px, border-radius 99px, 1px border var(--line-2), background #fff, Hanken Grotesk 15px weight 600, color #1A1714, cursor pointer, gap 11px con SVG 19x19"
+        },
+        {
+          "name": "Button auth (email)",
+          "detail": "width auto, padding 14px, border-radius 99px, no border, background var(--grana) #C0303A, Hanken Grotesk 15px weight 600, color #fff, gap 10px con SVG 17x17"
+        },
+        {
+          "name": "Theme grid picker",
+          "detail": "Desktop: grid 3 cols, gap 10px. Phone: grid 2 cols, gap 9px. Buttons individuales: display flex, padding 12px 13px, border-radius 12px, border 1px var(--line-2), background var(--surface), gap 10px, Fraunces 16px dark color, checkbox 20x20 border-radius 99px"
+        },
+        {
+          "name": "Checkbox custom",
+          "detail": "20x20px (desktop) / 20x20px (mobile), border-radius 99px, border 1.5px var(--line-2), flex:0 0 auto, unchecked: transparent, checked: background var(--grana), SVG checkmark blanco 12x12"
+        },
+        {
+          "name": "Photo button avatar",
+          "detail": "86x86px (desktop) / 96x96px (phone), border-radius 99px, border 2px dashed var(--line-2), background var(--surface-2), flex center, SVG camera 26x26 (desktop) / 28x28 (phone), o letra inicial Fraunces italic 34px (desktop) / 38px (phone)"
+        },
+        {
+          "name": "Input nombre",
+          "detail": "width 100%, font-size 15px, color var(--ink), background var(--surface), border 1px var(--line-2), border-radius 8px, padding 11px 13px (desktop) / 12px 13px (phone), Hanken Grotesk, outline none"
+        },
+        {
+          "name": "Input usuario (con @ prefix)",
+          "detail": "flex wrapper, 1px var(--line-2) border, border-radius 8px, background var(--surface). Prefix @ span padding 11px 4px 11px 13px (desktop) / 12px (phone), color var(--text-3). Input flex:1, no border, transparent background, padding 11px 13px"
+        },
+        {
+          "name": "Textarea bio",
+          "detail": "width 100%, Fraunces serif 16px, color var(--ink), background var(--surface), border 1px var(--line-2), border-radius 8px, padding 11px 13px (desktop) / 12px 13px (phone), rows 2, resize none"
+        },
+        {
+          "name": "Button continuar/crear",
+          "detail": "padding 13px 26px (desktop) / 14px full-width (phone), border-radius 99px, no border, background var(--grana) #C0303A, Hanken Grotesk 15px weight 600, color #fff, display flex, gap 9px, transition opacity .2s, disabled state opacity .4 pointer-events none"
+        },
+        {
+          "name": "Screen ready (success)",
+          "detail": "centered flex column, h2 Fraunces 30px weight 500, p Hanken Grotesk 14px, SVG logo 64x64 (desktop) / 60x60 (phone) con stroke var(--grana) #C0303A, animation fp-breathe 5s infinite"
+        }
+      ],
+      "tokensObserved": [
+        "#1A1714 (ink light)",
+        "#F2EFE8 (ink-on dark/light)",
+        "#6E685D (text-2 light)",
+        "#9C968A (text-3 light)",
+        "#FBFAF6 (surface light)",
+        "#F8F5EF (surface-2 light)",
+        "#F2EFE8 (surface-3 light)",
+        "#C0303A (grana red)",
+        "#9A2530 (grana-700 darker red)",
+        "#F6E6E4 (grana-wash light)",
+        "#D98A3D (ocre orange)",
+        "#15110E (brand bg dark)",
+        "rgba(26,23,20,.12) (--line)",
+        "rgba(26,23,20,.1) (--line-1)",
+        "rgba(26,23,20,.08) (--line-soft)",
+        "rgba(26,23,20,.24) (--line-2)",
+        "rgba(26,23,20,.14) (--line-14)",
+        "Fraunces 400/500/600 italic/regular serif",
+        "Hanken Grotesk 400/500/600 sans",
+        "Space Mono 400/700 monospace",
+        "font-size 11px, 12px, 13px, 14px, 15px, 16px, 18px, 20px, 24px, 25px, 27px-30px (h2), 34px (logo)",
+        "letter-spacing -.02em (h1), -.01em (logo)",
+        "line-height 1.05-1.4",
+        "padding 6px-56px variants",
+        "border-radius 8px (inputs), 12px (grid items), 18px (desktop), 28px (phone glass), 42px (phone corner), 52px (phone bezel), 99px (buttons/badges)",
+        "blur 34-40px (blobs)",
+        "opacity .4-.6 (blobs), .6-.82 (glass), .55 (disabled button)",
+        "box-shadow var(--shadow-window) 0 30px 70px -28px",
+        "backdrop-filter blur(18px) (glass sheet phone)"
+      ],
+      "interactions": [
+        {
+          "trigger": "click tema (checkbox)",
+          "effect": "pick(): toggle data-sel 0↔1, border color line-2→grana, background surface→grana-wash, checkbox filled, scale animation 1→1.04→1 (220ms cubic-bezier), blip sound 'pop' (on select) or 'soft' (on deselect). Max 3 selecciones; attempt 4ta shakes translateX ±5px (240ms) + blip 'soft'"
+        },
+        {
+          "trigger": "count temas",
+          "effect": "[data-tcount] actualiza 0-3, botón Continuar opacity .4↔1 (pointerEvents toggle)"
+        },
+        {
+          "trigger": "click Continuar/Crear",
+          "effect": "goStep() anima step siguiente opacity 0→1, transform translateY(10px)→0, duration 320ms easing cubic-bezier(.22,1,.36,1), blip sound 'click'"
+        },
+        {
+          "trigger": "click back arrow",
+          "effect": "goStep() al paso anterior con misma animación, blip 'click'"
+        },
+        {
+          "trigger": "input nombre",
+          "effect": "photo() si vacío → mostrar SVG cámara, si tiene valor → avatar circular con letra inicial Fraunces italic, border solid transparent, background ink"
+        },
+        {
+          "trigger": "input usuario",
+          "effect": "onInput() limpia no-alphanumeric, lowercase, display hint: si <3 caracteres 'Mínimo 3 caracteres', si ≥3 verde '#2E9A5B' con checkmark '✓ está disponible', si vacío default 'flowpub.lat/@tunombre'"
+        },
+        {
+          "trigger": "ready screen",
+          "effect": "fillReady() title interpolated: 'Tu Pub está listo, [nombre]' o 'Tu Pub está listo', [data-chosen] renderiza chips tema seleccionados (o default Arte/Cultura/Ciencia si none)"
+        },
+        {
+          "trigger": "theme toggle (light/dark)",
+          "effect": "applyTheme() setea data-theme='dark' en root, CSS vars actualizados (colores inverted), button visual toggle, localStorage 'fp-theme', blip sound 'tick'"
+        },
+        {
+          "trigger": "media prefers-reduced-motion",
+          "effect": "*{animation:none!important} — todas animaciones deshabilitadas"
+        }
+      ],
+      "copyStrings": [
+        "Bienvenida — entra al Pub",
+        "Interactivo: pasa por registro → elegir 3 temas → perfil → listo",
+        "Pantalla 04 · onboarding",
+        "Desktop · 1080",
+        "Teléfono · interactivo ↓",
+        "Crea tu cuenta",
+        "Escuchar el Pub es libre. Para publicar tu voz, entra.",
+        "Toma menos de un minuto. Después podrás grabar tu primer Flow.",
+        "Continuar con Google",
+        "Crear cuenta con correo",
+        "¿Ya tienes cuenta? Inicia sesión",
+        "Al continuar aceptas los Términos y el Aviso de privacidad. Protegido por Turnstile.",
+        "¿Qué te mueve?",
+        "Elige 3 temas para empezar tu Pub. Después puedes cambiarlos.",
+        "Atrás",
+        "Continuar",
+        "¿Cómo te van a conocer?",
+        "Puedes ajustar todo esto luego en tu perfil.",
+        "Sube una foto (opcional)",
+        "Nombre",
+        "Tu nombre",
+        "Usuario",
+        "tunombre",
+        "Tu enlace será flowpub.lat/@tunombre",
+        "Bio · opcional",
+        "Una línea sobre tu voz…",
+        "Crear mi Pub",
+        "FlowPub",
+        "La voz que se vuelve publicación.",
+        "Tu Pub está listo",
+        "Estas son tus voces para empezar. El Pub ya se está escribiendo.",
+        "Entrar al Pub",
+        "Grabar mi primer Flow",
+        "Escuchar es libre. Para publicar, entra.",
+        "¿Ya tienes cuenta? Inicia sesión",
+        "Mínimo 3 caracteres",
+        "está disponible ✓",
+        "flowpub.lat/@tunombre"
+      ],
+      "stateAndData": "[\"currentStep: 'auth' | 'themes' | 'profile' | 'ready'\", \"selectedThemes: array de max 3 tags (setea data-sel='1' on button)\", \"continuePossible: boolean (true si selectedThemes.length === 3)\", \"themeCount: number (0-3, bound to [data-tcount])\", \"profileData: { name, username, bio, avatarLetter }\", \"avatarShown: boolean (depends on name input)\", \"usernameValid: boolean (length ≥3, alphanumeric + underscore)\", \"theme: 'light' | 'dark' (localStorage 'fp-theme')\", \"TAGS array: 12 items ['Arte','Ciencia','Libros','Deportes','Tecnología','Cocina','Astrología','Viajes','Chisme','Cine','Naturaleza','Cultura']\"]",
+      "discrepanciesOrGotchas": "[\"No README encontrado en path — spec basado 100% en inline CSS y data-* attributes del HTML.\", \"Sonidos Web Audio (blip fn): genera OSC sine waves con diferentes frequencies (540 Hz tick, 700 Hz pop, 400 Hz click, 320 Hz soft) y decay exponencial 130-140ms. Requiere AudioContext, catch silenciosa si no disponible.\", \"Glass sheet en phone (backdrop-filter blur 18px) solo visible en navegadores que soportan backdrop-filter; fallback es rgba opacity .1-.3.\", \"Font Google imports deferred en <helmet> (no async). Hanken Grotesk, Fraunces, Space Mono deben estar disponibles en tiempo de render.\", \"Data attributes (data-theme, data-sel, data-ostep, data-action, data-to) son el core de la lógica de flujo — sin ellos, interacción no funciona.\", \"Animaciones WAAPI (animate()) asumen disponibilidad; código hace try-catch pero ignora errores silenciosos.\", \"Desktop steparea scrollable verticalmente (overflow-y auto) pero steps son absolutely positioned y no scrollean — scroll es para future content expansion (UX odd).\", \"Username hint display logic: no indica disponibilidad real (backend), solo valida longitud/charset. Color verde hardcoded #2E9A5B (no token), inconsistencia con design system.\", \"Typo posible: avatar init color light theme es var(--ink-on) pero light theme ink-on es #F2EFE8 (muy claro). En fondo darkish surface avatar #F2EFE8 es barely visible.\", \"Ready screen default temas si user no seleccionó: hardcoded ['Arte','Cultura','Ciencia'] (no localizados ni desde TAGS).\", \"Foto upload button (data-action='photo') muestra inicial letra pero no hay backend photo upload flow — solo avatar letter display.\", \"En desktop continuar button disabled pero sigue focusable (opacity pointerEvents no quita tab focus).\", \"No form validation visual (red borders, error messages) — solo hint text for username.\", \"Back button visualmente no disabled pero siempre clickable (no hay estado 'primer step' que lo deshabilite).\"]"
+    },
+    {
+      "screen": "Perfil (usuario + sus Flows + editar)",
+      "purpose": "Mostrar perfil de usuario con foto, nombre, @usuario, bio, stats (Flows, Seguidores, Siguiendo), grid de Flows/Gustos/Borradores, y permitir edición en vivo de datos de perfil.",
+      "layoutDesktop": "Max-width 1180px. Header: z-index 2, padding 26px 40px 8px, flex row con logo+título a la izquierda y theme toggle a la derecha. Profile container (scrollable, 760px height): banner 150px. Avatar 124px (negativo -44px margin-top). Nombre h2, @usuario, bio, tags (género). Stats row (30px gap) con 3 botones. Tabs (4px gap, margin 18px). Grid de flows: 3 columnas, gap 14px, cards aspect-ratio 16/11 con border-radius 14px. Edit modal: 440px ancho, centrado con overlay 50% blur.",
+      "layoutPhone": "Width 412px en frame 412x840 con bezel. Header: 46px status bar mockup (9:41). Banner 120px. Avatar 90px (-40px margin-top). Nombre h2 25px, tag en chips 11px. Stats row gap 24px. Tabs (gap 4px). Grid flows 2 columnas, gap 10px, aspect-ratio 1/1, border-radius 12px. Edit sheet: bottom sheet con border-radius 28px top, max-height 88%, padding 22px 20px 30px. Drag handle visual (40px ancho, 4px alto).",
+      "components": [
+        {
+          "name": "Avatar circle",
+          "detail": "Fraunces italic, fuente dinámico, border-radius 99px, border 5px solid surface. Desktop 124px (font 54px), phone 90px (font 40px). Bg colors rotary: var(--ink), #C0303A, #9A2530, #D98A3D con animation scale 1→1.08→1 (220ms, pop sound)"
+        },
+        {
+          "name": "Header logo",
+          "detail": "FlowPub: 30px Fraunces 500, letter-spacing -.01em. SVG animado con @keyframes fp-breathe (scale 1→1.05 rotate 0→-2.5deg, 6s ease-in-out infinite)"
+        },
+        {
+          "name": "Buttons action",
+          "detail": "Compartir: 42px circle, border var(--line-2), transparent bg, hover var(--hover). Editar perfil: 11px-22px padding, border-radius 99px, border var(--ink), font 14px Hanken 600, hover background var(--ink) color var(--ink-on)"
+        },
+        {
+          "name": "Tab buttons",
+          "detail": "Padding 10px 18px, Hanken 14px 600/500 (active/inactive), color var(--ink)/var(--text-3), border-bottom 2px solid var(--grana)/transparent, margin-bottom -1px. Phone 13px flex:1 padding 9px 0"
+        },
+        {
+          "name": "Flow cards grid",
+          "detail": "Aspect-ratio 16/11 (desktop) o 1/1 (phone), border-radius 14px desktop / 12px phone, box-shadow var(--shadow-card), transition transform .16s. Hover translateY(-3px). Gradient overlay oscuro bottom. Título Fraunces 15px 500 (desktop) / 13px (phone), Space Mono 11px (desktop) / 10px (phone) metadata"
+        },
+        {
+          "name": "Stats badges",
+          "detail": "Género tags: font-size 12px Hanken 600, color var(--grana-700), bg var(--grana-wash), padding 4px 11px (desktop) / 4px 10px (phone), border-radius 99px"
+        },
+        {
+          "name": "Edit modal",
+          "detail": "Desktop: 440px ancho, border-radius 20px, bg var(--surface), border 1px var(--line), shadow var(--shadow-window). Phone: bottom sheet, border-radius 28px 28px 0 0, width 100%. Avatar: 74px desktop / 88px phone. Inputs: 15px, bg var(--surface), border var(--line-2), border-radius 8px, padding 11px 13px (desktop) / 12px 13px (phone). Textarea Fraunces 16px. Botones: Guardar fondo var(--grana) hover var(--grana-700)"
+        },
+        {
+          "name": "Theme toggle",
+          "detail": "Inline flex, bg var(--surface), border var(--line-2), border-radius 99px, padding 3px. Botones 36x30px, border-radius 99px, cursor. Light activo: bg var(--ink) color var(--ink-on). Dark: bg transparent color var(--text-3)"
+        }
+      ],
+      "tokensObserved": [
+        "#1A1714 (--ink light)",
+        "#F2EFE8 (--ink-on light)",
+        "#6E685D (--text-2)",
+        "#9C968A (--text-3)",
+        "#FBFAF6 (--surface)",
+        "#F8F5EF (--surface-2)",
+        "#F2EFE8 (--surface-3)",
+        "#C0303A (--grana)",
+        "#9A2530 (--grana-700)",
+        "#F6E6E4 (--grana-wash)",
+        "#D98A3D (--ocre)",
+        "rgba(26,23,20,.12) (--line)",
+        "rgba(26,23,20,.1) (--line-1)",
+        "rgba(26,23,20,.24) (--line-2)",
+        "rgba(26,23,20,.14) (--line-14)",
+        "var(--shadow-window): 0 30px 70px -28px rgba(26,23,20,.42)",
+        "var(--shadow-card): 0 1px 2px rgba(26,23,20,.05)",
+        "var(--shadow-hover): 0 16px 34px -18px rgba(26,23,20,.3)",
+        "border-radius: 99px (full), 52px (bezel phone), 42px (inner phone), 28px (sheet), 20px (modal desktop), 18px (cards desktop), 14px (cards desktop grid), 12px (cards phone)",
+        "font-size: 30px (header), 24px (logo), 32px (h2 desktop), 25px (h2 phone), 22px (stat value Fraunces), 19px (stat value phone), 15px (card title), 14px (text desktop), 13px (label/tags desktop)",
+        "padding: 26px 40px header desktop, 22px 20px phone sheet, 18px 20px modal desktop"
+      ],
+      "interactions": [
+        {
+          "trigger": "hover theme button",
+          "effect": "bg opacity, color opacity sin transición explícita"
+        },
+        {
+          "trigger": "click theme button",
+          "effect": "Toggle active state, update all --color vars, localStorage.setItem('fp-theme', theme), sound blip 'tick' (540Hz, 130ms)"
+        },
+        {
+          "trigger": "click Editar perfil",
+          "effect": "Modal/sheet display:flex, fade-in animation 180ms, sound blip 'click' (400Hz)"
+        },
+        {
+          "trigger": "click Cancelar",
+          "effect": "Modal display:none, sound blip 'soft' (320Hz)"
+        },
+        {
+          "trigger": "click Cambiar foto",
+          "effect": "Avatar rotate color (4 valores), scale 1→1.08→1 animation (220ms), sound blip 'pop' (700Hz)"
+        },
+        {
+          "trigger": "click tab",
+          "effect": "Update tab color/font-weight/border, fade grid in 240ms cubic-bezier(.22,1,.36,1) con translateY(6px), sound blip 'tick'"
+        },
+        {
+          "trigger": "click Guardar cambios",
+          "effect": "Leer inputs [data-edit-*], sanitizar user (lowercase, alphanumeric, _), update [data-h-*] en ambas vistas, avatar scale-pop 280ms cubic-bezier(.22,1,.36,1), sound blip 'pop', close modal"
+        },
+        {
+          "trigger": "click flow card",
+          "effect": "Sound blip 'click'"
+        },
+        {
+          "trigger": "click stat button",
+          "effect": "Sound blip 'click', hover opacity .7"
+        },
+        {
+          "trigger": "prefers-reduced-motion",
+          "effect": "Media query desactiva todas las animaciones con animation:none!important"
+        }
+      ],
+      "copyStrings": [
+        "FlowPub",
+        "Perfil — tu voz, reunida",
+        "Foto, nombre, @usuario y bio editables; tus Flows, seguidores y a quién sigues. Toca Editar perfil para cambiarlo en vivo.",
+        "pantalla 06 · perfil",
+        "editar · flows · seguir",
+        "Tema claro",
+        "Tema oscuro",
+        "Compartir",
+        "Editar perfil",
+        "Renata Salas",
+        "@renata",
+        "Edito de noche. Cerámica, libros y la voz como primer borrador. Creo que todo lo importante se dice antes de escribirse.",
+        "CDMX, México",
+        "En FlowPub desde 2024",
+        "Libros",
+        "Cine",
+        "Arte",
+        "24 Flows",
+        "1,248 Seguidores",
+        "318 Siguiendo",
+        "Flows",
+        "Me gusta",
+        "Borradores",
+        "Nueve minutos sobre el barro",
+        "El silencio entre dos palabras",
+        "Notas de cine para nadie",
+        "Leer en voz alta cambia el libro",
+        "Cuando una voz se vuelve archivo",
+        "Tres cuadernos y una grabadora",
+        "Un mapa hablado de la ciudad",
+        "La ciencia en voz alta",
+        "Borrador · 2:14",
+        "sin publicar",
+        "Editar",
+        "Cambiar foto",
+        "Nombre",
+        "Usuario",
+        "Bio",
+        "Cancelar",
+        "Guardar cambios",
+        "9 min · 128 ♥",
+        "4 min · 96 ♥",
+        "7 min · 211 ♥",
+        "5 min · 174 ♥",
+        "6 min · 342 ♥",
+        "8 min · 88 ♥",
+        "Tomás · 5 min",
+        "Inés · 7 min"
+      ],
+      "stateAndData": "State: currentTheme (light/dark, localStorage), avatarColorIndex (0-3 para rotar), editMode (visible/hidden modal), tabActive (flows/liked/drafts). Data: user { name, user, bio, avatar { initials, bgColor, textColor }, flows [], liked [], drafts [] }, stats { flowsCount, followersCount, followingCount }. Inputs editables: [data-edit-name], [data-edit-user], [data-edit-bio]. Validaciones en saveEdit: trim, user lowercase alphanumeric underscore, name fallback 'Tu nombre'.",
+      "discrepanciesOrGotchas": "1. El archivo usa 'style-hover' attribute (no estándar) para indicar estilos hover, pero JavaScript no los aplica directamente — son referencia de diseño; en React hay que mapear a :hover CSS o onMouseEnter/Leave. 2. Sound blips generan tono con Web Audio API en varias frecuencias (tick 540Hz, pop 700Hz, click 400Hz, soft 320Hz) con envelope exponencial — la duración total es ~140ms. 3. Las animaciones usan .animate() (Web Animations API) con duration/easing cubic-bezier, pero caen gracefully si el navegador no las soporta. 4. Dark mode CSS variables están en [data-theme='dark'] — cambios son suavizados con transition background .4s ease en el [data-root]. 5. En phone, el edit sheet no tiene botón X en la esquina, usa 'Cancelar' inline; la estructura es más minimalista. 6. Grid de flows desktop 3 cols con cards 16/11 aspect-ratio (no square), phone 2 cols con 1/1 aspect-ratio (square) — cambios de layout NO están en breakpoints media-query, son dos layouts separados lado a lado en la prototypo (elemento data-scroll horizontal). 7. SVG banner personalizado con gradientes radiales/lineales, filtros (glow, noise) — no hay imagen real, todo procedural. 8. El textarea bio en edit desktop permite 3 filas (rows='3'), en phone también. 9. El botón 'Cambiar foto' en phone es un FAB grana color rojo (#C0303A) con borde blanco 3px en esquina bottom-right del avatar, no un botón separado como en desktop. 10. Metadata flows en cards: desktop muestra '9 min · 128 ♥', phone omite el ♥ en gridflows (solo '9 min'). Liked/drafts tienen formato distinto (autor · duracion). 11. stats row desktop gap 30px, phone gap 24px, pero NO son clickable (tienen data-action='stat' pero solo reproducen sonido). 12. En phone, tabs no tienen pestaña 'Borradores', solo 'Flows' y 'Me gusta' (simplificado). 13. El logo FlowPub combina Fraunces italic + regular en la misma línea: <span style='font-style:italic'>Flow</span>Pub."
+    },
+    {
+      "components": [
+        {
+          "name": "Conversation List Item",
+          "detail": "Button component; 100% width; flex row with gap 12px; padding 12px; border-radius 14px; transition background 0.14s; avatar (48px circle, serif italic 19px), name (font-weight 600, font-size 15px), time (Space Mono 11px, text-3), preview text (font-size 13px, text-2, ellipsis), unread badge (18px circle, grana bg, white 11px bold, padding 0 5px if present)"
+        },
+        {
+          "name": "Message Bubble — Text (Incoming)",
+          "detail": "align-self flex-start; max-width 78%; background surface-2; color ink; border 1px line-1; border-radius 18px 18px 18px 5px; padding 10px 14px; Hanken Grotesk 14.5px; line-height 1.45"
+        },
+        {
+          "name": "Message Bubble — Text (Outgoing)",
+          "detail": "align-self flex-end; max-width 78%; background grana (#C0303A); color #fff; border-radius 18px 18px 5px 18px; padding 10px 14px; Hanken Grotesk 14.5px; line-height 1.45"
+        },
+        {
+          "name": "Voice Message Bubble",
+          "detail": "flex column; align-self (flex-start or flex-end); max-width 80%; background (grana or surface-2); border-radius (18px 18px 5px 18px for outgoing, 18px 18px 18px 5px for incoming); padding 9px 12px; inner flex row: play button 34px circle, waveform SVG 130×22, duration Space Mono 12px; disclosure 'Ver transcript' button below"
+        },
+        {
+          "name": "Play Button — Voice Message",
+          "detail": "34px circle; border-radius 99px; background (white for outgoing grana, ink for incoming surface-2); color (grana for outgoing, ink-on for incoming); SVG play triangle 12×12"
+        },
+        {
+          "name": "Voice Waveform",
+          "detail": "SVG 130×22; path d='M3 11 C 35 3 60 19 100 11 S 165 3 197 11'; stroke (rgba(255,255,255,.45) for outgoing, line-2 for incoming); stroke-width 2; stroke-linecap round; fill none"
+        },
+        {
+          "name": "Voice Transcript Disclosure",
+          "detail": "Button; display flex gap 5px; margin-top 7px; background transparent; color (rgba(255,255,255,.8) or text-2); Hanken Grotesk 12px font-weight 600; SVG 13×13"
+        },
+        {
+          "name": "Message Composer",
+          "detail": "flex row; gap 10px (desktop) or 9px (phone); padding 14px 18px (desktop) or 12px 14px 22px (phone); border-top 1px line-1; input (flex 1, border 1px line-2, border-radius 99px, padding 12px 16px desktop or 11px 15px phone, Hanken Grotesk 14px)"
+        },
+        {
+          "name": "Mic Button (Voice Record)",
+          "detail": "44px (desktop) or 42px (phone) circle; border-radius 99px; border 1px line-2; background transparent; color grana; cursor pointer; flex center; SVG mic 19×19 (desktop) or 18×18 (phone); hover background grana-wash"
+        },
+        {
+          "name": "Send Button",
+          "detail": "44px (desktop) or 42px (phone) circle; border-radius 99px; border none; background grana (#C0303A); color #fff; cursor pointer; flex center; SVG send 19×19 (desktop) or 18×18 (phone); hover background grana-700"
+        },
+        {
+          "name": "Recording Indicator Bar",
+          "detail": "flex row; gap 3px; height 28px; padding 0 6px; multiple 3px bars (24px height, border-radius 9px, transform-origin center); animation fp-bar 1s ease-in-out infinite with staggered delays (0, 0.12s, 0.24s, etc.); colors: grana, grana, ocre, grana, ink, grana"
+        },
+        {
+          "name": "Recording Timer",
+          "detail": "Space Mono 13px font-weight 700; color grana; format '00:MM'"
+        },
+        {
+          "name": "Thread Header",
+          "detail": "flex row gap 12px; padding 14px 18px; avatar (42px circle, Fraunces italic 17px); name (Hanken Grotesk 15px font-weight 600, ink); status ('En línea' dot 7px, green #2E9A5B); call button (38px circle, border none, background transparent, hover var(--hover))"
+        },
+        {
+          "name": "Back Button (Phone)",
+          "detail": "34px circle; border-radius 99px; border none; background surface-2; color ink; cursor pointer; flex center; SVG arrow left 18×18"
+        },
+        {
+          "name": "Messages Container",
+          "detail": "flex column; gap 12px (desktop) or 10px (phone); padding 22px 26px (desktop) or 18px 16px (phone); overflow-y auto; scroll element"
+        },
+        {
+          "name": "Conversation List Pane (Desktop)",
+          "detail": "width 340px; border-right 1px line-1; background surface-2; flex column; padding 22px 20px 14px; heading Fraunces 500 24px margin 0 0 14px; search input with icon"
+        },
+        {
+          "name": "Thread Pane (Desktop)",
+          "detail": "flex 1; display flex; flex-direction column; background surface; thread-head border-bottom 1px line-1; messages flex 1 overflow-y auto; composer border-top 1px line-1"
+        },
+        {
+          "name": "Desktop Window",
+          "detail": "width 1180px; height 740px; border-radius 18px; overflow hidden; background surface; border 1px line-14; box-shadow 0 30px 70px -28px rgba(26,23,20,.42)"
+        },
+        {
+          "name": "Phone Frame",
+          "detail": "width 412px; height 840px; border-radius 52px; background #1A1714; padding 11px; inner container border-radius 42px; overflow hidden"
+        },
+        {
+          "name": "Phone Status Bar",
+          "detail": "height 46px; flex row; padding 0 28px 0 30px; background surface; Space Mono 13px; time left, notch center (104×28 #1A1714 rounded), signal right with SVG bars"
+        }
+      ],
+      "copyStrings": [
+        "Mensajes",
+        "Buscar",
+        "Escribe un mensaje…",
+        "Mensaje…",
+        "Nota de voz",
+        "Enviar",
+        "En línea",
+        "Ver transcript",
+        "Reproducir",
+        "Teléfono · toca una conversación",
+        "pantalla 07 · mensajes",
+        "texto · voz · transcript"
+      ],
+      "discrepanciesOrGotchas": "Voice message bars animation uses hardcoded colors (grana, ocre, ink) rather than being fully semantic. The phone bottom-sheet style composition uses position absolute with inset:0 for the thread view, requiring JS to toggle display (not CSS transform-based animation). Voice recording timer increments every 250ms, not 100ms (creates granularity at 0.25s). Waveform SVG uses a fixed cubic Bezier path (not dynamic based on actual audio levels) — this is prototype simplification; production should bind to real MediaRecorder frequency data. The transcript disclosure button inside voice bubbles uses display:none/block toggle rather than a Disclosure component pattern, which may cause layout shift. Recording UI replaces the entire composer innerHTML rather than toggling visibility of child elements, which loses focus and event listeners if not carefully managed. The 'unread badge' count is hardcoded as '1' in the proto; production needs actual unread count from Supabase. Hover state on mic button defined via 'style-hover' attribute (non-standard HTML) — must be converted to CSS :hover or data-hover state in React. Sound blips (tick, pop, click, soft) are tied to specific actions but controlled globally via audioContext (no user-facing mute toggle in this proto — the README mentions it should exist).",
+      "interactions": [
+        {
+          "trigger": "Click conversation item",
+          "effect": "On phone: thread view slides in from right (translateX 20px → 0) with opacity 0→1, duration 260ms cubic-bezier(.22,1,.36,1); background surface-3 applied to active item. On desktop: messages and thread-head update inline, no navigation animation."
+        },
+        {
+          "trigger": "Click 'Back' button (phone)",
+          "effect": "Thread view display:none; list view display:flex; sound 'soft' blip plays"
+        },
+        {
+          "trigger": "Click Mic button",
+          "effect": "Composer HTML replaced with recording UI (stop button + waveform bars + timer); timer increments every 250ms; bars animate with fp-bar keyframe (scale 0.3 → 1 → 0.3); sound 'soft' blip plays"
+        },
+        {
+          "trigger": "Click Stop Recording button",
+          "effect": "Voice bubble appended to messages (outgoing, grana bg); animation: opacity 0→1, translateY 6px→0, duration 240ms; composer restored to original state; timer cleared; sound 'pop' blip plays; scroll to bottom auto"
+        },
+        {
+          "trigger": "Send text message (button or input validation)",
+          "effect": "Text bubble appended (outgoing, grana bg); animation opacity 0→1, translateY 6px scale 0.96→1, duration 240ms cubic-bezier(.22,1,.36,1); input cleared; sound 'pop' blip plays; scroll to bottom auto. If empty: input shakes (translateX 0 → -4px → 4px → 0, duration 220ms)"
+        },
+        {
+          "trigger": "Click play button on voice message",
+          "effect": "Icon toggles between play (triangle) and pause (rectangles); sound 'click' blip plays; in production, bind to <audio> element playback"
+        },
+        {
+          "trigger": "Click 'Ver transcript' on voice message",
+          "effect": "Transcript disclosure panel toggles display:none ↔ block; on reveal: animation opacity 0→1 duration 200ms; sound 'tick' blip plays"
+        },
+        {
+          "trigger": "Hover conversation item",
+          "effect": "Background transitions to var(--hover) in 0.14s"
+        },
+        {
+          "trigger": "Hover mic button",
+          "effect": "Background becomes var(--grana-wash) (style-hover attribute)"
+        },
+        {
+          "trigger": "Hover send button",
+          "effect": "Background becomes var(--grana-700) (style-hover attribute)"
+        },
+        {
+          "trigger": "Theme toggle (light ↔ dark)",
+          "effect": "Root data-theme attribute set/removed; all CSS variables re-evaluate; transition background 0.4s ease; sound 'tick' blip plays"
+        }
+      ],
+      "layoutDesktop": "{\n  \"shell\": \"max-width 1640px, margin 0 auto\",\n  \"container\": \"grid: 340px (list) 1fr (thread); height 740px\",\n  \"list_pane\": \"340px fixed; background surface-2; padding 22px 20px 14px; heading Fraunces 500 24px\",\n  \"thread_pane\": \"flex 1; background surface; header border-bottom 1px line-1, padding 14px 18px; messages flex 1, padding 22px 26px, gap 12px; composer flex 0 0 auto, padding 14px 18px, border-top 1px line-1\",\n  \"message_max_width\": \"78% (text), 80% (voice)\",\n  \"window_border_radius\": \"18px\",\n  \"window_box_shadow\": \"0 30px 70px -28px rgba(26,23,20,.42)\"\n}",
+      "layoutPhone": "{\n  \"frame_size\": \"412×840px, border-radius 52px\",\n  \"inner_size\": \"100% × 100%, border-radius 42px\",\n  \"status_bar\": \"height 46px, notch centered\",\n  \"header\": \"padding 6px 18px 12px\",\n  \"heading\": \"Fraunces 500 26px margin 0 0 12px\",\n  \"search\": \"border-radius 99px, padding 9px 14px\",\n  \"list_scroll\": \"padding 2px 10px 18px, flex 1 overflow-y auto\",\n  \"thread_header\": \"height 46px (empty), flex 0 0 auto\",\n  \"thread_scroll\": \"flex 1, padding 18px 16px, gap 10px\",\n  \"composer\": \"padding 12px 14px 22px\",\n  \"message_max_width\": \"78% (text), 80% (voice)\",\n  \"navigation\": \"position absolute inset 0, list/thread toggled via display none/flex\"\n}",
+      "purpose": "Private text and voice direct messaging between users; desktop two-pane; phone list/thread toggle navigation.",
+      "screen": "Mensajeria (screen 07)",
+      "stateAndData": "{\n  \"UI_state\": {\n    \"activeConversation\": \"string (conversation id or null)\",\n    \"phoneView\": \"'list' | 'thread'\",\n    \"recordingActive\": \"boolean\",\n    \"recordingElapsed\": \"number (seconds × 4, increments every 250ms)\",\n    \"transcriptOpenFor\": \"[voice_message_id] (which voice bubble's transcript is expanded)\"\n  },\n  \"Data\": {\n    \"conversations\": \"[{ id, name, init, color, preview, time, unread }]\",\n    \"messages\": \"[{ id, sender_id, kind: 'text'|'voice', body_text?, audio_url?, transcript_raw, created_at }]\",\n    \"currentUser\": \"{ id, username, avatar_color }\"\n  },\n  \"Supabase queries\": {\n    \"conversations\": \"SELECT * FROM conversations INNER JOIN conversation_members USING (conversation_id) WHERE user_id = {user_id} ORDER BY created_at DESC\",\n    \"messages\": \"SELECT * FROM messages WHERE conversation_id = {conv_id} ORDER BY created_at ASC (with Realtime subscription)\",\n    \"transcript_raw\": \"Voice messages have both audio_url and transcript_raw fields; Gemini-transcribed at creation time\"\n  },\n  \"LocalStorage\": {\n    \"fp-theme\": \"'light' | 'dark' (persisted on toggle)\"\n  }\n}",
+      "tokensObserved": [
+        "#1A1714",
+        "#F2EFE8",
+        "#6E685D",
+        "#9C968A",
+        "#FBFAF6",
+        "#F8F5EF",
+        "#F2EFE8",
+        "#C0303A",
+        "#9A2530",
+        "#F6E6E4",
+        "#D98A3D",
+        "#2E9A5B",
+        "rgba(26,23,20,.12)",
+        "rgba(26,23,20,.1)",
+        "rgba(26,23,20,.24)",
+        "rgba(26,23,20,.04)",
+        "rgba(26,23,20,.42)",
+        "rgba(255,255,255,.8)",
+        "rgba(255,255,255,.45)",
+        "rgba(255,255,255,.92)",
+        "rgba(255,255,255,.25)",
+        "#fff",
+        "font-family: 'Fraunces', serif",
+        "font-family: 'Hanken Grotesk', sans-serif",
+        "font-family: 'Space Mono', monospace",
+        "font-size: 11px",
+        "font-size: 12px",
+        "font-size: 13px",
+        "font-size: 14px",
+        "font-size: 14.5px",
+        "font-size: 15px",
+        "font-size: 17px",
+        "font-size: 19px",
+        "font-size: 24px",
+        "font-weight: 400",
+        "font-weight: 500",
+        "font-weight: 600",
+        "font-weight: 700",
+        "border-radius: 4px",
+        "border-radius: 8px",
+        "border-radius: 14px",
+        "border-radius: 18px",
+        "border-radius: 42px",
+        "border-radius: 52px",
+        "border-radius: 99px",
+        "padding: 9px 14px",
+        "padding: 10px 14px",
+        "padding: 11px 15px",
+        "padding: 12px 16px",
+        "padding: 12px 14px 22px",
+        "padding: 14px 18px",
+        "padding: 22px 20px 14px",
+        "padding: 18px 16px",
+        "gap: 8px",
+        "gap: 9px",
+        "gap: 10px",
+        "gap: 12px",
+        "line-height: 1.35",
+        "line-height: 1.3",
+        "line-height: 1.45",
+        "line-height: 1.5",
+        "line-height: 1.7",
+        "transition: background 0.14s",
+        "transition: background 0.4s ease",
+        "box-shadow: 0 30px 70px -28px rgba(26,23,20,.42)",
+        "box-shadow: 0 30px 70px -28px rgba(0,0,0,.65) [dark theme]",
+        "width: 1180px",
+        "width: 412px",
+        "height: 740px",
+        "height: 840px",
+        "height: 46px",
+        "width: 340px",
+        "width: 48px",
+        "width: 42px",
+        "width: 44px",
+        "height: 48px",
+        "height: 42px",
+        "height: 44px",
+        "border-radius: 99px",
+        "grid-template-columns: 340px 1fr"
+      ]
+    },
+    {
+      "screen": "Notificaciones (feed de actividad)",
+      "purpose": "Pantalla de centro de notificaciones que muestra likes, seguimientos, comentarios de texto/voz, menciones y Flows nuevos de cuentas seguidas, con filtros y estado de lectura.",
+      "layoutDesktop": "Desktop responsive a 760px (ancho fijo en mockup). Header nav con logo FlowPub + título \"Notificaciones — quién te escucha\", subtítulo descriptivo. Toggles tema claro/oscuro (space-between). Cuerpo principal: 46px de chrome de navegador simulado (status bar con tres puntos de colores + URL). Zona de contenido: panel 760px width, flex column. Encabezado interno: h2 + botón \"Marcar todo como leído\" (space-between, 22px padding vertical). Tabs filtro: 2 botones (Todas / Sin leer) con border-bottom 2px dinámico. Lista scrollable altura fija 740px con 22px + 28px padding horizontal. Estructura de items agrupados por fecha (headers tipo \"Hoy\", \"Esta semana\") con padding 14px 14px 6px.",
+      "layoutPhone": "Teléfono 412px width, 840px altura, frame oscuro bezel 11px border-radius 52px. Status bar 46px con hora (9:41), notch simulada 104px x 28px centered, signal bars derecha. Navegación h2 + botón circular (36px) tema oscuro. Tabs filtro igual desktop. Contenido scroll: padding 6px 14px 24px (más comprimido que desktop). Items y groupers mismo comportamiento pero optimizado para touch (botones Seguir y play más grandes relativamente).",
+      "components": [
+        {
+          "name": "Notification Item",
+          "detail": "flex, gap 13px, padding 13px 14px, border-radius 14px. Avatar circular 46px (color variable, serif italic initials 19px) con badge posición absolute -3px -3px (22px diameter, filled icon blanco). Columna derecha flex:1 con actor name (600 weight) + action text + time (12px lighter). Opcional: botón Seguir (flex:0 0 auto, 13px, 600, 8px 18px padding, border 1px solid ink, transparent bg, border-radius 99px). Opcional: cover image 46x46px (border-radius 10px, 1px border). Opcional: voice block (flex gap 10px, max-width 300px, background surface-2, border 1px line, 99px radius, padding 5px 12px)."
+        },
+        {
+          "name": "Voice Comment Block",
+          "detail": "Contenedor flex, gap 10px. Play button circular 30x30px (background ink, color ink-on, border-radius 99px, flex:0 0 auto). SVG waveform scaled (flex:1, height 20px, path stroke line-2 2px). Time badge Space Mono 11px text-2. Debajo: botón toggle Ver transcript (flex gap 5px, transparent bg, text-2 color, 12px 600 Hanken). Transcript panel toggle display:none (margin-top 6px, padding 10px 12px, border-radius 10px, background surface-2, border 1px line, Fraunces 14px 1.5 line-height, text-2)."
+        },
+        {
+          "name": "Filter Tabs",
+          "detail": "flex gap 8px, border-bottom 1px line-1. Dos botones: 14px/600 font ink (active border-bottom 2px grana, margin-bottom -1px), inactive 14px/500 text-3 border-bottom 2px transparent."
+        },
+        {
+          "name": "Group Header",
+          "detail": "Space Mono 11px 600, uppercase, letter-spacing .12em, text-3 color. Padding 14px 14px 6px. Display conditional: hidden si no hay items visibles en el grupo (filter logic)."
+        },
+        {
+          "name": "Mark Read Button",
+          "detail": "Desktop: flex gap 7px, grana color, 13px 600 Hanken, transparent bg, no border. Phone: 36x36px circular button, surface-2 bg, grana color, flex centered."
+        },
+        {
+          "name": "Theme Toggle",
+          "detail": "inline-flex gap 0, background surface, border 1px line-2, border-radius 99px, padding 3px. Dos botones 36x30px (border-radius 99px, cursor pointer, flex centered). Active: background ink, color ink-on. Inactive: bg transparent, color text-3."
+        }
+      ],
+      "tokensObserved": [
+        "Color ink: #1A1714 (light) / #F2EFE8 (dark)",
+        "Color text-2: #6E685D (light) / #B3AB9D (dark)",
+        "Color text-3: #9C968A (light) / #867F72 (dark)",
+        "Color surface: #FBFAF6 (light) / #1E1A16 (dark)",
+        "Color surface-2: #F8F5EF (light) / #191510 (dark)",
+        "Color surface-3: #F2EFE8 (light) / #2A241D (dark)",
+        "Color line (borders): rgba(26,23,20,.12) light / rgba(242,239,232,.12) dark",
+        "Color line-1: rgba(26,23,20,.1) light / rgba(242,239,232,.1) dark",
+        "Color line-14: rgba(26,23,20,.14) light / rgba(242,239,232,.14) dark",
+        "Color line-2: rgba(26,23,20,.24) light / rgba(242,239,232,.22) dark",
+        "Color grana (red accent): #C0303A",
+        "Color grana-700: #9A2530",
+        "Color grana-wash (notification bg): #F6E6E4 (light) / rgba(192,48,58,.18) (dark)",
+        "Color ocre (comment): #D98A3D",
+        "Font Fraunces: serif, ital/wght 400/500/600",
+        "Font Hanken Grotesk: sans-serif, wght 400/500/600",
+        "Font Space Mono: monospace, wght 400/700",
+        "Icon colors: like #C0303A, follow #2A6FDB, comment #D98A3D, voice #9A2530, flow #1A1714, mention #2A6FDB",
+        "Avatar colors in data: #9A2530, #1A1714, #D98A3D, #C0303A (custom per notification)",
+        "Box-shadow (window): 0 30px 70px -28px rgba(26,23,20,.42) light / 0 30px 70px -28px rgba(0,0,0,.65) dark",
+        "Border-radius: 99px (pill), 52px (phone bezel), 42px (phone inner), 18px (desktop container), 14px (items), 10px (transcripts/covers)"
+      ],
+      "interactions": [
+        {
+          "trigger": "Click 'Marcar todo como leído'",
+          "effect": "Elimina fondo grana-wash de todos los items (dataset.unread = '0'), transition bg .2s. Reproduce sonido blip 'pop' (sine 700Hz, 0.05 gain ramped from 0.0001 over 6ms, decay a 0.0001 en 130ms total)."
+        },
+        {
+          "trigger": "Click tab filtro 'Sin leer'",
+          "effect": "Items no unread se ocultan (display:none). Group headers sin items visibles también ocultos. Color/weight/border-bottom del botón activo cambian. Sonido blip 'tick' (sine 540Hz, envelope igual)."
+        },
+        {
+          "trigger": "Click botón 'Seguir'",
+          "effect": "Toggle data-on (0/1). Texto alterna Seguir <-> Siguiendo. Background alterna transparent <-> ink, color alterna ink <-> ink-on. Sonido blip 'soft' (320Hz) si off -> on, 'pop' (700Hz) si on -> off."
+        },
+        {
+          "trigger": "Click play button en voice block",
+          "effect": "Toggle data-playing (0/1). SVG icon dentro cambia play triangle -> pause squares. Sonido blip 'click' (400Hz)."
+        },
+        {
+          "trigger": "Click 'Ver transcript'",
+          "effect": "Toggle display:none de div[data-vtrans] dentro del mismo item. Si abre, animation fadeIn [opacity 0 -> 1] 200ms. Sonido blip 'tick' (540Hz)."
+        },
+        {
+          "trigger": "Click tema claro/oscuro",
+          "effect": "Root[data-theme='dark'] attribute añadido/removido. Botones activo/inactivo: bg ink/transparent, color ink-on/text-3. LocalStorage guardado ('fp-theme'). Sonido blip 'tick'."
+        },
+        {
+          "trigger": "Hover button (hover: style-hover att)",
+          "effect": "Opacity .7 en algunos botones (style-hover attr indica capacidad, no CSS automático). Animación transition .14s en botones Seguir."
+        },
+        {
+          "trigger": "Scroll [data-scroll]",
+          "effect": "Custom scrollbar thumb (background line-2, border-radius 99px, width 7px) sobre fondo transparent."
+        }
+      ],
+      "copyStrings": [
+        "Notificaciones — quién te escucha",
+        "Likes, nuevos seguidores, comentarios de texto y de voz, menciones y Flows de quienes sigues.",
+        "Marcar todo como leído",
+        "Todas",
+        "Sin leer",
+        "Notificaciones",
+        "pantalla 08 · notificaciones",
+        "like · seguir · comentar · voz",
+        "flowpub.lat/notificaciones",
+        "Tema claro",
+        "Tema oscuro",
+        "Reproducir",
+        "Siguiendo",
+        "Seguir",
+        "Ver transcript",
+        "le gustó tu Flow",
+        "te comenzó a seguir",
+        "comentó:",
+        "te dejó un comentario de voz",
+        "publicó un nuevo Flow",
+        "te mencionó en un comentario",
+        "Desktop · 760",
+        "Teléfono · 390"
+      ],
+      "stateAndData": "Estado local: theme (light|dark), notif items array con campos { group, actor, initials, color, type, text, time, unread, cover?, voice?, transcript? }. Data attributes: [data-unread] en items (0|1), [data-on] en follow buttons (0|1), [data-playing] en play buttons (0|1), [data-filter] en tab buttons (all|unread), [data-action] en botones (markread, filter, follow, play, vtrans). LocalStorage: 'fp-theme'. Lógica: buildList genera HTML del array, onClick delegado gestiona acciones, filter remueve items del DOM (display:none) y headers vacíos.",
+      "discrepanciesOrGotchas": "1. Avatar en notif items usa color HARDCODED del objeto de datos, no desde tokens de design system (varios colores custom: #9A2530, #1A1714, #D98A3D, #C0303A). Esto es deliberado para diferenciar actores, pero no documentado en README típico de design system.\n2. Voice block max-width hardcoded a 300px, no token responsive.\n3. Badge posición absolute -3px -3px asume parent position:relative; verificar si se heredará correctamente en reconstruction.\n4. SVG waveform en voice block usa stroke line-2 color pero es SVG path hardcoded, no component reutilizable.\n5. Animación breathe en logo solo en svg, no en otros elementos (inconsistencia con motion tokens si los hubiera).\n6. Transcription text max-width 320px en dark mode pero no explícitamente definido en tokens.\n7. Group headers tienen display:none logic en JavaScript, no CSS (necesita estar en la lógica de rendering del dev).\n8. Theme toggle usa localStorage, asume que está disponible (sin try-catch).\n9. Blur/glow SVG filters (f-glow, f-hatch, gradientes g-turrell, g-flavin, g-amate, patrón p-hatch) son globales pero solo usados en covers. Clarificar si reutilizar.\n10. Button hover no tiene CSS declarado (style-hover attr es metadata, no selector :hover); aplicarse vía JS o Tailwind :hover directive.\n11. Audio context WebAudio API resume necesario (Autoplay Policy de navegadores modernos).\n12. Sonidos con nombres específicos pero parámetros inline (tick/pop/click/soft no son constantes cargadas, están hardcoded en métodos)."
+    },
+    {
+      "screen": "Panel de control (admin) — FlowPub",
+      "purpose": "Interfaz administrativa central para gestionar métricas, flows, usuarios, temas e integraciones de la plataforma FlowPub",
+      "layoutDesktop": "Grilla de 2 columnas: nav izquierda fija (226px) + contenido fluido. Nav: 22px padding, botones 12px padding, altura 780px. Header: max-width 1640px, padding 26px 40px 8px, flex row con logo/título a la izquierda y tema switcher a la derecha. Contenido: grid grid-template-columns: 1.5fr 1fr para secciones (resumen), gap 14px. Cards: border-radius 14px, padding 16-20px. Scrollable main content area con 24px padding top/bottom, 26px sides. Admin viewport: 1240px ancho, border-radius 18px.",
+      "layoutPhone": "Contenedor 412px ancho × 840px alto con border-radius 52px (bezel), padding 11px para simular dispositivo. Pantalla interna: 100% flex column. Header 46px fijo con hora (9:41) y barritas de señal. Title section padding 6px 18px 12px. Scrollable content area con grid 1fr 1fr para cards (4 cards 2×2), gap 10px, padding 14px. Botones acciones 44px × 26px (toggle switches).",
+      "components": [
+        {
+          "name": "Header Main",
+          "detail": "Logo animado (breathing: 6s ease-in-out, scale 1→1.05, rotate 0→-2.5deg), título Fraunces 30px w400, subtítulo Hanken 14px. Tema switcher: 2 botones 36×30px border-radius 99px, activo con background var(--ink), inactive transparent."
+        },
+        {
+          "name": "Admin Sidebar Nav",
+          "detail": "226px ancho, background var(--surface-2), padding 22px 16px, border-right 1px solid var(--line-1). Botones nav: 12px padding, border-radius 10px, 14px font-size w600. Activo: background var(--surface-3). Hover: background var(--hover). User avatar: 34px border-radius 99px, background var(--grana)."
+        },
+        {
+          "name": "Metric Card",
+          "detail": "background var(--surface-2), border 1px solid var(--line-1), border-radius 14px, padding 16px 18px. Título Hanken 12px color var(--text-3), valor Fraunces 28px w500, delta Space Mono 11px."
+        },
+        {
+          "name": "Bar Chart",
+          "detail": "7 barras, cada una flex column align-center. Altura: 60-100% con animation fp-grow (scaleY 0→1) staggered .05s delays. Gradientes: var(--grana)→#E0606A (rojo) y var(--ocre)→#E7A85C (ocre). border-radius 6px, transform-origin bottom."
+        },
+        {
+          "name": "Progress Bar",
+          "detail": "height 6px, border-radius 99px, background var(--line-1). Inner fill: width 11-32%, border-radius 99px, background var(--grana) o var(--ocre)."
+        },
+        {
+          "name": "Flows Table",
+          "detail": "Grid: grid-template-columns 1.8fr 1fr .8fr 1fr, gap 10px. Header padding 12px 16px, background var(--surface-2). Rows: padding 11px 16px, border-top 1px solid var(--line-1). Cover thumbnail 46×34px border-radius 7px. Botón acciones: 30×30px border-radius 8px, hover background var(--hover)."
+        },
+        {
+          "name": "Users Table",
+          "detail": "Grid: grid-template-columns 1.8fr 1fr .7fr 1fr. Avatar: 36×36px border-radius 99px. Nombre Fraunces serif 15px, username Space Mono 13px. Botón más: 16×16px filled circle icons."
+        },
+        {
+          "name": "Tag Row",
+          "detail": "display flex, gap 12px, padding 12px 14px, border 1px solid var(--line-1), border-radius 12px, background var(--surface-2). Nombre Fraunces 17px, counter Space Mono 12px, edit button 32×32px, toggle switch 44×26px border-radius 99px."
+        },
+        {
+          "name": "Toggle Switch",
+          "detail": "44×26px, border-radius 99px, border none. Inactivo: background var(--line-2). Activo: background var(--grana). Knob: position absolute, 20×20px border-radius 99px, background #fff, left 3px (off) / 21px (on), transition .2s, box-shadow 0 1px 2px rgba(0,0,0,.3)."
+        },
+        {
+          "name": "Setting Row",
+          "detail": "display flex, align-items center, gap 16px, padding 15px 0, border-bottom 1px solid var(--line-1). Título Hanken 15px w600, descripción Hanken 13px color var(--text-3)."
+        },
+        {
+          "name": "Range Slider",
+          "detail": "height 5px, border-radius 99px, background var(--line-2). Thumb: width/height 18px border-radius 99px, background var(--grana), border 2px solid var(--surface), cursor pointer."
+        },
+        {
+          "name": "Search Input",
+          "detail": "Dentro container flex gap 8px, align-items center, background var(--surface-2), border 1px solid var(--line-2), border-radius 99px, padding 8px 13px. Input: width 130px, font-size 13px, outline none, background transparent."
+        }
+      ],
+      "tokensObserved": [
+        "#F2EFE8 (ink-on)",
+        "#1A1714 (ink dark mode)",
+        "#F2EFE8 (ink light mode)",
+        "#6E685D (text-2)",
+        "#B3AB9D (text-2 dark mode)",
+        "#9C968A (text-3)",
+        "#FBFAF6 (surface light)",
+        "#1E1A16 (surface dark)",
+        "#F8F5EF (surface-2 light)",
+        "#191510 (surface-2 dark)",
+        "#F2EFE8 (surface-3 light)",
+        "#2A241D (surface-3 dark)",
+        "#C0303A (grana primary)",
+        "#9A2530 (grana-700)",
+        "#F6E6E4 (grana-wash light)",
+        "rgba(192,48,58,.18) (grana-wash dark)",
+        "#D98A3D (ocre secondary)",
+        "#2E9A5B (ok light)",
+        "#43B477 (ok dark)",
+        "rgba(26,23,20,.12) (line)",
+        "rgba(26,23,20,.1) (line-1)",
+        "rgba(26,23,20,.08) (line-soft)",
+        "rgba(26,23,20,.24) (line-2)",
+        "rgba(26,23,20,.14) (line-14)",
+        "rgba(26,23,20,.04) (hover light)",
+        "rgba(242,239,232,.06) (hover dark)",
+        "radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%) (bg-grad light)",
+        "radial-gradient(120% 90% at 50% -10%,#1E1913 0%,#141110 55%,#0E0C0A 100%) (bg-grad dark)",
+        "0 30px 70px -28px rgba(26,23,20,.42) (shadow-window light)",
+        "0 30px 70px -28px rgba(0,0,0,.65) (shadow-window dark)",
+        "#E0837F (macOS red traffic light)",
+        "#E7C07A (macOS yellow traffic light)",
+        "#A9C79A (macOS green traffic light)",
+        "#171410 (body bg dark - fallback)",
+        "#E0606A (grana lighter gradient)",
+        "#E7A85C (ocre lighter gradient)",
+        "#15110E (svg rect dark fill)",
+        "#EC7079 (flavin illustration red)",
+        "#F2C081 (flavin illustration gold)",
+        "font-size 30px Fraunces w400 (h1 main title)",
+        "font-size 24px Fraunces w500 (logo text)",
+        "font-size 22px Fraunces w500 (section title)",
+        "font-size 17px Fraunces (tag name)",
+        "font-size 15px Fraunces (user roles, avatar init)",
+        "font-size 28px Fraunces w500 (metric value large)",
+        "font-size 23px Fraunces w500 (metric value mobile)",
+        "font-size 18px Fraunces w500 (sidebar title)",
+        "font-size 14px Hanken (nav buttons, default text)",
+        "font-size 13px Hanken (setting titles, secondary)",
+        "font-size 12px Hanken (search placeholder, state badge, flows count)",
+        "font-size 11px Hanken (uppercase headers)",
+        "font-size 10px Space Mono (chart day labels)",
+        "font-size 12px Space Mono (state labels, metadata)",
+        "font-size 11px Space Mono (uppercase small caps)",
+        "letter-spacing -.02em (h1)",
+        "letter-spacing -.01em (logo)",
+        "letter-spacing .12em (uppercase tiny headers)",
+        "letter-spacing .14em (desktop/mobile labels)",
+        "letter-spacing .08em (table headers)"
+      ],
+      "interactions": [
+        {
+          "trigger": "click theme button (light/dark)",
+          "effect": "Toggle data-theme attr, update all button backgrounds/colors, play 'tick' sound (540Hz 0.14s), save theme to localStorage"
+        },
+        {
+          "trigger": "click nav button (Resumen/Flows/Usuarios/etc)",
+          "effect": "Update data-on attr (1/0), change background to var(--surface-3), update section panel visibility with opacity:0→1 animation (cubic-bezier .22,1,.36,1 260ms), translateY 8px, update title text, play 'click' sound (400Hz)"
+        },
+        {
+          "trigger": "click toggle switch",
+          "effect": "Flip data-on state, change background var(--line-2)↔var(--grana), slide knob left:3px↔21px in 200ms, play 'soft' (320Hz) or 'pop' (700Hz) sound"
+        },
+        {
+          "trigger": "click row action button (star/eye/more)",
+          "effect": "Execute animation scale(1)→scale(.85)→scale(1) 200ms, play 'click' sound"
+        },
+        {
+          "trigger": "click 'Añadir tema' button",
+          "effect": "Insert new tagRow at end of list, animate opacity 0→1 + translateY -6px in 260ms cubic-bezier, play 'pop' sound"
+        },
+        {
+          "trigger": "input range slider",
+          "effect": "Update sibling [data-val] textContent with formatted value (min:00 format or plain number)"
+        },
+        {
+          "trigger": "page load",
+          "effect": "Check localStorage for fp-theme, apply dark theme if present, render tables/tags/settings innerHTML dynamically, attach click/input listeners"
+        },
+        {
+          "trigger": "hover nav buttons (not active)",
+          "effect": "background changes to var(--hover)"
+        },
+        {
+          "trigger": "hover row action buttons",
+          "effect": "background var(--hover), color changes to var(--ocre) for star, var(--grana) for eye, var(--ink) for more"
+        },
+        {
+          "trigger": "page scroll (metrics bars on mount)",
+          "effect": "Staggered animation fp-grow on each bar: delays .05s, .1s, .15s, .2s, .25s, .3s"
+        },
+        {
+          "trigger": "logo on page load",
+          "effect": "Continuous animation fp-breathe 6s infinite: scale 1→1.05, rotate 0→-2.5deg, easing ease-in-out"
+        }
+      ],
+      "copyStrings": [
+        "Panel de control — configurar y editar todo",
+        "Métricas, Flows, usuarios, temas e ajustes: IA (Gemini), grabación, integraciones (Supabase · Resend · Turnstile) y el interruptor de UI generativa.",
+        "Tema claro",
+        "Tema oscuro",
+        "pantalla 09 · admin",
+        "métricas · ajustes · IA",
+        "Desktop · 1240",
+        "admin.flowpub.lat",
+        "Resumen",
+        "Flows",
+        "Usuarios",
+        "Temas",
+        "Ajustes",
+        "Admin",
+        "Usuarios",
+        "Flows publicados",
+        "Min. transcritos",
+        "Activos hoy",
+        "+4.2% semana",
+        "+312 hoy",
+        "Gemini",
+        "+8.1%",
+        "Flows por día",
+        "últimos 7 días",
+        "Temas más activos",
+        "Arte",
+        "Cultura",
+        "Ciencia",
+        "Libros",
+        "32%",
+        "21%",
+        "14%",
+        "11%",
+        "Buscar…",
+        "Flow",
+        "Autor",
+        "Tema",
+        "Estado · Acciones",
+        "Reportado",
+        "Destacado",
+        "Publicado",
+        "Suspendido",
+        "Usuario",
+        "Rol",
+        "Flows",
+        "Creadora",
+        "Creador",
+        "Oyente",
+        "Verificada",
+        "Activo",
+        "Ajustes rápidos",
+        "Teléfono · admin móvil",
+        "9:41",
+        "Operativo",
+        "Reportes",
+        "Activa, edita o añade los temas que los usuarios eligen al entrar (3) y para filtrar el Pub.",
+        "Añadir tema",
+        "Registro abierto",
+        "Permite que cualquiera cree una cuenta.",
+        "Idioma por defecto",
+        "FlowPub detecta el idioma del sistema operativo.",
+        "Automático (SO)",
+        "Español",
+        "English",
+        "Tema por defecto",
+        "Apariencia para usuarios nuevos.",
+        "Sistema",
+        "Claro",
+        "Oscuro",
+        "General",
+        "Inteligencia · Gemini",
+        "Transcripción automática",
+        "Convierte el audio en texto al grabar.",
+        "Pulido del texto con IA",
+        "Limpia muletillas y da forma de artículo.",
+        "Generación de portada",
+        "Crea la imagen abstracta de cada Flow.",
+        "Estilo de portada",
+        "Dirección visual de las portadas generadas.",
+        "Aleatorio",
+        "Collage 90s",
+        "Turrell / luz",
+        "Flavin / neón",
+        "Escher / isométrico",
+        "Grabación",
+        "Duración máxima",
+        "Tope de cada grabación de Flow.",
+        "Temas por Flow",
+        "Cuántos temas puede llevar una publicación.",
+        "Integraciones",
+        "Supabase",
+        "Base de datos y autenticación.",
+        "Conectado",
+        "Resend · correos",
+        "Notificaciones y verificación por email.",
+        "Cloudflare Turnstile",
+        "Protección anti-bots en el registro.",
+        "Experimental",
+        "UI generativa",
+        "beta",
+        "El layout de cada Flow se genera según su contenido. En construcción.",
+        "Nueve minutos sobre el barro",
+        "Julio",
+        "La luz del taller",
+        "Renata",
+        "Notas de cine para nadie",
+        "Sofía",
+        "Un mapa hablado de la ciudad",
+        "Tomás",
+        "La ciencia en voz alta",
+        "Inés",
+        "Renata Salas",
+        "renata",
+        "Julio Méndez",
+        "julio",
+        "Tomás Vela",
+        "tomas",
+        "Inés Caro",
+        "ines",
+        "Anon99",
+        "anon99"
+      ],
+      "stateAndData": "{\n  \"theme\": \"light | dark (localStorage key: fp-theme)\",\n  \"activeSection\": \"resumen | flows | usuarios | temas | ajustes\",\n  \"metrics\": {\n    \"usuarios\": 12480,\n    \"flowsPublicados\": 8412,\n    \"minutosTranscritos\": 61205,\n    \"activosHoy\": 3927\n  },\n  \"chartData\": \"[{day: L, height: 60%}, {day: M, height: 78%}, {day: M, height: 52%}, {day: J, height: 88%}, {day: V, height: 100%}, {day: S, height: 72%}, {day: D, height: 64%}]\",\n  \"tagsData\": \"[{name: Arte, count: random(100-999), on: true}, ...]\",\n  \"toggleStates\": \"Registro abierto (true), Transcripción IA (true), Generación portada (true), UI generativa (false), etc.\",\n  \"sliderValues\": {duracionMax: 9, temasPerFlow: 3}\",\n  \"flows\": \"[{title, author, tag, status, cover}] - 5 flows sample\",\n  \"users\": \"[{name, username, role, flows, status, color}] - 5 users sample\",\n  \"integraciones\": {supabase: connected, resend: enabled, turnstile: enabled}\"\n}",
+      "discrepanciesOrGotchas": "\"\n1. DISCREPANCIA: El archivo usa **colores hex hardcodeados** (#E0837F, #E7C07A, #A9C79A para semáforos macOS) en lugar de tokens de diseño del sistema. No están documentados en README.\n\n2. **Sounds no están documentados**: El sistema usa Web Audio API para generar 4 sonidos: tick (540Hz), pop (700Hz), click (400Hz), soft (320Hz) con duraciones/envolventes específicas. Requiere implementación en React.\n\n3. **CSS Custom Properties sin fallback**: Múltiples variables CSS (--grana, --ok, --ocre) se asumen siempre definidas. Si el scope CSS falla, los estilos colapsan.\n\n4. **Animaciones keyframes**: @keyframes fp-breathe y fp-grow no están exportadas como componentes reutilizables; están inlined en el CSS global. Difícil mantener en componentes React.\n\n5. **Datos mock hardcodeados**: TAGS, FLOWS, USERS arrays están inside del script de la clase Component. No hay endpoint API ni Supabase fetch. El desarrollador debe implementar la integración real.\n\n6. **localStorage sin try-catch consistente**: El applyTheme() intenta guardar el tema en localStorage, pero fallaría silenciosamente en private browsing. No hay error handling visible al usuario.\n\n7. **SVG inline coverage thumbnails generadas proceduralmente** en covSvg(): El CSS no cubre cómo se renderiza `preserveAspectRatio='xMidYMid slice'`. Puede causar stretching/cropping inesperado en diferentes tamaños de contenedor.\n\n8. **Padding/margin asimetría**: Header tiene padding 26px 40px 8px (top, sides, bottom distintos). Algunos cards 18px 20px, otros 16px 18px. No centralizado en tokens.\n\n9. **Grid inconsistencias**: Desktop admin grid es 1240px fijo, pero el content area no tiene max-width documentado; puede overflow en resoluciónesmuy altas.\n\n10. **Atributos data-* para lógica**: El componente depende de data-sec, data-on, data-action, data-secPanel para routing de eventos. Muy frágil; si la estructura HTML cambia, la lógica se rompe.\n\n11. **onClick handlers globales sin event delegation boundaries**: El onClick escucha en el root y bufa todos los [data-action] elementos, incluso fuera del admin viewport deseado (ej: Desktop y Phone comparten el handler).\n\n12. **Animación staggered delays hardcodeados**: Las barras del gráfico tienen delays .05s, .1s, .15s... en línea. Si quieres cambiar el ritmo, edita 7 líneas separadas.\n\n13. **Falta de responsive breakpoints documentados**: El archivo tiene Desktop (1240px) y Teléfono (412px), pero no hay especificación de tablet o media queries flexibles.\n\n14. **User avatar colors son hardcoded en USERS data**: Los colores (#C0303A, #1A1714, etc.) no se propagan desde tokens --grana, --ocre, etc. Duplicación de valores.\n\n15. **No hay indicación de carga (loading states)**: Las tablas se renderizan con innerHTML desde datos mock. Si la API fuese lenta, no hay skeleton screens ni spinners.\n\""
+    },
+    {
+      "screen": "Idiomas (demo i18n) — FlowPub",
+      "purpose": "Demostración de detección automática de idioma del sistema (ES/EN) y selector manual de idioma con traducción en vivo de la interfaz",
+      "layoutDesktop": "Header: max-width 1640px, margin 0 auto, padding 26px 40px 8px. Logo + titulo en left (flex, gap 10px). Controles de idioma/tema en right (flex column, gap 12px). \nDetection banner: max-width 1640px, margin 14px auto 0, padding 0 40px, display flex, align-items center, gap 12px.\nMain scroll container: max-width 1640px, padding 22px 40px 80px, display flex, gap 48px, overflow-x auto.\nDesktop mini-app: width 1080px, flex 0 0 auto. Grid: rail 230px + main 1fr, height 620px. Rail padding 24px 16px.\nPhone mini-app: width 412px, height 840px (outer frame 11px padding), inner container border-radius 42px.",
+      "layoutPhone": "Top bar: 46px, status time + notch placeholder + signal icons.\nHeader section: 6px+20px+12px padding top/bottom. FlowPub logo + user avatar 30px.\nFilter chips: padding 0 20px 12px, flex overflow-x auto.\nMain scroll area: flex 1, overflow-y auto, padding 4px 16px 16px.\nCard: full width, aspect 16/9 + content section padding 16px 17px.\nButton: width 100%, margin-top 16px, 14px padding, border-radius 99px.",
+      "components": [
+        {
+          "name": "Language Toggle Group",
+          "detail": "display inline-flex, align-items center, background var(--surface), border 1px solid var(--line-2), border-radius 99px, padding 3px. Buttons: font-size 12px, font-weight 600, padding 7px 13px, border-radius 99px, border none, cursor pointer. Active: background var(--ink), color var(--ink-on). Inactive: background transparent, color var(--text-3)"
+        },
+        {
+          "name": "Theme Toggle Group",
+          "detail": "display inline-flex, align-items center, background var(--surface), border 1px solid var(--line-2), border-radius 99px, padding 3px. Buttons: width 34px, height 30px, display flex, align-items center, justify-content center, border-radius 99px, border none, cursor pointer. Active: background var(--ink), color var(--ink-on). Inactive: background transparent, color var(--text-3)"
+        },
+        {
+          "name": "Detection Banner",
+          "detail": "display flex, align-items center, gap 12px, background var(--surface), border 1px solid var(--line-2), border-radius 14px, padding 13px 18px, box-shadow var(--shadow-card). Icon circle: width/height 34px, border-radius 99px, background var(--grana-wash), color var(--grana-700)"
+        },
+        {
+          "name": "Flow Card (Desktop)",
+          "detail": "max-width 560px, background var(--surface), border 1px solid var(--line), border-radius 16px, overflow hidden, box-shadow var(--shadow-card). Header: aspect-ratio 16/9. Footer: padding 20px 22px"
+        },
+        {
+          "name": "Flow Card (Mobile)",
+          "detail": "width 100%, background var(--surface), border 1px solid var(--line), border-radius 16px, overflow hidden, box-shadow var(--shadow-card). Header: aspect-ratio 16/9. Footer: padding 16px 17px"
+        },
+        {
+          "name": "Audio Badge",
+          "detail": "display inline-flex, align-items center, gap: 5-6px, font-size 11-12px, font-weight 600, padding 3-4px 9-10px, border-radius 99px, background rgba(251,250,246,.92), color #9A2530. Dot indicator: width/height 5-6px, border-radius 99px, background #C0303A"
+        },
+        {
+          "name": "Filter Chip",
+          "detail": "flex 0 0 auto, font-family Hanken Grotesk, font-size 13px, padding 6-7px 14-15px, border-radius 99px, border 1px solid. Active: border var(--ink), background var(--ink), color var(--ink-on), font-weight 600. Inactive: border var(--line-2), color var(--text-2), font-weight 500"
+        },
+        {
+          "name": "User Avatar",
+          "detail": "width 28-32px, height 28-32px, border-radius 99px, background var(--ink), color var(--ink-on), display flex, align-items center, justify-content center, font-family Fraunces, font-style italic, font-size 12-14px"
+        },
+        {
+          "name": "Record Button (CTA)",
+          "detail": "width 100% (mobile) or full flex, display flex, align-items center, justify-content center, gap 9px, padding 13-14px, border none, border-radius 99px, background var(--grana), color #fff, cursor pointer, font-family Hanken Grotesk, font-size 14-15px, font-weight 600"
+        }
+      ],
+      "tokensObserved": [
+        "#171410 (body background dark)",
+        "#F6E6E4 (selection background)",
+        "#1A1714 (--ink dark, text primary)",
+        "#F2EFE8 (--ink-on light, reverse text)",
+        "#6E685D (--text-2 secondary dark)",
+        "#9C968A (--text-3 tertiary)",
+        "#FBFAF6 (--surface light background)",
+        "#F8F5EF (--surface-2 light secondary)",
+        "#F2EFE8 (--surface-3 light tertiary)",
+        "#C0303A (--grana brand red)",
+        "#9A2530 (--grana-700 dark red)",
+        "#F6E6E4 (--grana-wash red tint)",
+        "#D98A3D (--ocre orange accent)",
+        "rgba(26,23,20,.12) (--line default border)",
+        "rgba(26,23,20,.1) (--line-1 subtle border)",
+        "rgba(26,23,20,.08) (--line-soft very subtle)",
+        "rgba(26,23,20,.24) (--line-2 medium border)",
+        "rgba(26,23,20,.14) (--line-14 border)",
+        "rgba(26,23,20,.04) (--hover light hover state)",
+        "rgba(26,23,20,.16) (--wave wave effect)",
+        "#E0837F (window control red)",
+        "#E7C07A (window control yellow)",
+        "#A9C79A (window control green)",
+        "rgba(251,250,246,.92) (badge background translucent light)",
+        "font-family: Fraunces (serif, headings, branding)",
+        "font-family: Hanken Grotesk (sans-serif, main UI)",
+        "font-family: Space Mono (monospace, code/labels)",
+        "font-weight: 400 (Fraunces regular)",
+        "font-weight: 500 (Fraunces medium, Hanken medium)",
+        "font-weight: 600 (Hanken semibold, Space Mono bold)",
+        "font-size: 24px (Fraunces brand name)",
+        "font-size: 30px (h1 title)",
+        "font-size: 20px (Fraunces card title mobile)",
+        "font-size: 24px (Fraunces card title desktop)",
+        "font-size: 14px (Hanken body copy, banner)",
+        "font-size: 13px (Hanken standard UI)",
+        "font-size: 12px (Hanken small, buttons, tags)",
+        "font-size: 11px (Hanken/Space Mono labels)",
+        "letter-spacing: -.01em (brand name)",
+        "letter-spacing: -.02em (title)",
+        "letter-spacing: .12em (filters label uppercase)",
+        "letter-spacing: .14em (device label uppercase)",
+        "line-height: 1.05 (h1 tight)",
+        "line-height: 1.12 (card title desktop)",
+        "line-height: 1.14 (card title mobile)",
+        "line-height: 1.25 (user name)",
+        "line-height: 1.45 (card description mobile)",
+        "line-height: 1.5 (card description desktop)",
+        "border-radius: 99px (pill/circular buttons, badges)",
+        "border-radius: 52px (phone frame outer)",
+        "border-radius: 42px (phone screen inner)",
+        "border-radius: 18px (desktop frame)",
+        "border-radius: 16px (cards)",
+        "border-radius: 14px (banner)",
+        "border-radius: 11px (nav items)",
+        "box-shadow: var(--shadow-window) 0 30px 70px -28px rgba(26,23,20,.42)",
+        "box-shadow: var(--shadow-card) 0 1px 2px rgba(26,23,20,.05)",
+        "opacity: .96 (polygon fill in illustration)",
+        "opacity: .5 (noise filter)",
+        "mix-blend-mode: multiply (noise on illustration)"
+      ],
+      "interactions": [
+        {
+          "trigger": "Click language button (Auto/ES/EN)",
+          "effect": "Toggle active state (background/color change), update all data-i18n text, update banner with navigator.language + detected language, audio sound 'tick' (540Hz sine, 0.006-0.13s ramp)"
+        },
+        {
+          "trigger": "Click theme button (light/dark)",
+          "effect": "Toggle active state on button, apply data-theme='dark' or remove on root, update all [data-set] button styles, persist to localStorage as 'fp-theme', audio sound 'tick' (540Hz)"
+        },
+        {
+          "trigger": "Hover on any button",
+          "effect": "Implicit via CSS: color/background transitions on --text-3 or --text-2 to darker on light theme (not explicitly animated in CSS, relies on --hover rgba for visual feedback)"
+        },
+        {
+          "trigger": "Click 'Traducir' button on card",
+          "effect": "Change text to 'Traducido ✓' (ES) or 'Translated ✓' (EN), change color to var(--ok, #2E9A5B), audio sound 'pop' (700Hz sine, 0.006-0.13s ramp)"
+        },
+        {
+          "trigger": "Scroll [data-scroll] containers",
+          "effect": "Custom scrollbar: width 7px, thumb background var(--line-2), border-radius 99px. [data-chips] scrolls hide default scrollbar (display none)"
+        },
+        {
+          "trigger": "Page load / componentDidMount",
+          "effect": "Detect system language (navigator.language), apply auto-detected language (ES if starts with 'es', EN if starts with 'en'), restore theme from localStorage, set [data-action='lang'] active button styling"
+        },
+        {
+          "trigger": "Component breathing animation (logo SVG)",
+          "effect": "Keyframe fp-breathe: scale(1)->scale(1.05) + rotate(0)->rotate(-2.5deg) at 50%, duration 6s ease-in-out infinite, transform-origin 50% 50%. Reduced motion: all animations disabled"
+        },
+        {
+          "trigger": "Audio context initialization",
+          "effect": "Resume suspended AudioContext on first user interaction. Sound types: tick (540Hz), pop (700Hz), click (400Hz), soft (320Hz). All use exponential ramp gain envelope with ~140ms total duration"
+        }
+      ],
+      "copyStrings": [
+        "Idiomas — internacional desde el día uno",
+        "FlowPub detecta el idioma de tu sistema y adopta ES o EN. Cambia el idioma aquí y mira cómo se traduce la interfaz en vivo. El contenido de cada Flow se queda en su idioma original.",
+        "Auto",
+        "ES",
+        "EN",
+        "Tema claro",
+        "Tema oscuro",
+        "pantalla 10 · i18n",
+        "detección · ES / EN",
+        "Detectamos el idioma de tu sistema",
+        "navigator.language",
+        "Interfaz en Español",
+        "Desktop · 1080",
+        "Teléfono · 390",
+        "El Pub",
+        "Explorar",
+        "Mensajes",
+        "Notificaciones",
+        "Perfil",
+        "Grabar un Flow",
+        "Filtrar por tema",
+        "Todos",
+        "Arte",
+        "Ciencia",
+        "Libros",
+        "Cultura",
+        "Audio",
+        "min",
+        "Nueve minutos sobre el barro",
+        "Hoy quiero hablar de algo que llevo pensando entre el barro y los datos: cómo lo que se moldea con las manos también guarda memoria.",
+        "El contenido del Flow se queda en su idioma original",
+        "Traducir",
+        "hace 2 h",
+        "Julio",
+        "Comentar",
+        "Compartir",
+        "Contenido en su idioma original"
+      ],
+      "stateAndData": "State: { _root, _ac (AudioContext), theme (light/dark from localStorage), currentLang (auto/es/en), DICT (i18n dictionary with two language objects).\nData flow: setLang() reads lang parameter, detects if 'auto', resolves to es/en. Updates all [data-i18n] elements textContent from DICT. Updates [data-oslang] with navigator.language + resolved code. Updates [data-action='lang'] button active states. Sets document.documentElement.lang attribute.\nTheme state: applyTheme(theme) sets data-theme='dark' or removes it on root. Updates all [data-set] button inline styles. Persists to localStorage as 'fp-theme'.\nAudioContext lazy-initialized on first user interaction. Supports suspended state resume.\nEvent delegation: onClick listens for [data-action] elements within _root. Routes to setLang() for lang buttons or translate button handler.",
+      "discrepanciesOrGotchas": "DISCREPANCY 1: Audio implementation uses Web Audio API directly (OscillatorNode) instead of audio file assets — not typical i18n screen but core to the UX demo.\nDISCREPANCY 2: Theme toggle persists to localStorage but language preference does NOT persist (only auto-detects on mount or manual click within session). Design may intend lang persistence.\nDISCREPANCY 3: Color var(--ok, #2E9A5B) for 'Traducido ✓' state is never defined in CSS --root or dark theme, relies on fallback hex. Not in design system tokens.\nDISCREPANCY 4: Font-style italic applied manually with inline <span style='font-style:italic'>Flow</span>Pub instead of CSS class, brittle if copy changes.\nDISCREPANCY 5: Scrollbar styling uses webkit pseudo-elements ([data-scroll]::-webkit-scrollbar) — not cross-browser, Firefox/Safari mobile ignored.\nDISCREPANCY 6: Noise SVG filter (id=f-noise) applied to illustration polygons but never used on main UI elements, isolated to card artwork only.\nDISCREPANCY 7: data-i18n keys use dot notation ('nav.pub', 't.all') but setLang() simply matches el.dataset.i18n to DICT key — no namespace resolution, works by string equality only.\nDISCREPANCY 8: Phone frame bezel uses hardcoded #1A1714 color (not CSS var), frame won't adapt to theme toggle.\nDISCREPANCY 9: Card subtitle line-clamp uses webkit standard (-webkit-line-clamp: 2) without fallback for non-webkit browsers.\nDISCREPANCY 10: SVG viewBox and stroke-width attributes hard-coded per icon; no icon system or reusable component structure noted (support.js not provided)."
+    }
+  ],
+  "support": {
+    "summary": "support.js es el runtime que ejecuta Design Components (.dc.html) en FlowPub. Proporciona un sistema completo de compilación de templates JSX, manejo de lógica de componentes (StreamableLogic), y sistema de streaming para propiedades/HTML/JS. No contiene primitivas de animación, sonido o interacción explícitas en la capa runtime — ésas se definen a nivel de CSS o componentes de usuario. El runtime sí maneja: compilación de templates HTML con soporte {{interpolación}}, directives sc-if/sc-for, gestión de componentes externos (x-import), hot-reload de lógica, streaming de propiedades/template/JS, y manejo de helm (head meta tags). Respeta prefers-reduced-motion implícitamente al no inyectar animaciones directas — el control está en el CSS del usuario y los componentes React.",
+    "animationPrimitives": [
+      "sc-shine: keyframe gradient shine para placeholders streaming (1.4s ease infinite)",
+      "placeholder streaming: animaciones de carga con gradientes lineales (shimmer effect)",
+      "CSS animation disabling on print: animation-duration .001s !important para print media",
+      "Media queries @media print con animation-iteration-count:1 y animation-fill-mode:both para congelación de animaciones"
+    ],
+    "soundSystem": "Sin implementación de audio en el runtime. El sistema de sonidos WebAudio NO está presente en support.js. Los componentes pueden importar librerías de audio externas vía x-import, pero el runtime base no provee gating por gesto, mute automático, ni blips de interacción. La lógica de sonido debe implementarse a nivel de componente usuario o librería externa.",
+    "interactionPatterns": [
+      "onclick/onChange/onInput/onSubmit/onKeyDown/onKeyUp/onKeyPress/onMouseDown/onMouseUp/onMouseEnter/onMouseLeave/onFocus/onBlur/onDoubleClick/onContextMenu: EVENT_MAP traduce atributos lowercase HTML a camelCase React",
+      "sc-for: directive loop sobre arrays con {{list}} y {{as}} binding — genera claves React por índice",
+      "sc-if: conditional rendering con {{value}} y hint-placeholder-val para streaming",
+      "Filtros de chips: no implementado en runtime — deben venir del componente usuario",
+      "Like animado: no implementado — responsabilidad del componente",
+      "Swipe/long-press: no implementado en runtime, requiere gestión en componente o librería externa"
+    ],
+    "reusableLogic": [
+      "StreamableLogic: clase base de lógica de componente con lifecycle (componentDidMount/Update/WillUnmount), renderVals(), setState() con back-pointer a componente host",
+      "Template compilation: función compileTemplate() que parse HTML + encodeCase (camelCase attrs, x-import self-close, sc-helmet), genera builders (funciones render) con data-dc-tpl tracking",
+      "Expression resolver: resolve() para {{expr}} — soporta aritmética básica, comparaciones (===, !==, ==, !=), rutas de objeto (obj.prop[index]), negación",
+      "External module loader: loadExternal() carga JS/JSX vía fetch, transpiila JSX con Babel standalone, cache de módulos, polling para globales no resueltas",
+      "Registry & hot-reload: createRegistry() con versioning (ver), bump() para triggers, subs (Set de callbacks) para invalidación",
+      "Pseudo-class sheet: createPseudoSheet() genera clases CSS dinámicas para :hover, :focus, :before, :after sin keyframes hardcoded"
+    ],
+    "notesForReact": "[\"Respetar prefers-reduced-motion: No inyectar animaciones en media print. Los componentes pueden leer @media (prefers-reduced-motion: reduce) en su CSS y remover durations. El runtime no lo hace, pero los componentes deben respetarlo.\", \"Providers de contexto: AncestorContext rastrear ciclos de importes circulares — portar como React Context con cadena de ancestros\", \"useEffect para suscripciones: registry.subs es Set de callbacks; en React traducir a useEffect(() => { registry.get(name).subs.add(sub); return () => registry.get(name).subs.delete(sub); }, [])\", \"Hot-reload via registry.bump(): llamar registry.bump(name) cuando template/JS/props cambien — dispara re-render en todos los suscriptores\", \"Manejo de errores: createComponentFactory retorna StreamableComponent con getDerivedStateFromError + componentDidCatch — portar como Error Boundary en React 18+\", \"state merging: logic.state persiste en hot-reload; setState() no reemplaza, merge (Object.assign)\", \"Streaming hints: hintSize, hintPlaceholderCount, hintPlaceholderVal — UI para placeholders durante lazy-load vía propsMeta\"]"
+  }
+}

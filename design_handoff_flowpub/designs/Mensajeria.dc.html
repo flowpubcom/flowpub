@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#171410;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#F6E6E4}
+  [data-scroll]::-webkit-scrollbar{width:7px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  input{font-family:'Hanken Grotesk',sans-serif}
+  [data-root]{
+    --ink:#1A1714;--ink-on:#F2EFE8;--text-2:#6E685D;--text-3:#9C968A;
+    --surface:#FBFAF6;--surface-2:#F8F5EF;--surface-3:#F2EFE8;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%);
+    --line:rgba(26,23,20,.12);--line-1:rgba(26,23,20,.1);--line-soft:rgba(26,23,20,.08);--line-2:rgba(26,23,20,.24);--line-14:rgba(26,23,20,.14);
+    --hover:rgba(26,23,20,.04);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:#F6E6E4;--ocre:#D98A3D;
+    --glass:rgba(251,250,246,.86);--shadow-window:0 30px 70px -28px rgba(26,23,20,.42);
+  }
+  [data-root][data-theme="dark"]{
+    --ink:#F2EFE8;--ink-on:#1A1714;--text-2:#B3AB9D;--text-3:#867F72;
+    --surface:#1E1A16;--surface-2:#191510;--surface-3:#2A241D;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#1E1913 0%,#141110 55%,#0E0C0A 100%);
+    --line:rgba(242,239,232,.12);--line-1:rgba(242,239,232,.1);--line-soft:rgba(242,239,232,.07);--line-2:rgba(242,239,232,.22);--line-14:rgba(242,239,232,.14);
+    --hover:rgba(242,239,232,.06);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:rgba(192,48,58,.18);--ocre:#D98A3D;
+    --glass:rgba(20,17,14,.78);--shadow-window:0 30px 70px -28px rgba(0,0,0,.65);
+  }
+  @keyframes fp-breathe{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.05) rotate(-2.5deg)}}
+  @keyframes fp-bar{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div data-root ref="{{ setRoot }}" style="position:relative;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);background:var(--bg-grad);transition:background .4s ease">
+
+  <header style="position:relative;z-index:2;max-width:1640px;margin:0 auto;padding:26px 40px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="line-height:0;display:inline-block;animation:fp-breathe 6s ease-in-out infinite;transform-origin:50% 50%"><svg width="30" height="30" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span></div>
+      <h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:0"><span style="font-style:italic">Mensajes</span> — hablarse entre voces</h1>
+      <p style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;color:var(--text-2);margin:8px 0 0;max-width:62ch">Conversaciones de texto y de <b style="color:var(--grana)">voz</b> (con su “ver transcript”). En teléfono, toca una conversación para abrir el chat.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:3px">
+        <button data-set="light" onClick="{{ onTheme }}" aria-label="Tema claro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:var(--ink);color:var(--ink-on)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button data-set="dark" onClick="{{ onTheme }}" aria-label="Tema oscuro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);text-align:right;line-height:1.7">pantalla 07 · mensajes<br>texto · voz · transcript</div>
+    </div>
+  </header>
+
+  <div data-scroll style="position:relative;z-index:2;display:flex;gap:48px;align-items:flex-start;justify-content:flex-start;padding:24px 40px 80px;flex-wrap:nowrap;overflow-x:auto">
+
+    <!-- ============ DESKTOP — two pane ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Desktop · 1180</div>
+      <div data-msg-root data-mode="desk" style="width:1180px;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line-14);box-shadow:var(--shadow-window)">
+        <div style="height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--surface-2);border-bottom:1px solid var(--line-1)"><div style="display:flex;gap:8px"><span style="width:11px;height:11px;border-radius:99px;background:#E0837F"></span><span style="width:11px;height:11px;border-radius:99px;background:#E7C07A"></span><span style="width:11px;height:11px;border-radius:99px;background:#A9C79A"></span></div><div style="flex:1;display:flex;justify-content:center"><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);background:var(--surface);border:1px solid var(--line-1);padding:5px 16px;border-radius:99px">flowpub.lat/mensajes</span></div><div style="width:54px"></div></div>
+
+        <div style="display:grid;grid-template-columns:340px 1fr;height:740px">
+          <!-- conversation list -->
+          <div style="border-right:1px solid var(--line-1);display:flex;flex-direction:column;background:var(--surface-2)">
+            <div style="padding:22px 20px 14px;flex:0 0 auto">
+              <h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:24px;margin:0 0 14px">Mensajes</h2>
+              <div style="display:flex;align-items:center;gap:9px;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:9px 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar" style="flex:1;border:none;background:transparent;font-size:14px;color:var(--ink);outline:none" /></div>
+            </div>
+            <div data-scroll data-convlist style="flex:1;overflow-y:auto;padding:4px 10px 12px"></div>
+          </div>
+          <!-- thread pane -->
+          <div style="display:flex;flex-direction:column;background:var(--surface)">
+            <div data-thread-head style="flex:0 0 auto;border-bottom:1px solid var(--line-1)"></div>
+            <div data-scroll data-msgs style="flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:12px"></div>
+            <div data-composer style="flex:0 0 auto;border-top:1px solid var(--line-1);padding:14px 18px;display:flex;align-items:center;gap:10px">
+              <input data-ctext placeholder="Escribe un mensaje…" style="flex:1;border:1px solid var(--line-2);border-radius:99px;padding:12px 16px;font-size:14px;background:var(--surface);color:var(--ink);outline:none" />
+              <button data-action="recVoice" aria-label="Nota de voz" style="width:44px;height:44px;flex:0 0 auto;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--grana);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--grana-wash)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+              <button data-action="sendText" aria-label="Enviar" style="width:44px;height:44px;flex:0 0 auto;border-radius:99px;border:none;background:var(--grana);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--grana-700)"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PHONE — list <-> thread ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Teléfono · toca una conversación</div>
+      <div style="width:412px;height:840px;border-radius:52px;background:#1A1714;padding:11px;box-shadow:0 30px 70px -28px rgba(0,0,0,.5)">
+        <div data-msg-root data-mode="phone" style="position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--surface)">
+          <!-- list view -->
+          <div data-view="list" style="position:absolute;inset:0;display:flex;flex-direction:column">
+            <div style="height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink)"><span>9:41</span><span style="position:absolute;left:50%;top:9px;transform:translateX(-50%);width:104px;height:28px;background:#1A1714;border-radius:99px"></span><span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg></span></div>
+            <div style="padding:6px 18px 12px;flex:0 0 auto"><h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0 0 12px">Mensajes</h2><div style="display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:99px;padding:9px 14px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input placeholder="Buscar" style="flex:1;border:none;background:transparent;font-size:14px;color:var(--ink);outline:none" /></div></div>
+            <div data-scroll data-convlist style="flex:1;overflow-y:auto;padding:2px 10px 18px"></div>
+          </div>
+          <!-- thread view -->
+          <div data-view="thread" style="position:absolute;inset:0;display:none;flex-direction:column;background:var(--surface)">
+            <div style="height:46px;flex:0 0 auto"></div>
+            <div data-thread-head style="flex:0 0 auto;border-bottom:1px solid var(--line-1)"></div>
+            <div data-scroll data-msgs style="flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:10px"></div>
+            <div data-composer style="flex:0 0 auto;border-top:1px solid var(--line-1);padding:12px 14px 22px;display:flex;align-items:center;gap:9px">
+              <input data-ctext placeholder="Mensaje…" style="flex:1;border:1px solid var(--line-2);border-radius:99px;padding:11px 15px;font-size:14px;background:var(--surface);color:var(--ink);outline:none" />
+              <button data-action="recVoice" aria-label="Nota de voz" style="width:42px;height:42px;flex:0 0 auto;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--grana);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+              <button data-action="sendText" aria-label="Enviar" style="width:42px;height:42px;flex:0 0 auto;border-radius:99px;border:none;background:var(--grana);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  setRoot = (el) => { this._root = el; };
+  blip = (type) => {
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      if (A.state === 'suspended') A.resume();
+      const o = A.createOscillator(), g = A.createGain();
+      o.connect(g); g.connect(A.destination);
+      const now = A.currentTime; const f = { tick: 540, pop: 700, click: 400, soft: 320 }[type] || 440;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.05, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      o.start(now); o.stop(now + 0.14);
+    } catch (e) {}
+  };
+  applyTheme = (theme) => {
+    if (!this._root) return;
+    if (theme === 'dark') this._root.setAttribute('data-theme', 'dark'); else this._root.removeAttribute('data-theme');
+    this._root.querySelectorAll('[data-set]').forEach((b) => { const on = b.dataset.set === theme; b.style.background = on ? 'var(--ink)' : 'transparent'; b.style.color = on ? 'var(--ink-on)' : 'var(--text-3)'; });
+    try { localStorage.setItem('fp-theme', theme); } catch (e) {}
+  };
+  onTheme = (e) => { this.applyTheme(e.currentTarget.dataset.set); this.blip('tick'); };
+
+  CONVS = [
+    { id: 'maria', name: 'María', init: 'M', color: '#9A2530', sub: 'Cultura', preview: 'nota de voz · 0:18', time: '2 min', unread: true },
+    { id: 'tomas', name: 'Tomás', init: 'T', color: '#1A1714', sub: 'Viajes', preview: '¿Te late grabar una por CDMX?', time: '1 h', unread: false },
+    { id: 'ines', name: 'Inés', init: 'I', color: '#D98A3D', sub: 'Ciencia', preview: 'graciasss, me costó soltarlo', time: 'ayer', unread: false },
+  ];
+
+  esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  inMsg = (t) => `<div style="align-self:flex-start;max-width:78%;background:var(--surface-2);color:var(--ink);border:1px solid var(--line-1);border-radius:18px 18px 18px 5px;padding:10px 14px;font-family:'Hanken Grotesk',sans-serif;font-size:14.5px;line-height:1.45">${this.esc(t)}</div>`;
+  outMsg = (t) => `<div style="align-self:flex-end;max-width:78%;background:var(--grana);color:#fff;border-radius:18px 18px 5px 18px;padding:10px 14px;font-family:'Hanken Grotesk',sans-serif;font-size:14.5px;line-height:1.45">${this.esc(t)}</div>`;
+  voiceMsg = (mine, dur, transcript) => {
+    const bg = mine ? 'var(--grana)' : 'var(--surface-2)';
+    const fg = mine ? '#fff' : 'var(--ink)';
+    const sub = mine ? 'rgba(255,255,255,.8)' : 'var(--text-2)';
+    const track = mine ? 'rgba(255,255,255,.45)' : 'var(--line-2)';
+    const fill = mine ? '#fff' : 'var(--grana)';
+    const border = mine ? 'none' : '1px solid var(--line-1)';
+    const radius = mine ? '18px 18px 5px 18px' : '18px 18px 18px 5px';
+    return `<div style="align-self:${mine ? 'flex-end' : 'flex-start'};max-width:80%;background:${bg};border:${border};border-radius:${radius};padding:9px 12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <button data-action="play" aria-label="Reproducir" style="flex:0 0 auto;width:34px;height:34px;border-radius:99px;background:${mine ? '#fff' : 'var(--ink)'};color:${mine ? 'var(--grana)' : 'var(--ink-on)'};border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M8 5v14l11-7z"/></svg></span></button>
+        <svg viewBox="0 0 200 22" preserveAspectRatio="none" style="width:130px;height:22px" aria-hidden="true"><path d="M3 11 C 35 3 60 19 100 11 S 165 3 197 11" fill="none" stroke="${track}" stroke-width="2" stroke-linecap="round"/></svg>
+        <span style="font-family:'Space Mono',monospace;font-size:12px;color:${sub};white-space:nowrap">${dur}</span>
+      </div>
+      <button data-action="vtrans" style="display:flex;align-items:center;gap:5px;margin-top:7px;background:transparent;border:none;cursor:pointer;color:${sub};font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Ver transcript</button>
+      <div data-vtrans style="display:none;margin-top:7px;padding-top:7px;border-top:1px solid ${mine ? 'rgba(255,255,255,.25)' : 'var(--line-1)'};font-family:'Fraunces',serif;font-size:14px;line-height:1.5;color:${mine ? 'rgba(255,255,255,.92)' : 'var(--text-2)'}">${this.esc(transcript)}</div>
+    </div>`;
+  };
+
+  THREADS = {};
+  buildThreads() {
+    this.THREADS = {
+      maria: [this.inMsg('¿Viste el Flow de Julio sobre el barro?'), this.outMsg('Sí, me encantó lo del primer molde'), this.voiceMsg(false, '0:18', 'Te mando esto en voz porque ando cocinando: deberíamos grabar uno juntas sobre cerámica, ¿no? Va.')],
+      tomas: [this.inMsg('Gracias por seguir mis caminatas'), this.outMsg('Son lo mejor del Pub, en serio'), this.inMsg('¿Te late grabar una por CDMX?')],
+      ines: [this.outMsg('Tu Flow de ciencia estuvo buenísimo'), this.inMsg('graciasss, me costó soltarlo'), this.outMsg('Se notó honesto, por eso pegó')],
+    };
+  }
+
+  headHTML = (c, withBack) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:14px 18px">
+      ${withBack ? `<button data-action="backList" aria-label="Atrás" style="width:34px;height:34px;border-radius:99px;border:none;background:var(--surface-2);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button>` : ''}
+      <span style="width:42px;height:42px;border-radius:99px;background:${c.color};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:17px">${c.init}</span>
+      <div style="flex:1;line-height:1.3"><div style="font-weight:600;font-size:15px;color:var(--ink)">${c.name}</div><div style="font-size:12px;color:#2E9A5B;display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:99px;background:#2E9A5B"></span>En línea</div></div>
+      <button data-action="call" aria-label="Llamar" style="width:38px;height:38px;border-radius:99px;border:none;background:transparent;color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:var(--hover)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6 19.8 19.8 0 0 1-3.1-8.7A2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg></button>
+    </div>`;
+
+  convItemHTML = (c) => `
+    <button data-action="openConv" data-conv="${c.id}" style="width:100%;display:flex;align-items:center;gap:12px;padding:12px 12px;border:none;border-radius:14px;background:transparent;cursor:pointer;text-align:left;transition:background .14s" style-hover="background:var(--hover)">
+      <span style="width:48px;height:48px;flex:0 0 auto;border-radius:99px;background:${c.color};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:19px">${c.init}</span>
+      <span style="flex:1;min-width:0;line-height:1.35"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-weight:600;font-size:15px;color:var(--ink)">${c.name}</span><span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-3)">${c.time}</span></span><span style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px">${c.preview}</span>${c.unread ? '<span style="flex:0 0 auto;min-width:18px;height:18px;border-radius:99px;background:var(--grana);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px">1</span>' : ''}</span></span>
+    </button>`;
+
+  componentDidMount() {
+    try { const t = localStorage.getItem('fp-theme'); if (t === 'dark') this.applyTheme('dark'); } catch (e) {}
+    this.buildThreads();
+    if (this._root) {
+      this._root.querySelectorAll('[data-convlist]').forEach((l) => { l.innerHTML = this.CONVS.map((c) => this.convItemHTML(c)).join(''); });
+      // desktop: open first conv by default
+      const desk = this._root.querySelector('[data-mode="desk"]');
+      if (desk) this.openConv(desk, 'maria');
+      this._root.addEventListener('click', this.onClick);
+    }
+  }
+  componentWillUnmount() { if (this._root) this._root.removeEventListener('click', this.onClick); }
+
+  onClick = (e) => {
+    const t = e.target.closest('[data-action]');
+    if (!t || !this._root.contains(t)) return;
+    const root = t.closest('[data-msg-root]');
+    const a = t.dataset.action;
+    if (a === 'openConv') this.openConv(root, t.dataset.conv);
+    else if (a === 'backList') this.backList(root);
+    else if (a === 'sendText') this.sendText(t);
+    else if (a === 'recVoice') this.recVoice(t);
+    else if (a === 'recStop') this.recStop(t);
+    else if (a === 'vtrans') this.vtrans(t);
+    else if (a === 'play') this.play(t);
+    else if (a === 'call') this.blip('click');
+  };
+
+  openConv = (root, id) => {
+    const c = this.CONVS.find((x) => x.id === id) || this.CONVS[0];
+    const isPhone = root.dataset.mode === 'phone';
+    root.querySelectorAll('[data-thread-head]').forEach((h) => { h.innerHTML = this.headHTML(c, isPhone); });
+    root.querySelectorAll('[data-msgs]').forEach((m) => { m.innerHTML = (this.THREADS[id] || []).join(''); m.scrollTop = m.scrollHeight; });
+    root.querySelectorAll('[data-conv]').forEach((it) => { it.style.background = it.dataset.conv === id ? 'var(--surface-3)' : 'transparent'; });
+    if (isPhone) {
+      root.querySelector('[data-view="list"]').style.display = 'none';
+      const th = root.querySelector('[data-view="thread"]'); th.style.display = 'flex';
+      if (th.animate) th.animate([{ opacity: 0, transform: 'translateX(20px)' }, { opacity: 1, transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' });
+    }
+    this.blip('click');
+  };
+
+  backList = (root) => {
+    root.querySelector('[data-view="thread"]').style.display = 'none';
+    root.querySelector('[data-view="list"]').style.display = 'flex';
+    this.blip('soft');
+  };
+
+  sendText = (btn) => {
+    const root = btn.closest('[data-msg-root]');
+    const comp = btn.closest('[data-composer]');
+    const inp = comp.querySelector('[data-ctext]');
+    const v = (inp.value || '').trim();
+    if (!v) { if (inp.animate) inp.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-4px)' }, { transform: 'translateX(4px)' }, { transform: 'translateX(0)' }], { duration: 220 }); return; }
+    const area = comp.parentElement.querySelector('[data-msgs]') || root.querySelector('[data-msgs]');
+    area.insertAdjacentHTML('beforeend', this.outMsg(v));
+    inp.value = '';
+    const node = area.lastElementChild; if (node && node.animate) node.animate([{ opacity: 0, transform: 'translateY(6px) scale(.96)' }, { opacity: 1, transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' });
+    area.scrollTop = area.scrollHeight;
+    this.blip('pop');
+  };
+
+  recVoice = (btn) => {
+    const comp = btn.closest('[data-composer]');
+    comp._saved = comp.innerHTML;
+    comp.dataset.rec = '1';
+    comp.innerHTML = `<button data-action="recStop" aria-label="Detener" style="width:44px;height:44px;flex:0 0 auto;border-radius:99px;border:none;background:var(--grana);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="6" width="12" height="12" rx="3"/></svg></button>
+      <div style="flex:1;display:flex;align-items:center;gap:3px;height:28px;padding:0 6px"><div style="width:3px;height:24px;border-radius:9px;background:var(--grana);transform-origin:center;animation:fp-bar 1s ease-in-out infinite"></div><div style="width:3px;height:24px;border-radius:9px;background:var(--grana);transform-origin:center;animation:fp-bar 1s ease-in-out infinite .12s"></div><div style="width:3px;height:24px;border-radius:9px;background:var(--ocre);transform-origin:center;animation:fp-bar 1s ease-in-out infinite .24s"></div><div style="width:3px;height:24px;border-radius:9px;background:var(--grana);transform-origin:center;animation:fp-bar 1s ease-in-out infinite .36s"></div><div style="width:3px;height:24px;border-radius:9px;background:var(--ink);transform-origin:center;animation:fp-bar 1s ease-in-out infinite .48s"></div><div style="width:3px;height:24px;border-radius:9px;background:var(--grana);transform-origin:center;animation:fp-bar 1s ease-in-out infinite .6s"></div></div>
+      <span data-rt style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--grana)">00:00</span>`;
+    const rt = comp.querySelector('[data-rt]'); comp._el = 0;
+    clearInterval(comp._t); comp._t = setInterval(() => { comp._el += 1; if (rt) rt.textContent = `00:${String(comp._el).padStart(2, '0')}`; if (comp._el >= 60) this.recStop(comp.querySelector('[data-action="recStop"]')); }, 250);
+    this.blip('soft');
+  };
+
+  recStop = (btn) => {
+    const comp = btn.closest('[data-composer]');
+    clearInterval(comp._t);
+    const root = comp.closest('[data-msg-root]');
+    const area = comp.parentElement.querySelector('[data-msgs]') || root.querySelector('[data-msgs]');
+    const dur = `0:${String(Math.max(1, comp._el || 1)).padStart(2, '0')}`;
+    area.insertAdjacentHTML('beforeend', this.voiceMsg(true, dur, 'Nada, que me dio gusto saludarte. Cuando quieras grabamos ese Flow juntos, va.'));
+    const node = area.lastElementChild; if (node && node.animate) node.animate([{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }], { duration: 240 });
+    area.scrollTop = area.scrollHeight;
+    comp.innerHTML = comp._saved; comp.dataset.rec = '0';
+    this.blip('pop');
+  };
+
+  vtrans = (btn) => {
+    const panel = btn.parentElement.querySelector('[data-vtrans]');
+    if (!panel) return;
+    const open = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : 'block';
+    if (!open && panel.animate) panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+    this.blip('tick');
+  };
+
+  play = (btn) => {
+    const playing = btn.getAttribute('data-playing') === '1';
+    btn.setAttribute('data-playing', playing ? '0' : '1');
+    const ic = btn.querySelector('[data-icon]');
+    if (ic) ic.innerHTML = playing ? '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><path d="M8 5v14l11-7z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    this.blip('click');
+  };
+
+  renderVals() { return { setRoot: this.setRoot, onTheme: this.onTheme }; }
+}
+</script>
+</body>
+</html>

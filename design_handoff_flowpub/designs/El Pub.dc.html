@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#171410;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#F6E6E4}
+  [data-scroll]::-webkit-scrollbar{width:8px;height:8px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  [data-chips]::-webkit-scrollbar{display:none}
+  [data-frame-root]{
+    --ink:#1A1714;--ink-on:#F2EFE8;--text-2:#6E685D;--text-3:#9C968A;
+    --surface:#FBFAF6;--surface-2:#F8F5EF;--surface-3:#F2EFE8;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%);
+    --line:rgba(26,23,20,.12);--line-1:rgba(26,23,20,.1);--line-soft:rgba(26,23,20,.08);--line-2:rgba(26,23,20,.24);--line-14:rgba(26,23,20,.14);
+    --hover:rgba(26,23,20,.04);--wave:rgba(26,23,20,.16);
+    --grana:#C0303A;--grana-700:#9A2530;--ocre:#D98A3D;
+    --glass:rgba(251,250,246,.82);--glass-top:rgba(242,239,232,.72);
+    --shadow-window:0 30px 70px -28px rgba(26,23,20,.42);--shadow-card:0 1px 2px rgba(26,23,20,.05);--shadow-hover:0 18px 36px -18px rgba(26,23,20,.3);
+  }
+  [data-frame-root][data-theme="dark"]{
+    --ink:#F2EFE8;--ink-on:#1A1714;--text-2:#B3AB9D;--text-3:#867F72;
+    --surface:#1E1A16;--surface-2:#191510;--surface-3:#2A241D;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#1E1913 0%,#141110 55%,#0E0C0A 100%);
+    --line:rgba(242,239,232,.12);--line-1:rgba(242,239,232,.1);--line-soft:rgba(242,239,232,.07);--line-2:rgba(242,239,232,.22);--line-14:rgba(242,239,232,.14);
+    --hover:rgba(242,239,232,.06);--wave:rgba(242,239,232,.2);
+    --grana:#C0303A;--grana-700:#9A2530;--ocre:#D98A3D;
+    --glass:rgba(20,17,14,.72);--glass-top:rgba(20,17,14,.6);
+    --shadow-window:0 30px 70px -28px rgba(0,0,0,.65);--shadow-card:0 1px 2px rgba(0,0,0,.3);--shadow-hover:0 18px 36px -18px rgba(0,0,0,.55);
+  }
+  @keyframes fp-drift{0%{transform:translateY(0)}50%{transform:translateY(-22px)}100%{transform:translateY(0)}}
+  @keyframes fp-breathe{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.05) rotate(-2.5deg)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div data-frame-root ref="{{ setRoot }}" style="position:relative;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);background:var(--bg-grad);transition:background .4s ease">
+
+  <!-- ambient drifting particles -->
+  <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;z-index:0">
+    <div style="position:absolute;top:14%;left:8%;width:7px;height:7px;border-radius:99px;background:var(--grana);opacity:.14;animation:fp-drift 11s ease-in-out infinite"></div>
+    <div style="position:absolute;top:30%;left:88%;width:5px;height:5px;border-radius:99px;background:var(--ocre);opacity:.2;animation:fp-drift 14s ease-in-out infinite .8s"></div>
+    <div style="position:absolute;top:66%;left:5%;width:5px;height:5px;border-radius:99px;background:var(--ink);opacity:.16;animation:fp-drift 13s ease-in-out infinite 1.6s"></div>
+    <div style="position:absolute;top:80%;left:92%;width:6px;height:6px;border-radius:99px;background:var(--grana);opacity:.12;animation:fp-drift 16s ease-in-out infinite .4s"></div>
+    <div style="position:absolute;top:48%;left:50%;width:4px;height:4px;border-radius:99px;background:var(--ocre);opacity:.16;animation:fp-drift 12s ease-in-out infinite 2.2s"></div>
+  </div>
+
+  <!-- ===== hidden SVG defs: the generated-cover library ===== -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <radialGradient id="g-turrell" cx="50%" cy="46%" r="60%"><stop offset="0%" stop-color="#F6D49A"/><stop offset="30%" stop-color="#E29A4A"/><stop offset="62%" stop-color="#C0303A"/><stop offset="100%" stop-color="#1A1714"/></radialGradient>
+    <linearGradient id="g-flavin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EC7079"/><stop offset="1" stop-color="#9A2530"/></linearGradient>
+    <linearGradient id="g-flavin-o" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2C081"/><stop offset="1" stop-color="#C97A2E"/></linearGradient>
+    <linearGradient id="g-amate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EFE8"/><stop offset="1" stop-color="#E6DFD0"/></linearGradient>
+    <pattern id="p-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#1A1714" stroke-width="1.1"/></pattern>
+    <filter id="f-noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.16"/></feComponentTransfer></filter>
+    <filter id="f-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter>
+  </defs></svg>
+
+  <!-- ===== page header ===== -->
+  <header style="position:relative;z-index:2;max-width:1640px;margin:0 auto;padding:26px 40px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="line-height:0;display:inline-block;animation:fp-breathe 6s ease-in-out infinite;transform-origin:50% 50%"><svg width="30" height="30" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span>
+      </div>
+      <h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:0">El <span style="font-style:italic">Pub</span> — el timeline de las voces</h1>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:3px">
+        <button data-set="light" onClick="{{ onTheme }}" aria-label="Tema claro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:var(--ink);color:var(--ink-on);transition:.15s"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button data-set="dark" onClick="{{ onTheme }}" aria-label="Tema oscuro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3);transition:.15s"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);text-align:right;line-height:1.7">pantalla 01 · timeline<br>desktop + teléfono · claro / oscuro</div>
+    </div>
+  </header>
+
+  <!-- ===== frames row ===== -->
+  <div data-scroll style="position:relative;z-index:2;display:flex;gap:48px;align-items:flex-start;justify-content:flex-start;padding:24px 40px 80px;flex-wrap:nowrap;overflow-x:auto">
+
+    <!-- ============ DESKTOP FRAME ============ -->
+    <div data-frame style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Desktop · 1200</div>
+      <div style="width:1200px;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line-14);box-shadow:var(--shadow-window)">
+        <div style="height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--glass-top);backdrop-filter:blur(10px);border-bottom:1px solid var(--line-1)">
+          <div style="display:flex;gap:8px"><span style="width:11px;height:11px;border-radius:99px;background:#E0837F"></span><span style="width:11px;height:11px;border-radius:99px;background:#E7C07A"></span><span style="width:11px;height:11px;border-radius:99px;background:#A9C79A"></span></div>
+          <div style="flex:1;display:flex;justify-content:center"><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);background:var(--surface);border:1px solid var(--line-1);padding:5px 16px;border-radius:99px">flowpub.lat</span></div>
+          <div style="width:54px"></div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:236px 1fr 296px;height:760px;background:var(--surface)">
+
+          <!-- LEFT RAIL -->
+          <nav style="border-right:1px solid var(--line-1);padding:26px 18px;display:flex;flex-direction:column;gap:6px;background:var(--surface-2)">
+            <div style="display:flex;align-items:center;gap:9px;padding:0 8px 22px">
+              <svg width="26" height="26" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="font-family:'Fraunces',serif;font-size:21px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span>
+            </div>
+            <button data-nav data-rail data-on="1" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;border-radius:12px;background:var(--surface-3);cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:600;color:var(--ink);text-align:left">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>El Pub
+            </button>
+            <button data-nav data-rail data-on="0" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;border-radius:12px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:500;color:var(--text-2);text-align:left" style-hover="background:var(--hover)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorar
+            </button>
+            <button data-nav data-rail data-on="0" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;border-radius:12px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:500;color:var(--text-2);text-align:left" style-hover="background:var(--hover)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>Mensajes
+              <span style="margin-left:auto;width:8px;height:8px;border-radius:99px;background:var(--grana)"></span>
+            </button>
+            <button data-nav data-rail data-on="0" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;border-radius:12px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:500;color:var(--text-2);text-align:left" style-hover="background:var(--hover)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Notificaciones
+            </button>
+            <button data-nav data-rail data-on="0" onClick="{{ onNav }}" style="display:flex;align-items:center;gap:13px;padding:11px 14px;border:none;border-radius:12px;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:500;color:var(--text-2);text-align:left" style-hover="background:var(--hover)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil
+            </button>
+            <div style="margin-top:auto;padding-top:18px">
+              <button onClick="{{ onRecord }}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:9px;padding:13px;border:none;border-radius:99px;background:var(--grana);color:#fff;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:600;box-shadow:0 8px 20px -8px rgba(192,48,58,.6);transition:transform .12s,background .15s" style-hover="background:var(--grana-700)" style-active="transform:scale(.97)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>Grabar un Flow
+              </button>
+              <p style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;color:var(--text-3);text-align:center;margin:10px 0 0">Habla. FlowPub lo vuelve publicación.</p>
+            </div>
+          </nav>
+
+          <!-- CENTER COLUMN -->
+          <main data-scroll style="overflow-y:auto;position:relative">
+            <div style="position:sticky;top:0;z-index:5;background:var(--glass);backdrop-filter:blur(12px);border-bottom:1px solid var(--line-soft);padding:16px 28px">
+              <div data-chips style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none">
+                <button data-tag="Todos" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:7px 15px;border-radius:99px;border:1px solid var(--ink);background:var(--ink);color:var(--ink-on);cursor:pointer;transition:.15s">Todos</button>
+                <button data-tag="Arte" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Arte</button>
+                <button data-tag="Ciencia" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Ciencia</button>
+                <button data-tag="Libros" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Libros</button>
+                <button data-tag="Cultura" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Cultura</button>
+                <button data-tag="Tecnología" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Tecnología</button>
+                <button data-tag="Viajes" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Viajes</button>
+                <button data-tag="Cine" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Cine</button>
+                <button data-tag="Naturaleza" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:7px 15px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s" style-hover="border-color:var(--ink);color:var(--ink)">Naturaleza</button>
+              </div>
+            </div>
+
+            <div data-timeline style="padding:24px 28px 40px;display:flex;flex-direction:column;gap:22px">
+
+              <!-- CARD 1 — Escher/LeWitt, Arte -->
+              <article data-flow-tag="Arte" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:transform .18s,box-shadow .18s" style-hover="transform:translateY(-3px);box-shadow:var(--shadow-hover)">
+                <div style="position:relative;aspect-ratio:16/9">
+                  <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true">
+                    <rect width="400" height="225" fill="url(#g-amate)"/>
+                    <g opacity="0.96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g>
+                    <rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:multiply" opacity=".5"/>
+                  </svg>
+                  <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:6px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:6px;height:6px;border-radius:99px;background:#C0303A"></span>Audio</span><span style="font-family:'Space Mono',monospace;font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">9 min</span></div>
+                </div>
+                <div style="padding:22px 24px">
+                  <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:25px;line-height:1.12;letter-spacing:-.01em;margin:0 0 8px">Nueve minutos sobre el barro</h3>
+                  <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.5;color:var(--text-2);margin:0 0 16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Hoy quiero hablar de algo que llevo pensando entre el barro y los datos: cómo lo que se moldea con las manos también guarda memoria, y por qué la voz es el primer molde.</p>
+                  <div style="display:flex;align-items:center;gap:14px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:7px 14px 7px 7px;margin-bottom:16px">
+                    <button data-playing="0" onClick="{{ onPlay }}" aria-label="Reproducir" style="flex:0 0 auto;width:38px;height:38px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M8 5v14l11-7z"/></svg></span></button>
+                    <svg viewBox="0 0 300 26" preserveAspectRatio="none" style="flex:1;height:26px;min-width:0" aria-hidden="true"><path d="M3 13 C 50 4 80 22 140 13 S 230 4 297 13" fill="none" stroke="var(--wave)" stroke-width="2" stroke-linecap="round"/><path data-prog d="M3 13 C 50 4 80 22 110 13" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-2);white-space:nowrap">9:00</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--line-1)">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">J</span><span style="line-height:1.25"><span style="font-weight:600;font-size:14px">Julio</span><br><span style="font-size:12px;color:var(--text-3)">hace 2 h · Arte</span></span></div>
+                    <div style="display:flex;align-items:center;gap:4px">
+                      <button data-on="0" onClick="{{ onLike }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>128</span></button>
+                      <button onClick="{{ onComment }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>24</button>
+                      <button onClick="{{ onShare }}" aria-label="Compartir" style="display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:var(--text-2);padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <!-- CARD 2 — Turrell, Cultura -->
+              <article data-flow-tag="Cultura" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:transform .18s,box-shadow .18s" style-hover="transform:translateY(-3px);box-shadow:var(--shadow-hover)">
+                <div style="position:relative;aspect-ratio:16/9">
+                  <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true">
+                    <rect width="400" height="225" fill="#1A1714"/><ellipse cx="200" cy="112" rx="150" ry="95" fill="url(#g-turrell)" filter="url(#f-glow)" opacity=".9"/><rect x="92" y="44" width="216" height="138" rx="46" fill="url(#g-turrell)"/><rect x="92" y="44" width="216" height="138" rx="46" fill="none" stroke="#F6D49A" stroke-width="1.4" opacity=".5"/><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:overlay" opacity=".7"/>
+                  </svg>
+                  <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:6px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:6px;height:6px;border-radius:99px;background:#C0303A"></span>Audio</span><span style="font-family:'Space Mono',monospace;font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">6 min</span></div>
+                </div>
+                <div style="padding:22px 24px">
+                  <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:25px;line-height:1.12;letter-spacing:-.01em;margin:0 0 8px">Cuando una voz se vuelve archivo</h3>
+                  <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.5;color:var(--text-2);margin:0 0 16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">No es lo mismo escribir que hablar. La transcripción guarda las palabras, pero el audio guarda las dudas, las pausas, el cuerpo de quien habla.</p>
+                  <div style="display:flex;align-items:center;gap:14px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:7px 14px 7px 7px;margin-bottom:16px">
+                    <button data-playing="0" onClick="{{ onPlay }}" aria-label="Reproducir" style="flex:0 0 auto;width:38px;height:38px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M8 5v14l11-7z"/></svg></span></button>
+                    <svg viewBox="0 0 300 26" preserveAspectRatio="none" style="flex:1;height:26px;min-width:0" aria-hidden="true"><path d="M3 13 C 50 22 80 4 140 13 S 230 22 297 13" fill="none" stroke="var(--wave)" stroke-width="2" stroke-linecap="round"/><path data-prog d="M3 13 C 50 22 80 4 100 13" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-2);white-space:nowrap">6:00</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--line-1)">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:99px;background:#9A2530;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">M</span><span style="line-height:1.25"><span style="font-weight:600;font-size:14px">María</span><br><span style="font-size:12px;color:var(--text-3)">hace 1 d · Cultura</span></span></div>
+                    <div style="display:flex;align-items:center;gap:4px">
+                      <button data-on="0" onClick="{{ onLike }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>342</span></button>
+                      <button onClick="{{ onComment }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>57</button>
+                      <button onClick="{{ onShare }}" aria-label="Compartir" style="display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:var(--text-2);padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <!-- CARD 3 — Flavin, Ciencia -->
+              <article data-flow-tag="Ciencia" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card);transition:transform .18s,box-shadow .18s" style-hover="transform:translateY(-3px);box-shadow:var(--shadow-hover)">
+                <div style="position:relative;aspect-ratio:16/9">
+                  <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true">
+                    <rect width="400" height="225" fill="#15110E"/><g filter="url(#f-glow)" opacity=".85"><rect x="70" y="30" width="16" height="170" rx="8" fill="url(#g-flavin)"/><rect x="150" y="55" width="16" height="150" rx="8" fill="url(#g-flavin-o)"/><rect x="250" y="20" width="16" height="150" rx="8" fill="url(#g-flavin)"/></g><rect x="70" y="30" width="13" height="170" rx="6.5" fill="#EC7079"/><rect x="150" y="55" width="13" height="150" rx="6.5" fill="#F2C081"/><rect x="250" y="20" width="13" height="150" rx="6.5" fill="#EC7079"/><rect x="300" y="120" width="80" height="13" rx="6.5" fill="#F2C081" filter="url(#f-glow)" opacity=".8"/><rect x="300" y="121" width="80" height="10" rx="5" fill="#F6D49A"/><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:overlay" opacity=".7"/>
+                  </svg>
+                  <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:6px;font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:6px;height:6px;border-radius:99px;background:#C0303A"></span>Audio</span><span style="font-family:'Space Mono',monospace;font-size:12px;padding:4px 10px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">7 min</span></div>
+                </div>
+                <div style="padding:22px 24px">
+                  <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:25px;line-height:1.12;letter-spacing:-.01em;margin:0 0 8px">La ciencia también se cuenta en voz alta</h3>
+                  <p style="font-family:'Fraunces',serif;font-size:16px;line-height:1.5;color:var(--text-2);margin:0 0 16px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Pasé años escribiendo papers que nadie leía completos. Hoy grabé en siete minutos la idea que de verdad importa, y por fin suena a lo que es.</p>
+                  <div style="display:flex;align-items:center;gap:14px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:7px 14px 7px 7px;margin-bottom:16px">
+                    <button data-playing="0" onClick="{{ onPlay }}" aria-label="Reproducir" style="flex:0 0 auto;width:38px;height:38px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M8 5v14l11-7z"/></svg></span></button>
+                    <svg viewBox="0 0 300 26" preserveAspectRatio="none" style="flex:1;height:26px;min-width:0" aria-hidden="true"><path d="M3 13 C 50 6 80 20 140 13 S 230 6 297 13" fill="none" stroke="var(--wave)" stroke-width="2" stroke-linecap="round"/><path data-prog d="M3 13 C 50 6 80 20 95 13" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-2);white-space:nowrap">7:00</span>
+                  </div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding-top:16px;border-top:1px solid var(--line-1)">
+                    <div style="display:flex;align-items:center;gap:10px"><span style="width:34px;height:34px;border-radius:99px;background:#D98A3D;color:#1A1714;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">I</span><span style="line-height:1.25"><span style="font-weight:600;font-size:14px">Inés</span><br><span style="font-size:12px;color:var(--text-3)">hace 4 h · Ciencia</span></span></div>
+                    <div style="display:flex;align-items:center;gap:4px">
+                      <button data-on="0" onClick="{{ onLike }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>89</span></button>
+                      <button onClick="{{ onComment }}" style="display:flex;align-items:center;gap:6px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>12</button>
+                      <button onClick="{{ onShare }}" aria-label="Compartir" style="display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:var(--text-2);padding:6px 9px;border-radius:99px" style-hover="background:var(--hover)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+            </div>
+          </main>
+
+          <!-- RIGHT RAIL -->
+          <aside style="border-left:1px solid var(--line-1);padding:24px 22px;display:flex;flex-direction:column;gap:24px;background:var(--surface-2);overflow-y:auto">
+            <div>
+              <p style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 14px">Hoy en el Pub</p>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Fraunces',serif;font-size:17px;color:var(--ink)">Arte</span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3)">1.2k flows</span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Fraunces',serif;font-size:17px;color:var(--ink)">Cultura</span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3)">860 flows</span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-family:'Fraunces',serif;font-size:17px;color:var(--ink)">Ciencia</span><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3)">540 flows</span></div>
+              </div>
+            </div>
+            <div style="height:1px;background:var(--line-1)"></div>
+            <div>
+              <p style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 14px">Voces para seguir</p>
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">R</span><span style="flex:1;line-height:1.25"><span style="font-weight:600;font-size:14px">Renata</span><br><span style="font-size:12px;color:var(--text-3)">Libros · Cine</span></span><button onClick="{{ onFollow }}" data-on="0" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink);cursor:pointer;transition:.15s" style-hover="background:var(--ink);color:var(--ink-on)">Seguir</button></div>
+                <div style="display:flex;align-items:center;gap:10px"><span style="width:36px;height:36px;border-radius:99px;background:#9A2530;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:15px">T</span><span style="flex:1;line-height:1.25"><span style="font-weight:600;font-size:14px">Tomás</span><br><span style="font-size:12px;color:var(--text-3)">Viajes · Naturaleza</span></span><button onClick="{{ onFollow }}" data-on="0" style="font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--ink);cursor:pointer;transition:.15s" style-hover="background:var(--ink);color:var(--ink-on)">Seguir</button></div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PHONE FRAME ============ -->
+    <div data-frame style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Teléfono · 390</div>
+      <div style="width:412px;height:840px;border-radius:52px;background:#1A1714;padding:11px;box-shadow:0 30px 70px -28px rgba(0,0,0,.5)">
+        <div style="position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column">
+          <div style="height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink);flex:0 0 auto">
+            <span>9:41</span>
+            <span style="position:absolute;left:50%;top:9px;transform:translateX(-50%);width:104px;height:28px;background:#1A1714;border-radius:99px"></span>
+            <span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg><svg width="22" height="11" viewBox="0 0 22 11" fill="none"><rect x="1" y="1" width="17" height="9" rx="2.5" stroke="currentColor" stroke-width="1" opacity=".5"/><rect x="2.5" y="2.5" width="12" height="6" rx="1" fill="currentColor"/></svg></span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;flex:0 0 auto">
+            <div style="display:flex;align-items:center;gap:8px"><svg width="24" height="24" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></svg><span style="font-family:'Fraunces',serif;font-size:20px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span></div>
+            <div style="display:flex;align-items:center;gap:14px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span style="width:30px;height:30px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:14px">A</span></div>
+          </div>
+          <div data-chips style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding:0 20px 12px;flex:0 0 auto">
+            <button data-tag="Todos" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;border:1px solid var(--ink);background:var(--ink);color:var(--ink-on);cursor:pointer;transition:.15s">Todos</button>
+            <button data-tag="Arte" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s">Arte</button>
+            <button data-tag="Cultura" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s">Cultura</button>
+            <button data-tag="Viajes" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s">Viajes</button>
+            <button data-tag="Ciencia" onClick="{{ onChip }}" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid var(--line-2);background:transparent;color:var(--text-2);cursor:pointer;transition:.15s">Ciencia</button>
+          </div>
+
+          <div data-scroll data-timeline style="flex:1;overflow-y:auto;padding:4px 16px 110px;display:flex;flex-direction:column;gap:18px">
+            <article data-flow-tag="Arte" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)">
+              <div style="position:relative;aspect-ratio:16/9">
+                <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true"><rect width="400" height="225" fill="url(#g-amate)"/><g opacity="0.96"><polygon points="120,150 170,121 220,150 170,179" fill="#E6DFD0"/><polygon points="120,150 120,100 170,71 170,121" fill="#C0303A"/><polygon points="170,121 170,71 220,100 220,150" fill="#1A1714"/><polygon points="200,176 250,147 300,176 250,205" fill="#E6DFD0"/><polygon points="200,176 200,126 250,97 250,147" fill="url(#p-hatch)"/><polygon points="250,147 250,97 300,126 300,176" fill="#D98A3D"/><polygon points="170,71 220,42 270,71 220,100" fill="#FBFAF6"/><polygon points="170,71 170,21 220,-8 220,42" fill="#9A2530"/><polygon points="220,42 220,-8 270,21 270,71" fill="#1A1714"/></g><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:multiply" opacity=".5"/></svg>
+                <div style="position:absolute;left:11px;bottom:11px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:5px;font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:5px;height:5px;border-radius:99px;background:#C0303A"></span>Audio</span><span style="font-family:'Space Mono',monospace;font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">9 min</span></div>
+              </div>
+              <div style="padding:16px 17px">
+                <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:20px;line-height:1.14;letter-spacing:-.01em;margin:0 0 7px">Nueve minutos sobre el barro</h3>
+                <p style="font-family:'Fraunces',serif;font-size:14.5px;line-height:1.45;color:var(--text-2);margin:0 0 13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Cómo lo que se moldea con las manos también guarda memoria, y por qué la voz es el primer molde.</p>
+                <div style="display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:5px 12px 5px 5px;margin-bottom:13px">
+                  <button data-playing="0" onClick="{{ onPlay }}" aria-label="Reproducir" style="flex:0 0 auto;width:32px;height:32px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><path d="M8 5v14l11-7z"/></svg></span></button>
+                  <svg viewBox="0 0 300 22" preserveAspectRatio="none" style="flex:1;height:22px;min-width:0" aria-hidden="true"><path d="M3 11 C 50 3 80 19 140 11 S 230 3 297 11" fill="none" stroke="var(--wave)" stroke-width="2" stroke-linecap="round"/><path data-prog d="M3 11 C 50 3 80 19 110 11" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg>
+                  <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2);white-space:nowrap">9:00</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:13px;border-top:1px solid var(--line-1)">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:30px;height:30px;border-radius:99px;background:var(--ink);color:var(--ink-on);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:13px">J</span><span style="line-height:1.2"><span style="font-weight:600;font-size:13px">Julio</span><br><span style="font-size:11px;color:var(--text-3)">hace 2 h</span></span></div>
+                  <div style="display:flex;align-items:center;gap:2px">
+                    <button data-on="0" onClick="{{ onLike }}" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>128</span></button>
+                    <button onClick="{{ onComment }}" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>24</button>
+                    <button onClick="{{ onShare }}" aria-label="Compartir" style="display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:var(--text-2);padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article data-flow-tag="Viajes" style="background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-card)">
+              <div style="position:relative;aspect-ratio:16/9">
+                <svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%;display:block" aria-hidden="true"><rect width="400" height="225" fill="#15110E"/><g filter="url(#f-glow)" opacity=".85"><rect x="60" y="40" width="15" height="150" rx="7.5" fill="url(#g-flavin-o)"/><rect x="140" y="25" width="15" height="170" rx="7.5" fill="url(#g-flavin)"/><rect x="230" y="50" width="15" height="140" rx="7.5" fill="url(#g-flavin-o)"/><rect x="310" y="30" width="15" height="160" rx="7.5" fill="url(#g-flavin)"/></g><rect x="60" y="40" width="12" height="150" rx="6" fill="#F2C081"/><rect x="140" y="25" width="12" height="170" rx="6" fill="#EC7079"/><rect x="230" y="50" width="12" height="140" rx="6" fill="#F2C081"/><rect x="310" y="30" width="12" height="160" rx="6" fill="#EC7079"/><rect width="400" height="225" filter="url(#f-noise)" style="mix-blend-mode:overlay" opacity=".7"/></svg>
+                <div style="position:absolute;left:11px;bottom:11px;display:flex;gap:6px"><span style="display:inline-flex;align-items:center;gap:5px;font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#9A2530"><span style="width:5px;height:5px;border-radius:99px;background:#C0303A"></span>Audio</span><span style="font-family:'Space Mono',monospace;font-size:11px;padding:3px 9px;border-radius:99px;background:rgba(251,250,246,.92);color:#6E685D">5 min</span></div>
+              </div>
+              <div style="padding:16px 17px">
+                <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:20px;line-height:1.14;letter-spacing:-.01em;margin:0 0 7px">Un mapa hablado de la ciudad</h3>
+                <p style="font-family:'Fraunces',serif;font-size:14.5px;line-height:1.45;color:var(--text-2);margin:0 0 13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">Caminé sin Google Maps por una ciudad que no conocía y grabé lo que me iban diciendo los desconocidos.</p>
+                <div style="display:flex;align-items:center;gap:11px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:5px 12px 5px 5px;margin-bottom:13px">
+                  <button data-playing="0" onClick="{{ onPlay }}" aria-label="Reproducir" style="flex:0 0 auto;width:32px;height:32px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><path d="M8 5v14l11-7z"/></svg></span></button>
+                  <svg viewBox="0 0 300 22" preserveAspectRatio="none" style="flex:1;height:22px;min-width:0" aria-hidden="true"><path d="M3 11 C 50 19 80 3 140 11 S 230 19 297 11" fill="none" stroke="var(--wave)" stroke-width="2" stroke-linecap="round"/><path data-prog d="M3 11 C 50 19 80 3 95 11" fill="none" stroke="#C0303A" stroke-width="2" stroke-linecap="round"/></svg>
+                  <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2);white-space:nowrap">5:00</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding-top:13px;border-top:1px solid var(--line-1)">
+                  <div style="display:flex;align-items:center;gap:8px"><span style="width:30px;height:30px;border-radius:99px;background:#9A2530;color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:13px">T</span><span style="line-height:1.2"><span style="font-weight:600;font-size:13px">Tomás</span><br><span style="font-size:11px;color:var(--text-3)">hace 8 h</span></span></div>
+                  <div style="display:flex;align-items:center;gap:2px">
+                    <button data-on="0" onClick="{{ onLike }}" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg><span data-count>206</span></button>
+                    <button onClick="{{ onComment }}" style="display:flex;align-items:center;gap:5px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:500;padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>41</button>
+                    <button onClick="{{ onShare }}" aria-label="Compartir" style="display:flex;align-items:center;background:transparent;border:none;cursor:pointer;color:var(--text-2);padding:6px 7px;border-radius:99px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:16px;height:16px"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg></button>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div style="position:absolute;left:0;right:0;bottom:0;height:88px;background:var(--glass);backdrop-filter:blur(14px);border-top:1px solid var(--line-1);display:flex;align-items:flex-start;justify-content:space-around;padding:12px 18px 0">
+            <button data-nav data-on="1" onClick="{{ onNav }}" style="background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink);font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:600"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>Pub</button>
+            <button data-nav data-on="0" onClick="{{ onNav }}" style="background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-3);font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:500"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>Explorar</button>
+            <button onClick="{{ onRecord }}" aria-label="Grabar un Flow" style="position:relative;top:-14px;width:62px;height:62px;border-radius:99px;background:var(--grana);border:4px solid var(--surface);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 24px -8px rgba(192,48,58,.8);transition:transform .12s" style-active="transform:scale(.94)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+            <button data-nav data-on="0" onClick="{{ onNav }}" style="background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-3);font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:500"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/></svg>Mensajes</button>
+            <button data-nav data-on="0" onClick="{{ onNav }}" style="background:transparent;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-3);font-family:'Hanken Grotesk',sans-serif;font-size:10px;font-weight:500"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Perfil</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== auth prompt modal (hidden) ===== -->
+  <div data-auth ref="{{ setAuthRef }}" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(10,8,6,.55);backdrop-filter:blur(6px)">
+    <div style="width:380px;max-width:90vw;background:var(--surface);border-radius:20px;border:1px solid var(--line);box-shadow:var(--shadow-window);padding:34px 30px;text-align:center">
+      <span style="line-height:0;display:inline-block;margin-bottom:14px"><svg width="40" height="40" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="#C0303A" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <h3 style="font-family:'Fraunces',serif;font-weight:500;font-size:24px;line-height:1.15;margin:0 0 8px;color:var(--ink)">Para grabar un <span style="font-style:italic">Flow</span>, entra a FlowPub</h3>
+      <p style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;color:var(--text-2);margin:0 0 22px">Cualquiera puede escuchar el Pub. Para publicar tu voz, crea tu cuenta —toma menos de un minuto.</p>
+      <button onClick="{{ closeAuth }}" style="width:100%;display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;border-radius:99px;border:1px solid rgba(120,120,120,.4);background:#fff;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:600;color:#1A1714;margin-bottom:10px"><svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-2 3.2-4.9 3.2-7.9z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.7l-3.6-2.7c-1 .7-2.3 1-3.6 1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M6 14.2a6.6 6.6 0 0 1 0-4.2V7.2H2.3a11 11 0 0 0 0 9.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3 .5 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.2L6 10c.9-2.5 3.2-4.6 6-4.6z"/></svg>Continuar con Google</button>
+      <button onClick="{{ closeAuth }}" style="width:100%;padding:12px;border-radius:99px;border:none;background:var(--grana);cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:16px" style-hover="background:var(--grana-700)">Crear cuenta con correo</button>
+      <button onClick="{{ closeAuth }}" style="background:transparent;border:none;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:13px;color:var(--text-3);text-decoration:underline">Ahora no, sigo escuchando</button>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { loggedIn: false };
+  setRoot = (el) => { this._root = el; };
+
+  componentDidMount() {
+    try { const t = localStorage.getItem('fp-theme'); if (t === 'dark') this.applyTheme('dark'); } catch (e) {}
+  }
+
+  applyTheme = (theme) => {
+    if (!this._root) return;
+    if (theme === 'dark') this._root.setAttribute('data-theme', 'dark');
+    else this._root.removeAttribute('data-theme');
+    this._root.querySelectorAll('[data-set]').forEach((b) => {
+      const on = b.dataset.set === theme;
+      b.style.background = on ? 'var(--ink)' : 'transparent';
+      b.style.color = on ? 'var(--ink-on)' : 'var(--text-3)';
+    });
+    try { localStorage.setItem('fp-theme', theme); } catch (e) {}
+  };
+
+  onTheme = (e) => { this.applyTheme(e.currentTarget.dataset.set); this.blip('tick'); };
+
+  blip = (type) => {
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      if (A.state === 'suspended') A.resume();
+      const o = A.createOscillator(), g = A.createGain();
+      o.connect(g); g.connect(A.destination);
+      const now = A.currentTime;
+      const f = { tick: 540, pop: 700, click: 400, soft: 320 }[type] || 440;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(0.05, now + 0.006);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      o.start(now); o.stop(now + 0.14);
+    } catch (e) {}
+  };
+
+  setAuthRef = (el) => { this._auth = el; };
+
+  onChip = (e) => {
+    const el = e.currentTarget;
+    const tag = el.dataset.tag;
+    const row = el.parentElement;
+    [...row.children].forEach((c) => {
+      const on = c === el;
+      c.style.background = on ? 'var(--ink)' : 'transparent';
+      c.style.color = on ? 'var(--ink-on)' : 'var(--text-2)';
+      c.style.borderColor = on ? 'var(--ink)' : 'var(--line-2)';
+      c.style.fontWeight = on ? '600' : '500';
+    });
+    const frame = el.closest('[data-frame]');
+    const tl = frame && frame.querySelector('[data-timeline]');
+    if (tl) {
+      [...tl.querySelectorAll('[data-flow-tag]')].forEach((card) => {
+        const show = tag === 'Todos' || card.dataset.flowTag === tag;
+        card.style.display = show ? '' : 'none';
+        if (show && card.animate) card.animate(
+          [{ opacity: 0, transform: 'translateY(6px)' }, { opacity: 1, transform: 'none' }],
+          { duration: 240, easing: 'cubic-bezier(.22,1,.36,1)' }
+        );
+      });
+    }
+    this.blip('tick');
+  };
+
+  onLike = (e) => {
+    const b = e.currentTarget;
+    const on = b.getAttribute('data-on') === '1';
+    b.setAttribute('data-on', on ? '0' : '1');
+    const path = b.querySelector('svg path');
+    if (path) { path.setAttribute('fill', on ? 'none' : '#C0303A'); path.setAttribute('stroke', on ? 'currentColor' : '#C0303A'); }
+    const cnt = b.querySelector('[data-count]');
+    if (cnt) cnt.textContent = String(parseInt(cnt.textContent, 10) + (on ? -1 : 1));
+    b.style.color = on ? 'var(--text-2)' : '#C0303A';
+    if (!on && b.animate) b.animate(
+      [{ transform: 'scale(1)' }, { transform: 'scale(1.28)' }, { transform: 'scale(1)' }],
+      { duration: 280, easing: 'cubic-bezier(.22,1,.36,1)' }
+    );
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  onPlay = (e) => {
+    const b = e.currentTarget;
+    const playing = b.getAttribute('data-playing') === '1';
+    b.setAttribute('data-playing', playing ? '0' : '1');
+    const ic = b.querySelector('[data-icon]');
+    if (ic) ic.innerHTML = playing
+      ? '<svg viewBox="0 0 24 24" fill="currentColor" style="width:13px;height:13px"><path d="M8 5v14l11-7z"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="currentColor" style="width:12px;height:12px"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    const card = b.closest('article');
+    const prog = card && card.querySelector('[data-prog]');
+    if (prog) {
+      const full = prog.getAttribute('data-prog') === 'full';
+      if (!playing && !full) {
+        prog.setAttribute('data-prog', 'full');
+        const len = prog.getTotalLength ? prog.getTotalLength() : 100;
+        prog.style.transition = 'none';
+        prog.setAttribute('stroke-dasharray', len);
+        prog.setAttribute('stroke-dashoffset', len * 0.55);
+        void prog.getBoundingClientRect();
+        prog.style.transition = 'stroke-dashoffset 4s linear';
+        prog.setAttribute('stroke-dashoffset', '0');
+      }
+    }
+    this.blip('click');
+  };
+
+  onComment = () => { this.blip('click'); };
+  onShare = () => { this.blip('click'); };
+
+  onFollow = (e) => {
+    const b = e.currentTarget;
+    const on = b.getAttribute('data-on') === '1';
+    b.setAttribute('data-on', on ? '0' : '1');
+    b.textContent = on ? 'Seguir' : 'Siguiendo';
+    b.style.background = on ? 'transparent' : 'var(--ink)';
+    b.style.color = on ? 'var(--ink)' : 'var(--ink-on)';
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  onNav = (e) => {
+    const el = e.currentTarget;
+    const rail = el.parentElement;
+    rail.querySelectorAll('[data-nav]').forEach((n) => {
+      const on = n === el;
+      const isRail = n.hasAttribute('data-rail');
+      n.setAttribute('data-on', on ? '1' : '0');
+      n.style.color = on ? 'var(--ink)' : (isRail ? 'var(--text-2)' : 'var(--text-3)');
+      n.style.fontWeight = on ? '600' : '500';
+      if (isRail) n.style.background = on ? 'var(--surface-3)' : 'transparent';
+    });
+    this.blip('click');
+  };
+
+  onRecord = () => {
+    if (!this.state.loggedIn && this._auth) {
+      this._auth.style.display = 'flex';
+      if (this._auth.animate) this._auth.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease-out' });
+    }
+    this.blip('click');
+  };
+
+  closeAuth = () => { if (this._auth) this._auth.style.display = 'none'; this.blip('soft'); };
+
+  renderVals() {
+    return {
+      onChip: this.onChip, onLike: this.onLike, onPlay: this.onPlay,
+      onComment: this.onComment, onShare: this.onShare, onFollow: this.onFollow,
+      onNav: this.onNav, onRecord: this.onRecord, closeAuth: this.closeAuth,
+      setAuthRef: this.setAuthRef, onTheme: this.onTheme, setRoot: this.setRoot,
+    };
+  }
+}
+</script>
+</body>
+</html>

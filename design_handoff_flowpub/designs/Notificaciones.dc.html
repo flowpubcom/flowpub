@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:#171410;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  ::selection{background:#F6E6E4}
+  [data-scroll]::-webkit-scrollbar{width:7px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:99px}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  [data-root]{
+    --ink:#1A1714;--ink-on:#F2EFE8;--text-2:#6E685D;--text-3:#9C968A;
+    --surface:#FBFAF6;--surface-2:#F8F5EF;--surface-3:#F2EFE8;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#F4F1EA 0%,#EDE7DA 55%,#E6DFD0 100%);
+    --line:rgba(26,23,20,.12);--line-1:rgba(26,23,20,.1);--line-soft:rgba(26,23,20,.08);--line-2:rgba(26,23,20,.24);--line-14:rgba(26,23,20,.14);
+    --hover:rgba(26,23,20,.04);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:#F6E6E4;--ocre:#D98A3D;
+    --shadow-window:0 30px 70px -28px rgba(26,23,20,.42);
+  }
+  [data-root][data-theme="dark"]{
+    --ink:#F2EFE8;--ink-on:#1A1714;--text-2:#B3AB9D;--text-3:#867F72;
+    --surface:#1E1A16;--surface-2:#191510;--surface-3:#2A241D;
+    --bg-grad:radial-gradient(120% 90% at 50% -10%,#1E1913 0%,#141110 55%,#0E0C0A 100%);
+    --line:rgba(242,239,232,.12);--line-1:rgba(242,239,232,.1);--line-soft:rgba(242,239,232,.07);--line-2:rgba(242,239,232,.22);--line-14:rgba(242,239,232,.14);
+    --hover:rgba(242,239,232,.06);--grana:#C0303A;--grana-700:#9A2530;--grana-wash:rgba(192,48,58,.18);--ocre:#D98A3D;
+    --shadow-window:0 30px 70px -28px rgba(0,0,0,.65);
+  }
+  @keyframes fp-breathe{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.05) rotate(-2.5deg)}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</helmet>
+
+<div data-root ref="{{ setRoot }}" style="position:relative;min-height:100vh;font-family:'Hanken Grotesk',system-ui,sans-serif;color:var(--ink);background:var(--bg-grad);transition:background .4s ease">
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+    <radialGradient id="g-turrell" cx="50%" cy="46%" r="60%"><stop offset="0%" stop-color="#F6D49A"/><stop offset="30%" stop-color="#E29A4A"/><stop offset="62%" stop-color="#C0303A"/><stop offset="100%" stop-color="#1A1714"/></radialGradient>
+    <linearGradient id="g-flavin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EC7079"/><stop offset="1" stop-color="#9A2530"/></linearGradient>
+    <linearGradient id="g-amate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2EFE8"/><stop offset="1" stop-color="#E6DFD0"/></linearGradient>
+    <pattern id="p-hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="7" stroke="#1A1714" stroke-width="1.1"/></pattern>
+    <filter id="f-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+  </defs></svg>
+
+  <header style="position:relative;z-index:2;max-width:1640px;margin:0 auto;padding:26px 40px 8px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><span style="line-height:0;display:inline-block;animation:fp-breathe 6s ease-in-out infinite;transform-origin:50% 50%"><svg width="30" height="30" viewBox="0 0 200 200" aria-hidden="true"><path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span style="font-family:'Fraunces',serif;font-size:24px;font-weight:500;letter-spacing:-.01em"><span style="font-style:italic">Flow</span>Pub</span></div>
+      <h1 style="font-family:'Fraunces',serif;font-weight:400;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:0"><span style="font-style:italic">Notificaciones</span> — quién te escucha</h1>
+      <p style="font-family:'Hanken Grotesk',sans-serif;font-size:14px;color:var(--text-2);margin:8px 0 0;max-width:62ch">Likes, nuevos seguidores, comentarios de texto y de <b style="color:var(--grana)">voz</b>, menciones y Flows de quienes sigues.</p>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+      <div style="display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--line-2);border-radius:99px;padding:3px">
+        <button data-set="light" onClick="{{ onTheme }}" aria-label="Tema claro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:var(--ink);color:var(--ink-on)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+        <button data-set="dark" onClick="{{ onTheme }}" aria-label="Tema oscuro" style="display:flex;align-items:center;justify-content:center;width:36px;height:30px;border:none;border-radius:99px;cursor:pointer;background:transparent;color:var(--text-3)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);text-align:right;line-height:1.7">pantalla 08 · notificaciones<br>like · seguir · comentar · voz</div>
+    </div>
+  </header>
+
+  <div data-scroll style="position:relative;z-index:2;display:flex;gap:48px;align-items:flex-start;justify-content:flex-start;padding:24px 40px 80px;flex-wrap:nowrap;overflow-x:auto">
+
+    <!-- ============ DESKTOP ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Desktop · 760</div>
+      <div data-notif-root style="width:760px;border-radius:18px;overflow:hidden;background:var(--surface);border:1px solid var(--line-14);box-shadow:var(--shadow-window)">
+        <div style="height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;background:var(--surface-2);border-bottom:1px solid var(--line-1)"><div style="display:flex;gap:8px"><span style="width:11px;height:11px;border-radius:99px;background:#E0837F"></span><span style="width:11px;height:11px;border-radius:99px;background:#E7C07A"></span><span style="width:11px;height:11px;border-radius:99px;background:#A9C79A"></span></div><div style="flex:1;display:flex;justify-content:center"><span style="font-family:'Space Mono',monospace;font-size:12px;color:var(--text-3);background:var(--surface);border:1px solid var(--line-1);padding:5px 16px;border-radius:99px">flowpub.lat/notificaciones</span></div><div style="width:54px"></div></div>
+        <div style="display:flex;flex-direction:column;height:740px">
+          <div style="flex:0 0 auto;padding:22px 28px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:26px;margin:0">Notificaciones</h2><button data-action="markread" style="display:flex;align-items:center;gap:7px;background:transparent;border:none;cursor:pointer;color:var(--grana);font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600" style-hover="opacity:.7"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Marcar todo como leído</button></div>
+            <div style="display:flex;gap:8px;border-bottom:1px solid var(--line-1)">
+              <button data-action="filter" data-filter="all" style="padding:9px 4px 12px;border:none;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--ink);border-bottom:2px solid var(--grana);margin-bottom:-1px">Todas</button>
+              <button data-action="filter" data-filter="unread" style="padding:9px 12px 12px;border:none;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px">Sin leer</button>
+            </div>
+          </div>
+          <div data-scroll data-notiflist style="flex:1;overflow-y:auto;padding:8px 18px 24px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ PHONE ============ -->
+    <div style="flex:0 0 auto">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--text-3);margin:0 0 12px 6px">Teléfono · 390</div>
+      <div style="width:412px;height:840px;border-radius:52px;background:#1A1714;padding:11px;box-shadow:0 30px 70px -28px rgba(0,0,0,.5)">
+        <div data-notif-root style="position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column">
+          <div style="height:46px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 30px;font-family:'Space Mono',monospace;font-size:13px;color:var(--ink)"><span>9:41</span><span style="position:absolute;left:50%;top:9px;transform:translateX(-50%);width:104px;height:28px;background:#1A1714;border-radius:99px"></span><span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="6" width="3" height="5" rx="1"/><rect x="4.5" y="4" width="3" height="7" rx="1"/><rect x="9" y="2" width="3" height="9" rx="1"/><rect x="13.5" y="0" width="3" height="11" rx="1"/></svg></span></div>
+          <div style="flex:0 0 auto;padding:6px 18px 0">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><h2 style="font-family:'Fraunces',serif;font-weight:500;font-size:25px;margin:0">Notificaciones</h2><button data-action="markread" aria-label="Marcar leído" style="width:36px;height:36px;border-radius:99px;border:none;background:var(--surface-2);color:var(--grana);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></button></div>
+            <div style="display:flex;gap:8px;border-bottom:1px solid var(--line-1)">
+              <button data-action="filter" data-filter="all" style="padding:8px 4px 11px;border:none;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:600;color:var(--ink);border-bottom:2px solid var(--grana);margin-bottom:-1px">Todas</button>
+              <button data-action="filter" data-filter="unread" style="padding:8px 12px 11px;border:none;background:transparent;cursor:pointer;font-family:'Hanken Grotesk',sans-serif;font-size:14px;font-weight:500;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px">Sin leer</button>
+            </div>
+          </div>
+          <div data-scroll data-notiflist style="flex:1;overflow-y:auto;padding:6px 14px 24px"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  setRoot = (el) => { this._root = el; };
+  blip = (type) => {
+    try {
+      const A = this._ac || (this._ac = new (window.AudioContext || window.webkitAudioContext)());
+      if (A.state === 'suspended') A.resume();
+      const o = A.createOscillator(), g = A.createGain();
+      o.connect(g); g.connect(A.destination);
+      const now = A.currentTime; const f = { tick: 540, pop: 700, click: 400, soft: 320 }[type] || 440;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(0.05, now + 0.006); g.gain.exponentialRampToValueAtTime(0.0001, now + 0.13);
+      o.start(now); o.stop(now + 0.14);
+    } catch (e) {}
+  };
+  applyTheme = (theme) => {
+    if (!this._root) return;
+    if (theme === 'dark') this._root.setAttribute('data-theme', 'dark'); else this._root.removeAttribute('data-theme');
+    this._root.querySelectorAll('[data-set]').forEach((b) => { const on = b.dataset.set === theme; b.style.background = on ? 'var(--ink)' : 'transparent'; b.style.color = on ? 'var(--ink-on)' : 'var(--text-3)'; });
+    try { localStorage.setItem('fp-theme', theme); } catch (e) {}
+  };
+  onTheme = (e) => { this.applyTheme(e.currentTarget.dataset.set); this.blip('tick'); };
+
+  COVERS = {
+    barro: `<svg viewBox="0 0 80 80" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%"><rect width="80" height="80" fill="url(#g-amate)"/><polygon points="22,48 40,38 58,48 40,58" fill="#E6DFD0"/><polygon points="22,48 22,30 40,20 40,38" fill="#C0303A"/><polygon points="40,38 40,20 58,30 58,48" fill="#1A1714"/></svg>`,
+    luz: `<svg viewBox="0 0 80 80" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%"><rect width="80" height="80" fill="#1A1714"/><ellipse cx="40" cy="40" rx="34" ry="30" fill="url(#g-turrell)" filter="url(#f-glow)" opacity=".9"/><rect x="20" y="16" width="40" height="48" rx="12" fill="url(#g-turrell)"/></svg>`,
+    cine: `<svg viewBox="0 0 80 80" preserveAspectRatio="xMidYMid slice" style="width:100%;height:100%"><rect width="80" height="80" fill="#15110E"/><rect x="16" y="12" width="6" height="56" rx="3" fill="#EC7079"/><rect x="37" y="20" width="6" height="48" rx="3" fill="#F2C081"/><rect x="58" y="10" width="6" height="50" rx="3" fill="#EC7079"/></svg>`,
+  };
+
+  ICONS = {
+    like: { c: '#C0303A', svg: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/>', fill: true },
+    follow: { c: '#2A6FDB', svg: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>', fill: false },
+    comment: { c: '#D98A3D', svg: '<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-4-1L3 20l1.5-4.5a8.5 8.5 0 0 1 16.5-4z"/>', fill: false },
+    voice: { c: '#9A2530', svg: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>', fill: false },
+    flow: { c: '#1A1714', svg: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>', fill: false },
+    mention: { c: '#2A6FDB', svg: '<circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/>', fill: false },
+  };
+
+  N = [
+    { g: 'Hoy', actor: 'María', init: 'M', color: '#9A2530', type: 'like', text: 'le gustó tu Flow <b>“Nueve minutos sobre el barro”</b>', time: '2 min', unread: true, cover: 'barro' },
+    { g: 'Hoy', actor: 'Tomás', init: 'T', color: '#1A1714', type: 'follow', text: 'te comenzó a seguir', time: '10 min', unread: true, follow: true },
+    { g: 'Hoy', actor: 'Inés', init: 'I', color: '#D98A3D', type: 'comment', text: 'comentó: <span style="color:var(--text-2)">“Me quedo con dejar secar las ideas.”</span>', time: '1 h', unread: true, cover: 'barro' },
+    { g: 'Hoy', actor: 'Renata', init: 'R', color: '#C0303A', type: 'voice', text: 'te dejó un comentario de voz', time: '2 h', unread: false, cover: 'barro', voice: '0:24', transcript: 'Oye, me encantó tu Flow. Lo del primer molde me dejó pensando toda la tarde. Gracias por grabarlo.' },
+    { g: 'Esta semana', actor: 'Julio', init: 'J', color: '#1A1714', type: 'flow', text: 'publicó un nuevo Flow <b>“La luz del taller”</b>', time: 'ayer', unread: false, cover: 'luz' },
+    { g: 'Esta semana', actor: 'Sofía', init: 'S', color: '#9A2530', type: 'mention', text: 'te mencionó en un comentario', time: '2 d', unread: false, cover: 'cine' },
+    { g: 'Esta semana', actor: 'Carlos', init: 'C', color: '#D98A3D', type: 'follow', text: 'te comenzó a seguir', time: '3 d', unread: false, follow: true },
+  ];
+
+  itemHTML = (n, i) => {
+    const ic = this.ICONS[n.type];
+    const badge = `<span style="position:absolute;right:-3px;bottom:-3px;width:22px;height:22px;border-radius:99px;background:${ic.c};border:2px solid var(--surface);display:flex;align-items:center;justify-content:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="${ic.fill ? '#fff' : 'none'}" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg></span>`;
+    const right = n.follow
+      ? `<button data-action="follow" data-on="0" style="flex:0 0 auto;font-family:'Hanken Grotesk',sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:99px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:.14s" onmouseover="" >Seguir</button>`
+      : (n.cover ? `<span style="flex:0 0 auto;width:46px;height:46px;border-radius:10px;overflow:hidden;border:1px solid var(--line-1)">${this.COVERS[n.cover] || ''}</span>` : '');
+    const voiceBlock = n.voice ? `
+      <div style="display:flex;align-items:center;gap:10px;margin-top:9px;background:var(--surface-2);border:1px solid var(--line-1);border-radius:99px;padding:5px 12px 5px 5px;max-width:300px">
+        <button data-action="play" aria-label="Reproducir" style="flex:0 0 auto;width:30px;height:30px;border-radius:99px;background:var(--ink);color:var(--ink-on);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer"><span data-icon style="line-height:0"><svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><path d="M8 5v14l11-7z"/></svg></span></button>
+        <svg viewBox="0 0 160 20" preserveAspectRatio="none" style="flex:1;height:20px;min-width:0"><path d="M3 10 C 30 3 50 17 80 10 S 130 3 157 10" fill="none" stroke="var(--line-2)" stroke-width="2" stroke-linecap="round"/></svg>
+        <span style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text-2)">${n.voice}</span>
+      </div>
+      <button data-action="vtrans" style="display:flex;align-items:center;gap:5px;margin-top:7px;background:transparent;border:none;cursor:pointer;color:var(--text-2);font-family:'Hanken Grotesk',sans-serif;font-size:12px;font-weight:600;padding:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Ver transcript</button>
+      <div data-vtrans style="display:none;margin-top:6px;padding:10px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line-1);font-family:'Fraunces',serif;font-size:14px;line-height:1.5;color:var(--text-2);max-width:320px">${n.transcript || ''}</div>` : '';
+    return `<div data-item data-unread="${n.unread ? '1' : '0'}" style="display:flex;align-items:flex-start;gap:13px;padding:13px 14px;border-radius:14px;background:${n.unread ? 'var(--grana-wash)' : 'transparent'};transition:background .2s">
+      <span style="position:relative;flex:0 0 auto"><span style="width:46px;height:46px;border-radius:99px;background:${n.color};color:#F2EFE8;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-style:italic;font-size:19px">${n.init}</span>${badge}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Hanken Grotesk',sans-serif;font-size:14.5px;line-height:1.4;color:var(--ink)"><b style="font-weight:600">${n.actor}</b> ${n.text} <span style="color:var(--text-3);font-size:12px;white-space:nowrap"> · ${n.time}</span></div>
+        ${voiceBlock}
+      </div>
+      ${right}
+    </div>`;
+  };
+
+  buildList = (list) => {
+    let html = ''; let lastG = '';
+    this.N.forEach((n, i) => {
+      if (n.g !== lastG) { html += `<div data-group style="font-family:'Hanken Grotesk',sans-serif;font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);padding:14px 14px 6px">${n.g}</div>`; lastG = n.g; }
+      html += this.itemHTML(n, i);
+    });
+    list.innerHTML = html;
+  };
+
+  componentDidMount() {
+    try { const t = localStorage.getItem('fp-theme'); if (t === 'dark') this.applyTheme('dark'); } catch (e) {}
+    if (this._root) {
+      this._root.querySelectorAll('[data-notiflist]').forEach((l) => this.buildList(l));
+      this._root.addEventListener('click', this.onClick);
+    }
+  }
+  componentWillUnmount() { if (this._root) this._root.removeEventListener('click', this.onClick); }
+
+  onClick = (e) => {
+    const t = e.target.closest('[data-action]');
+    if (!t || !this._root.contains(t)) return;
+    const root = t.closest('[data-notif-root]');
+    const a = t.dataset.action;
+    if (a === 'markread') this.markRead(root);
+    else if (a === 'follow') this.follow(t);
+    else if (a === 'vtrans') this.vtrans(t);
+    else if (a === 'play') this.play(t);
+    else if (a === 'filter') this.filter(t, root);
+  };
+
+  markRead = (root) => {
+    root.querySelectorAll('[data-item]').forEach((it) => { it.dataset.unread = '0'; it.style.background = 'transparent'; });
+    this.blip('pop');
+  };
+
+  follow = (btn) => {
+    const on = btn.getAttribute('data-on') === '1';
+    btn.setAttribute('data-on', on ? '0' : '1');
+    btn.textContent = on ? 'Seguir' : 'Siguiendo';
+    btn.style.background = on ? 'transparent' : 'var(--ink)';
+    btn.style.color = on ? 'var(--ink)' : 'var(--ink-on)';
+    this.blip(on ? 'soft' : 'pop');
+  };
+
+  vtrans = (btn) => {
+    const panel = btn.parentElement.querySelector('[data-vtrans]');
+    if (!panel) return;
+    const open = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : 'block';
+    if (!open && panel.animate) panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200 });
+    this.blip('tick');
+  };
+
+  play = (btn) => {
+    const playing = btn.getAttribute('data-playing') === '1';
+    btn.setAttribute('data-playing', playing ? '0' : '1');
+    const ic = btn.querySelector('[data-icon]');
+    if (ic) ic.innerHTML = playing ? '<svg viewBox="0 0 24 24" fill="currentColor" style="width:11px;height:11px"><path d="M8 5v14l11-7z"/></svg>' : '<svg viewBox="0 0 24 24" fill="currentColor" style="width:10px;height:10px"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    this.blip('click');
+  };
+
+  filter = (btn, root) => {
+    const which = btn.dataset.filter;
+    btn.parentElement.querySelectorAll('[data-filter]').forEach((b) => {
+      const on = b === btn;
+      b.style.color = on ? 'var(--ink)' : 'var(--text-3)';
+      b.style.fontWeight = on ? '600' : '500';
+      b.style.borderBottom = on ? '2px solid var(--grana)' : '2px solid transparent';
+    });
+    root.querySelectorAll('[data-notiflist]').forEach((list) => {
+      list.querySelectorAll('[data-item]').forEach((it) => { it.style.display = (which === 'unread' && it.dataset.unread !== '1') ? 'none' : 'flex'; });
+      // hide group headers with no visible items
+      list.querySelectorAll('[data-group]').forEach((g) => {
+        let n = g.nextElementSibling, any = false;
+        while (n && !n.hasAttribute('data-group')) { if (n.hasAttribute('data-item') && n.style.display !== 'none') any = true; n = n.nextElementSibling; }
+        g.style.display = any ? 'block' : 'none';
+      });
+    });
+    this.blip('tick');
+  };
+
+  renderVals() { return { setRoot: this.setRoot, onTheme: this.onTheme }; }
+}
+</script>
+</body>
+</html>
