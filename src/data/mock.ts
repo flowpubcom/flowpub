@@ -1,4 +1,5 @@
 import type { Flow, Profile, TrendingTag } from "./types";
+import { POLISHED_MD, RAW_TRANSCRIPT } from "./composeMock";
 
 // Datos simulados (front-first). Se intercambian por consultas a Supabase
 // en su fase. Copy en registro mexicano, a tono con la marca.
@@ -23,12 +24,12 @@ export const CATEGORIES = [
 // Filtros de El Pub: «Todos» + las categorías activas.
 export const TAGS = ["Todos", ...CATEGORIES.slice(0, 8)];
 
-const julio: Profile = { id: "u1", username: "julio", displayName: "Julio", avatarColor: "ink" };
-const maria: Profile = { id: "u2", username: "maria", displayName: "María", avatarColor: "grana" };
-const ines: Profile = { id: "u3", username: "ines", displayName: "Inés", avatarColor: "ocre" };
-const tomas: Profile = { id: "u4", username: "tomas", displayName: "Tomás", avatarColor: "grana" };
-const renata: Profile = { id: "u5", username: "renata", displayName: "Renata", avatarColor: "ink" };
-const sof: Profile = { id: "u6", username: "sof", displayName: "Sof", avatarColor: "ocre" };
+export const julio: Profile = { id: "u1", username: "julio", displayName: "Julio", avatarColor: "ink" };
+export const maria: Profile = { id: "u2", username: "maria", displayName: "María", avatarColor: "grana" };
+export const ines: Profile = { id: "u3", username: "ines", displayName: "Inés", avatarColor: "ocre" };
+export const tomas: Profile = { id: "u4", username: "tomas", displayName: "Tomás", avatarColor: "grana" };
+export const renata: Profile = { id: "u5", username: "renata", displayName: "Renata", avatarColor: "ink" };
+export const sof: Profile = { id: "u6", username: "sof", displayName: "Sof", avatarColor: "ocre" };
 
 export const FLOWS: Flow[] = [
   {
@@ -44,6 +45,8 @@ export const FLOWS: Flow[] = [
     likeCount: 128,
     commentCount: 14,
     liked: false,
+    bodyMd: POLISHED_MD,
+    transcriptRaw: RAW_TRANSCRIPT,
   },
   {
     id: "f2",

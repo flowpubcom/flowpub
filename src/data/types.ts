@@ -24,6 +24,10 @@ export interface Flow {
   likeCount: number;
   commentCount: number;
   liked: boolean;
+  /** Artículo pulido (markdown). Si falta, el lector arma uno del excerpt. */
+  bodyMd?: string;
+  /** Transcript crudo original. */
+  transcriptRaw?: string;
 }
 
 export interface TrendingTag {
