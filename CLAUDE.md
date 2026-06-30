@@ -36,7 +36,8 @@ Turnstile** (signup/login) · **Google Gemini** (STT, pulido, portada/translate)
 
 ## Comandos
 
-> El proyecto aún no está scaffoldeado; estos serán los comandos una vez montado Next.js.
+> Montado con **Next.js 16** (App Router, Turbopack). El loop central va front-first;
+> falta cablear el backend. **Dónde nos quedamos: `ESTADO.md`.**
 
 ```bash
 npm run dev          # next dev (Turbopack, :3000)
@@ -194,6 +195,7 @@ políticas RLS escritas y probadas.
 
 ## Memoria y handoff
 
+- **Dónde nos quedamos / cómo seguir:** `ESTADO.md` (handoff entre sesiones — léelo primero).
 - **Spec exhaustivo:** `design_handoff_flowpub/README.md` (modelo de datos con columnas, tabla
   oscura completa, path del FlowMark, keys del diccionario i18n, detalle por pantalla).
 - **Verdad visual por pantalla:** `docs/design-map.json` (tokens reales, componentes con medidas,
