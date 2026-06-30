@@ -304,6 +304,30 @@
   }
 }
 
+/* sacudida al topar un límite (p. ej. 4.º tag) */
+@keyframes fp-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+/* trazo de tinta de la vírgula (processing) */
+@keyframes fp-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .fp-breathe {
   animation: fp-breathe 6s var(--ease-flow) infinite;
 }

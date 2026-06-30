@@ -3,8 +3,9 @@ import type { Flow, Profile, TrendingTag } from "./types";
 // Datos simulados (front-first). Se intercambian por consultas a Supabase
 // en su fase. Copy en registro mexicano, a tono con la marca.
 
-export const TAGS = [
-  "Todos",
+// Las 12 categorías: fuente de verdad para onboarding, filtros y el composer.
+// (Luego las administra el panel.)
+export const CATEGORIES = [
   "Arte",
   "Ciencia",
   "Libros",
@@ -13,7 +14,14 @@ export const TAGS = [
   "Viajes",
   "Cine",
   "Naturaleza",
+  "Cocina",
+  "Deportes",
+  "Música",
+  "Historia",
 ];
+
+// Filtros de El Pub: «Todos» + las categorías activas.
+export const TAGS = ["Todos", ...CATEGORIES.slice(0, 8)];
 
 const julio: Profile = { id: "u1", username: "julio", displayName: "Julio", avatarColor: "ink" };
 const maria: Profile = { id: "u2", username: "maria", displayName: "María", avatarColor: "grana" };

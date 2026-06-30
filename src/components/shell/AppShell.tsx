@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Bell, Mic } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/brand";
 import { Avatar, Button } from "@/components/ui";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
-import { useAuth } from "@/providers/AuthProvider";
 import { NAV, type NavItem } from "./nav";
-import { AuthGateModal } from "./AuthGateModal";
 
 export interface AppShellProps {
   children: ReactNode;
@@ -24,13 +23,13 @@ export interface AppShellProps {
 export function AppShell({ children, active = "pub", rightRail }: AppShellProps) {
   const { t } = useI18n();
   const { play } = useSound();
-  const { user } = useAuth();
-  const [gate, setGate] = useState(false);
+  const router = useRouter();
 
   const onRecord = () => {
     play("rec");
-    if (!user) setGate(true);
-    // con sesión → ir a /componer (fase de creación)
+    // Front-first: sin auth real, vamos directo a crear. Cuando entre la auth,
+    // aquí se abre la compuerta (AuthGateModal) si !user.
+    router.push("/componer");
   };
 
   return (
@@ -73,7 +72,6 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
       )}
 
       <MobileBottomNav active={active} onRecord={onRecord} recordLabel={t("record")} />
-      <AuthGateModal open={gate} onClose={() => setGate(false)} />
     </div>
   );
 }

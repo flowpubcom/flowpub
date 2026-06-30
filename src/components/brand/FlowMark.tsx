@@ -11,6 +11,8 @@ export interface FlowMarkProps
   strokeWidth?: number;
   /** Respira (idle ambiente). Apagado dentro de prefers-reduced-motion. */
   breathe?: boolean;
+  /** Trazo de tinta en bucle (estado «procesando»). */
+  draw?: boolean;
   title?: string;
 }
 
@@ -18,6 +20,7 @@ export function FlowMark({
   size = 30,
   strokeWidth = 14,
   breathe = false,
+  draw = false,
   title = "FlowPub",
   className,
   ...props
@@ -39,6 +42,9 @@ export function FlowMark({
         strokeWidth={strokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
+        pathLength={draw ? 1 : undefined}
+        strokeDasharray={draw ? 1 : undefined}
+        style={draw ? { animation: "fp-draw 1.7s var(--ease-flow) infinite" } : undefined}
       />
     </svg>
   );
