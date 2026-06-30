@@ -37,20 +37,14 @@ export const viewport: Viewport = {
   ],
 };
 
-// Pinta el tema ANTES del primer frame (sin FOUC). Lee fp-theme / SO.
-const themeScript = `(function(){try{var t=localStorage.getItem('fp-theme');var d=t==='dark'||((t===null||t==='system')&&window.matchMedia('(prefers-color-scheme: dark)').matches);var e=document.documentElement;if(d){e.setAttribute('data-theme','dark');}else{e.removeAttribute('data-theme');}}catch(e){}})();`;
-
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // No-flash sin script: el default del SO lo resuelve `@media
+  // (prefers-color-scheme)` en globals.css; el override explícito lo aplica el
+  // ThemeProvider vía data-theme. Sin <script> = consola limpia.
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        {/* No-flash: pinta el tema antes del primer frame. Corre en el HTML del
-            SSR (síncrono, pre-paint). El warning de React por <script> es solo
-            de dev y se elimina en producción. */}
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-      </head>
       <body
         className={`${fraunces.variable} ${hanken.variable} ${spaceMono.variable}`}
       >

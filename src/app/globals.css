@@ -120,6 +120,33 @@
   color-scheme: dark;
 }
 
+/* Sin elección explícita (no hay data-theme): sigue al SO. Da el tema correcto
+   en el primer frame sin script ni flash; el override del usuario gana porque
+   el ThemeProvider fija un data-theme explícito. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --ink: #f2efe8;
+    --ink-on: #1a1714;
+    --text-2: #b3ab9d;
+    --text-3: #867f72;
+    --surface: #1e1a16;
+    --surface-2: #191510;
+    --surface-3: #2a241d;
+    --line: rgba(242, 239, 232, 0.12);
+    --line-2: rgba(242, 239, 232, 0.22);
+    --line-soft: rgba(242, 239, 232, 0.08);
+    --hover: rgba(242, 239, 232, 0.06);
+    --glass: rgba(20, 17, 14, 0.72);
+    --grana-wash: rgba(192, 48, 58, 0.18);
+    --wave: rgba(242, 239, 232, 0.18);
+    --bg-1: #1e1913;
+    --bg-2: #141110;
+    --bg-3: #0e0c0a;
+    --shadow-window: 0 30px 70px -28px rgba(0, 0, 0, 0.65);
+    color-scheme: dark;
+  }
+}
+
 /* ── base ─────────────────────────────────────────────────────────────────── */
 @layer base {
   * {

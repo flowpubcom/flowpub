@@ -34,9 +34,8 @@ function systemTheme(): Resolved {
 }
 
 function apply(theme: Resolved) {
-  const el = document.documentElement;
-  if (theme === "dark") el.setAttribute("data-theme", "dark");
-  else el.removeAttribute("data-theme");
+  // Siempre explícito: "light" debe sobreponerse a un SO oscuro (y viceversa).
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
