@@ -43,17 +43,23 @@ export async function publishFlow(input: {
   if (error || !flow) return { ok: false, error: "generic" };
 
   // Mapea nombres de tema (name_es) → ids e inserta flow_tags (máx 3).
+  // OJO: el Flow YA está publicado; si los tags fallan NO reportamos error
+  // (el usuario reintentaría y duplicaría el Flow). Tags = secundarios.
   const names = input.tagNames.slice(0, 3);
   if (names.length) {
-    const { data: tagRows } = await supabase
+    const { data: tagRows, error: tagsErr } = await supabase
       .from("tags")
       .select("id,name_es")
       .in("name_es", names);
+    if (tagsErr) console.warn("[publishFlow] tags:", tagsErr.message);
     const rows = (tagRows ?? []).map((t) => ({
       flow_id: flow.id as string,
       tag_id: t.id as number,
     }));
-    if (rows.length) await supabase.from("flow_tags").insert(rows);
+    if (rows.length) {
+      const { error: ftErr } = await supabase.from("flow_tags").insert(rows);
+      if (ftErr) console.warn("[publishFlow] flow_tags:", ftErr.message);
+    }
   }
 
   return { ok: true, id: flow.id as string };

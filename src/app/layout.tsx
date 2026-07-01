@@ -23,11 +23,20 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
+
 export const metadata: Metadata = {
-  title: { default: "FlowPub", template: "%s · FlowPub" },
-  description: "La voz que se vuelve publicación.",
+  metadataBase: new URL(SITE),
+  title: {
+    default: "FlowPub — la voz que se vuelve publicación",
+    template: "%s · FlowPub",
+  },
+  description:
+    "Graba tu voz y FlowPub la vuelve artículo: transcripción y pulido con IA, portada generativa y una comunidad que escucha. Voces de arte, ciencia, libros, cultura, viajes y más.",
   applicationName: "FlowPub",
-  metadataBase: new URL("https://flowpub.lat"),
+  openGraph: { type: "website", siteName: "FlowPub", locale: "es_MX" },
+  twitter: { card: "summary" },
+  robots: { index: true, follow: true },
 };
 
 export const viewport: Viewport = {

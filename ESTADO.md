@@ -1,7 +1,51 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 2 — 2026-07-01**.
+> Última actualización: **sesión 3 — 2026-07-01 (ronda Fable 5)**.
+
+## Sesión 3 — auditoría + ronda de features (Fable 5)
+
+**Hecho y verificado en vivo** (typecheck/lint/build verdes):
+
+- **Marca viva:** `<FlowMark>` por default se dibuja al aparecer, respira y se
+  inclina al hover (clases `fp-mark-*` en globals). Reduced-motion safe.
+- **Portadas con capa oscura:** tokens `--cover-*` (canvas/figura/línea/grano
+  voltean por tema; acentos fijos). Regla actualizada en CLAUDE.md.
+- **Radio Autoplay** (`providers/RadioProvider.tsx`, alcance PubFeed): al
+  terminar un audio suena el siguiente Flow con audio; solo uno a la vez;
+  scroll suave a la tarjeta. Verificado E2E (encadenado + pausa cruzada).
+- **Velocidad 1×/1.5×/2×** en AudioPlayer (real `playbackRate` + mock).
+- **3 minutos máximo** (`MAX=180` composer + settings + `migration_03`).
+- **Filtros nuevos del Pub:** temas en rail deslizable (tags REALES de la BD,
+  con fade en bordes) + menú de duración ≤15/30/60/90/120/150/180 s.
+- **SEO completo:** metadataBase/OG/canonical, `sitemap.ts`, `robots.ts`,
+  hubs **`/tema/[slug]`** (H1+copy+CollectionPage), JSON-LD Article+AudioObject
+  en el Flow, links internos (kicker→tema, trending→tema). Plan: `docs/seo.md`.
+- **Fixes de la auditoría multi-agente** (los verificadores toparon con el
+  límite de sesión; el triage lo hice a mano sobre los hallazgos):
+  - _Seguridad:_ APIs de Gemini exigen sesión (401 anónimo — verificado);
+    privilegios de columna: nadie se auto-promueve a admin ni infla contadores
+    (`revoke/grant update` por columna); `members_insert` ya no deja colarse a
+    conversaciones ajenas; callback OAuth sanea `?next=` (solo rutas internas).
+  - _Honestidad del pipeline:_ sin transcript NO se finge contenido (aviso y
+    regresa a grabar); si el pulido falla, el cuerpo = transcript crudo; si la
+    subida de audio falla, se avisa; el editor muestra el transcript REAL.
+  - _Datos:_ `fetchFlows` con límite 60 + errores logueados; `cache()` en
+    fetchFlow/fetchTags (una consulta por request); fallo de tags al publicar
+    ya no invita a duplicar el Flow.
+  - _A11y:_ aria-labels en bottom nav / inputs del composer / comentario;
+    aria-pressed en toggles segmentados; errores con role="status".
+- **Primer Flow real de Julio publicado** (con audio, @julio). El Pub vive.
+
+**👉 Julio debe correr en el SQL Editor:** `supabase/migration_03_radio_y_hardening.sql`
+(tope 3 min + duraciones demo bajo el tope + hardening). Sin esto, el filtro de
+duración deja fuera a los 6 Flows demo (duran >3 min) y el hardening no aplica.
+
+**Pendientes que dejó la auditoría (colita):** paginación real del feed ·
+cachear páginas públicas (cliente sin cookies + revalidate) · og:image por Flow
+· slugs legibles en /flow · focus-trap completo en Modal · barrido i18n de
+strings hardcodeados (fase 9) · bucket audio es público por diseño (revisar
+cuando lleguen los DMs de voz).
 
 ## En una frase
 

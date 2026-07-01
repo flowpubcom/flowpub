@@ -81,8 +81,9 @@ npm run start        # next start (sirve el build)
   semilla = keys de `designs/Idiomas.dc.html` (`nav.*`, `record`, `t.*`, `audio`, `ago`…).
 - **Estilos:** **solo por tokens** (CSS variables `--*`). **Nunca hardcodees hex** fuera de la
   capa de tokens. Tematizado por capa semántica que voltea en `[data-theme="dark"]` (persiste
-  `localStorage('fp-theme')`, **default = SO**). No invertir en bloque: mapea roles (covers,
-  bezels y acentos **no** cambian entre temas).
+  `localStorage('fp-theme')`, **default = SO**). No invertir en bloque: mapea roles (bezels y
+  acentos **no** cambian entre temas; las **portadas** tienen su propia capa clara/oscura vía
+  tokens `--cover-*`: canvas/figura/línea/grano voltean, acentos grana/ocre/champagne fijos).
 - **Sin emoji** en ningún lado. La única «emoji» de la marca es la **vírgula / gota dorada**.
 - **Datos:** nada de SQL en componentes — pasa por `lib/` y los route handlers. Columnas nuevas:
   léelas con cascada tolerante (reintenta sin la columna si el esquema no la tiene aún).
@@ -114,7 +115,9 @@ npm run start        # next start (sirve el build)
 `--surface-2 #F8F5EF↔#191510`, `--surface-3 #F2EFE8↔#2A241D`, `--text-2 #6E685D↔#B3AB9D`,
 `--text-3 #9C968A↔#867F72`, `--glass rgba(251,250,246,.82)↔rgba(20,17,14,.72)`,
 `--grana-wash #F6E6E4↔rgba(192,48,58,.18)`; líneas → `rgba(242,239,232,*)`. Acentos
-(grana/ocre) y bezels/covers **fijos**.
+(grana/ocre) y bezels **fijos**; las portadas voltean su lienzo con los tokens `--cover-*`
+(`--cover-canvas #F2EFE8↔#262019`, `--cover-shadow #1A1714↔#0E0C0A`,
+`--cover-line #1A1714↔#F2EFE8`, `--cover-night #1A1714↔#12100D`, grano multiply↔soft-light).
 
 **Tipografía:** **Fraunces** (serif = *la voz*: títulos, cuerpo del artículo, transcripts,
 iniciales de avatar en itálica; pesos 400/500, optical sizing). **Hanken Grotesk** (sans = *el
@@ -136,8 +139,11 @@ oscilador **sine**, envelope exponencial ~140ms — `rec 220Hz`, `pop 700Hz`, `c
 
 **Marca (FlowMark):** vírgula monolínea (voluta de la palabra) — **un solo path SVG**,
 `stroke=currentColor`, caps redondos (path exacto en el README). Wordmark «*Flow*Pub» (Flow
-itálica). El **reproductor de audio es una línea-vírgula** que ondula, no un waveform genérico;
-el progreso es un trazo grana vía `stroke-dashoffset`.
+itálica). La marca está **viva** (default de `<FlowMark>`): se dibuja al aparecer
+(`fp-mark-intro`), respira (`fp-breathe`) y se inclina al hover (`fp-mark-g`); todo se apaga con
+`prefers-reduced-motion`. El **reproductor de audio es una línea-vírgula** que ondula, no un
+waveform genérico; el progreso es un trazo grana vía `stroke-dashoffset`, con velocidad
+1×/1.5×/2×.
 
 **Portadas:** SVG abstracto 16:9 en 4 direcciones de arte (Escher/LeWitt isométrico · Turrell
 apertura · Flavin neón · Lichtenstein/collage 90s), paleta bloqueada + grano `feTurbulence`.
@@ -149,7 +155,9 @@ image-gen. Persistir `cover_kind` + `cover_svg`.
 `profiles · tags · flows · flow_tags (máx 3) · comments (text|voice) · likes · follows ·
 conversations · conversation_members · messages (text|voice) · notifications · settings`.
 Buckets: `audio`, `avatars`, `covers`. Fan-out de notificaciones + mantener contadores con
-triggers/Edge. **Pipeline de publicación (server):** `transcribe` (audio→crudo, stream para vivo)
+triggers/Edge. **Un Flow dura ≤ 3 min** (`settings.limits.maxDurationSec=180`; el filtro de
+duración del Pub corta en 15/30/60/90/120/150/180 s; la radio del Pub encadena los audios).
+**Pipeline de publicación (server):** `transcribe` (audio→crudo, stream para vivo)
 → `polish` (crudo→markdown, conserva la voz, quita muletillas, **solo markdown**, mismo idioma,
 sugiere título+tags) → `cover` (kind→SVG) → persistir `flows`. Comentarios/mensajes de voz:
 guardar **audio + transcript sin pulir**.

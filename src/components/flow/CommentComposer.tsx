@@ -74,6 +74,7 @@ export function CommentComposer({
           <button
             key={v}
             type="button"
+            aria-pressed={tab === v}
             onClick={() => {
               setTab(v);
               play("tick");
@@ -104,6 +105,7 @@ export function CommentComposer({
             onChange={(e) => setText(e.target.value)}
             rows={1}
             placeholder="Suma tu voz…"
+            aria-label="Escribe un comentario"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();

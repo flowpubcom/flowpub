@@ -171,6 +171,7 @@ function MobileBottomNav({
   onRecord: () => void;
   recordLabel: string;
 }) {
+  const { t } = useI18n();
   const { play } = useSound();
   const items = NAV.filter((n) => n.mobile);
   const left = items.slice(0, 2);
@@ -179,7 +180,13 @@ function MobileBottomNav({
   return (
     <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-line-soft px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 lg:hidden">
       {left.map((it) => (
-        <BottomItem key={it.key} item={it} active={active === it.key} onPlay={() => play("click")} />
+        <BottomItem
+          key={it.key}
+          item={it}
+          label={t(it.i18n)}
+          active={active === it.key}
+          onPlay={() => play("click")}
+        />
       ))}
       <button
         type="button"
@@ -190,7 +197,13 @@ function MobileBottomNav({
         <Mic size={24} />
       </button>
       {right.map((it) => (
-        <BottomItem key={it.key} item={it} active={active === it.key} onPlay={() => play("click")} />
+        <BottomItem
+          key={it.key}
+          item={it}
+          label={t(it.i18n)}
+          active={active === it.key}
+          onPlay={() => play("click")}
+        />
       ))}
     </nav>
   );
@@ -198,10 +211,12 @@ function MobileBottomNav({
 
 function BottomItem({
   item,
+  label,
   active,
   onPlay,
 }: {
   item: NavItem;
+  label: string;
   active: boolean;
   onPlay: () => void;
 }) {
@@ -210,6 +225,7 @@ function BottomItem({
     <Link
       href={item.href}
       onClick={onPlay}
+      aria-label={label}
       aria-current={active ? "page" : undefined}
       className={cn(
         "grid h-12 w-14 place-items-center rounded-[12px] transition-colors",

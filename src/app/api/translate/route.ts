@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
 import { geminiGenerate } from "@/lib/gemini";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 
 // Traducción opt-in por Flow (chrome se traduce aparte; el CONTENIDO se traduce
-// solo cuando el lector lo pide). Server-only.
+// solo cuando el lector lo pide). Server-only. Por ahora exige sesión (cuando
+// entre Turnstile podremos abrirla a invitados sin regalar cuota de Gemini).
 
 export async function POST(req: Request) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "auth-requerida" }, { status: 401 });
+  }
+
   let text: unknown;
   let target: unknown;
   try {

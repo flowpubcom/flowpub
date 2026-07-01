@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { geminiTranscribeAudio } from "@/lib/gemini";
+import { createClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -9,6 +10,15 @@ export const maxDuration = 60;
 const MAX_BYTES = 20 * 1024 * 1024;
 
 export async function POST(req: Request) {
+  // Solo usuarios con sesión: Gemini cuesta; anónimos no lo queman.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "auth-requerida" }, { status: 401 });
+  }
+
   let file: FormDataEntryValue | null;
   try {
     const form = await req.formData();

@@ -259,7 +259,7 @@ create table if not exists public.settings (
   value jsonb not null
 );
 insert into public.settings (key, value) values
-  ('limits',   '{"maxDurationSec":540,"maxTags":3}'::jsonb),
+  ('limits',   '{"maxDurationSec":180,"maxTags":3}'::jsonb),
   ('features', '{"openRegistration":true,"generativeUI":false}'::jsonb),
   ('defaults', '{"lang":"auto","theme":"system"}'::jsonb)
 on conflict (key) do nothing;
@@ -363,9 +363,21 @@ create policy conv_insert on public.conversations for insert with check (auth.ui
 
 drop policy if exists members_read on public.conversation_members;
 create policy members_read on public.conversation_members for select using (public.is_member(conversation_id));
+-- Solo un integrante invita; la única alta "propia" permitida es la del
+-- creador sobre una conversación aún vacía (bootstrap). Sin esto, cualquiera
+-- podría auto-agregarse a conversaciones ajenas y leer sus mensajes.
 drop policy if exists members_insert on public.conversation_members;
 create policy members_insert on public.conversation_members for insert
-  with check (user_id = auth.uid() or public.is_member(conversation_id));
+  with check (
+    public.is_member(conversation_id)
+    or (
+      user_id = auth.uid()
+      and not exists (
+        select 1 from public.conversation_members m
+        where m.conversation_id = conversation_members.conversation_id
+      )
+    )
+  );
 
 drop policy if exists messages_read on public.messages;
 create policy messages_read on public.messages for select using (public.is_member(conversation_id));
@@ -384,6 +396,23 @@ drop policy if exists settings_read on public.settings;
 create policy settings_read on public.settings for select using (true);
 drop policy if exists settings_admin on public.settings;
 create policy settings_admin on public.settings for all using (public.is_admin()) with check (public.is_admin());
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Privilegios de columna (defensa además de RLS): nadie se auto-promueve a
+-- admin ni infla contadores por la API; esas columnas las mueven solo los
+-- triggers/el servidor (service_role). El update queda acotado por columnas.
+-- ─────────────────────────────────────────────────────────────────────────────
+revoke update on public.profiles from anon, authenticated;
+grant update (username, display_name, bio, avatar_url, location, lang, theme, onboarded)
+  on public.profiles to authenticated;
+
+revoke update on public.flows from anon, authenticated;
+grant update (title, body_md, transcript_raw, audio_url, duration_s,
+              cover_kind, cover_svg, cover_url, lang, status)
+  on public.flows to authenticated;
+
+revoke update on public.comments from anon, authenticated;
+grant update (body_text) on public.comments to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- Storage: buckets audio / avatars / covers (carpeta por usuario: <uid>/...)

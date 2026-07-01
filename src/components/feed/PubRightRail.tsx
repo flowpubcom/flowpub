@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { cn } from "@/lib/cn";
 import { Avatar } from "@/components/ui";
 import { SUGGESTED, TRENDING } from "@/data/mock";
@@ -48,11 +49,18 @@ export function PubRightRail() {
         <Eyebrow>Hoy en el Pub</Eyebrow>
         <ul className="flex flex-col gap-3">
           {TRENDING.map((tag) => (
-            <li key={tag.name} className="flex items-baseline justify-between">
-              <span className="font-serif text-[17px] text-ink">{tag.name}</span>
-              <span className="font-mono text-[12px] text-text-3">
-                {compactNumber(tag.flows)} flows
-              </span>
+            <li key={tag.name}>
+              <Link
+                href={`/tema/${tag.slug}`}
+                className="flex items-baseline justify-between rounded-[8px] transition-colors hover-tint"
+              >
+                <span className="font-serif text-[17px] text-ink">
+                  {tag.name}
+                </span>
+                <span className="font-mono text-[12px] text-text-3">
+                  {compactNumber(tag.flows)} flows
+                </span>
+              </Link>
             </li>
           ))}
         </ul>

@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server";
 import { geminiGenerate } from "@/lib/gemini";
+import { createClient } from "@/lib/supabase/server";
 import { CATEGORIES } from "@/data/mock";
 
 export const runtime = "nodejs";
+
+/** Solo usuarios con sesión: Gemini cuesta; anónimos no lo queman. */
+async function requireUser() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user;
+}
 
 // Pulido del transcript crudo → artículo markdown + título + temas (Gemini).
 // Server-only: la llave nunca toca el cliente.
@@ -18,6 +28,10 @@ const SCHEMA = {
 } as const;
 
 export async function POST(req: Request) {
+  if (!(await requireUser())) {
+    return NextResponse.json({ error: "auth-requerida" }, { status: 401 });
+  }
+
   let transcript: unknown;
   try {
     ({ transcript } = await req.json());

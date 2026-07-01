@@ -77,11 +77,20 @@ export function FlowReader({
       </header>
 
       <article className="mx-auto max-w-[720px] px-5 pb-28 pt-8 lg:pb-16">
-        {/* kicker */}
+        {/* kicker → hub del tema (link interno: SEO + descubrimiento) */}
         <div className="mb-4 flex flex-wrap gap-2">
-          <span className="rounded-pill bg-grana-wash px-3 py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.06em] text-grana-700">
-            {flow.tag}
-          </span>
+          {flow.tagSlug ? (
+            <Link
+              href={`/tema/${flow.tagSlug}`}
+              className="rounded-pill bg-grana-wash px-3 py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.06em] text-grana-700 transition-transform duration-150 ease-flow hover:scale-[1.03]"
+            >
+              {flow.tag}
+            </Link>
+          ) : (
+            <span className="rounded-pill bg-grana-wash px-3 py-1 font-sans text-[12px] font-semibold uppercase tracking-[0.06em] text-grana-700">
+              {flow.tag}
+            </span>
+          )}
         </div>
 
         <h1 className="font-serif text-[clamp(30px,5vw,46px)] font-normal leading-[1.08] tracking-[-0.02em] text-ink">
@@ -149,6 +158,7 @@ export function FlowReader({
             <button
               key={v}
               type="button"
+              aria-pressed={view === v}
               onClick={() => {
                 setView(v);
                 play("tick");
