@@ -61,6 +61,7 @@ function mapRow(r: any): Flow | null {
     liked: false,
     bodyMd: bodyMd || undefined,
     transcriptRaw: r.transcript_raw ?? undefined,
+    audioUrl: r.audio_url ?? null,
   };
 }
 

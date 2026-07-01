@@ -131,7 +131,11 @@ export function FlowReader({
 
         {/* audio */}
         <div className="mt-5">
-          <AudioPlayer durationSeconds={flow.durationSeconds} variant="full" />
+          <AudioPlayer
+            src={flow.audioUrl ?? undefined}
+            durationSeconds={flow.durationSeconds}
+            variant="full"
+          />
         </div>
 
         {/* toggle publicación / transcript */}

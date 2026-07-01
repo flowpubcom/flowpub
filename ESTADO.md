@@ -80,10 +80,15 @@ contra Supabase real (registro → 3 temas → perfil → sesión → compuerta 
    con Gemini **real** (fallback al mock si falla). Modelo **`gemini-2.5-flash`**
    (`gemini-2.0-flash` tiene cuota 0 en esta llave); configurable con `GEMINI_MODEL`.
    Verificado con llamadas reales (pulido quita muletillas, mantiene la voz, tags de la lista).
-5. **(SIGUIENTE) Audio real**: grabación con MediaRecorder → subir al bucket `audio`
-   (Storage) → **`/api/transcribe`** (Gemini STT) para el transcript real; comentarios de
-   **voz** (hoy "pronto"); botón **Traducir** en el Flow abierto (la ruta ya existe).
-6. Google OAuth click-through (Julio) · Turnstile · Resend · pantallas placeholder ·
+5. ✅ **Audio real**: grabación con MediaRecorder (`useRecorder` real), subida al bucket
+   `audio` (`data/storage.ts`, carpeta por uid para la RLS), `/api/transcribe` (Gemini STT).
+   El composer encadena **grabar → subir → transcribir → pulir → publicar** con `audio_url`;
+   el Flow abierto reproduce el audio real. Verificado E2E con stream sintético (webm subido
+   a Storage y accesible + transcrito por Gemini); **falta solo tu prueba con micrófono real**.
+6. **(SIGUIENTE)** botón **Traducir** en el Flow abierto (ruta `/api/translate` lista) ·
+   comentarios de **voz** (grabar+subir+transcribir, igual que el composer) · transcript en
+   vivo (opcional).
+7. Google OAuth click-through (Julio) · Turnstile · Resend · pantallas placeholder ·
    likes/seguir reales · «Guardar borrador» (hoy solo navega, no persiste draft).
 3. **Pipeline Gemini** (route handlers server-only): transcribe/polish/translate;
    cambiar `useRecorder`/`composeMock` por lo real. Subir audio a Storage.
@@ -99,6 +104,10 @@ contra Supabase real (registro → 3 temas → perfil → sesión → compuerta 
 - **Gemini:** `gemini-2.0-flash` da **429 (cuota 0)** en el free tier de esta llave; usa
   `gemini-2.5-flash` (o `gemini-flash-latest`). La llave es formato nuevo `AQ.Ab8…`. Toda
   llamada a Gemini es **server-only** (`lib/gemini.ts` + route handlers), nunca en cliente.
+- **Preview sin micrófono:** `getUserMedia` falla (se maneja con un error claro). Para probar
+  el composer real ahí, parchea `navigator.mediaDevices.getUserMedia` con un oscilador
+  (Web Audio → `MediaStreamDestination`) y drivéalo por eval. Gemini **acepta
+  `audio/webm;codecs=opus`** (el formato de MediaRecorder en Chrome) — verificado.
 - **Env nuevo → reinicia el dev server:** Next lee `.env.local` al arrancar. Si pegas una
   llave (p. ej. `GEMINI_API_KEY`) con el server corriendo, no la ve hasta reiniciar (en
   preview: `preview_stop` + `preview_start`).

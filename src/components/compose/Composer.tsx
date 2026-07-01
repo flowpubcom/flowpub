@@ -19,6 +19,7 @@ import {
   SUGGESTED_TITLE,
 } from "@/data/composeMock";
 import { publishFlow } from "@/data/publishApi";
+import { uploadAudio } from "@/data/storage";
 import { StepIndicator } from "./StepIndicator";
 import { MarkdownToolbar } from "./MarkdownToolbar";
 import { TagPicker } from "./TagPicker";
@@ -40,12 +41,14 @@ export function Composer() {
   const [coverIndex, setCoverIndex] = useState(0);
   const [duration, setDuration] = useState(0);
   const [transcript, setTranscript] = useState("");
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [newFlowId, setNewFlowId] = useState<string | null>(null);
   const [pubError, setPubError] = useState<string | null>(null);
 
-  const startRecording = () => {
-    recorder.start();
-    setStep("recording");
+  const startRecording = async () => {
+    const ok = await recorder.start();
+    if (ok) setStep("recording");
+    // Si no, recorder.error se muestra en la pantalla de grabar.
   };
 
   // Pule el transcript con Gemini (/api/polish); si falla, cae al mock para que
@@ -82,17 +85,43 @@ export function Composer() {
     [play],
   );
 
-  const stopRecording = useCallback(() => {
-    const dur = recorder.stop();
-    setDuration(Math.max(8, Math.round(dur)));
-    // El audio real y su transcripción con Gemini entran después; por ahora el
-    // transcript "grabado" es el simulado, que sí pulimos de verdad con Gemini.
-    const t = RAW_TRANSCRIPT;
-    setTranscript(t);
-    setProc("polish");
-    setStep("processing");
-    void runPolish(t);
-  }, [recorder, runPolish]);
+  // Pipeline real: sube el audio a Storage + lo transcribe con Gemini (en
+  // paralelo), luego pule el transcript. Si la transcripción falla, cae al mock.
+  const runPipeline = useCallback(
+    async (blob: Blob, durationSeconds: number) => {
+      setDuration(Math.max(1, Math.round(durationSeconds)));
+      setProc("polish");
+      setStep("processing");
+
+      const form = new FormData();
+      form.append("audio", blob);
+
+      const [url, transcriptText] = await Promise.all([
+        uploadAudio(blob).catch(() => null),
+        fetch("/api/transcribe", { method: "POST", body: form })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((j) => (typeof j?.transcript === "string" ? j.transcript : ""))
+          .catch(() => ""),
+      ]);
+
+      setAudioUrl(url);
+      const raw =
+        transcriptText.trim().length > 3 ? transcriptText.trim() : RAW_TRANSCRIPT;
+      setTranscript(raw);
+      await runPolish(raw);
+    },
+    [runPolish],
+  );
+
+  const stopRecording = useCallback(async () => {
+    const result = await recorder.stop();
+    if (!result) {
+      setStep("record");
+      play("soft");
+      return;
+    }
+    await runPipeline(result.blob, result.durationSeconds);
+  }, [recorder, runPipeline, play]);
 
   const cancelRecording = useCallback(() => {
     recorder.reset();
@@ -114,6 +143,7 @@ export function Composer() {
         coverKind: COVER_KINDS[coverIndex],
         durationSeconds: duration,
         tagNames: tags,
+        audioUrl,
       }),
       new Promise((r) => setTimeout(r, 1200)),
     ]);
@@ -135,6 +165,10 @@ export function Composer() {
     setTags([]);
     setCoverIndex(0);
     setDuration(0);
+    setTranscript("");
+    setAudioUrl(null);
+    setNewFlowId(null);
+    setPubError(null);
     setStep("record");
   };
 
@@ -181,7 +215,11 @@ export function Composer() {
         )}
       >
         {step === "record" && (
-          <RecordStep onStart={startRecording} maxSeconds={MAX} />
+          <RecordStep
+            onStart={startRecording}
+            maxSeconds={MAX}
+            error={recorder.error}
+          />
         )}
         {step === "recording" && (
           <RecordingStep
@@ -203,6 +241,7 @@ export function Composer() {
             coverIndex={coverIndex}
             cycleCover={cycleCover}
             duration={duration}
+            audioUrl={audioUrl}
             error={pubError}
             onPublish={publish}
             onSaveDraft={() => router.push("/")}
@@ -226,9 +265,11 @@ export function Composer() {
 function RecordStep({
   onStart,
   maxSeconds,
+  error,
 }: {
   onStart: () => void;
   maxSeconds: number;
+  error?: string | null;
 }) {
   const { play } = useSound();
   return (
@@ -255,6 +296,9 @@ function RecordStep({
         Toca para grabar. Tienes hasta {Math.round(maxSeconds / 60)} minutos; di
         lo que quieras, con tus pausas.
       </p>
+      {error && (
+        <p className="mt-5 max-w-xs font-sans text-[14px] text-grana">{error}</p>
+      )}
     </div>
   );
 }
@@ -303,16 +347,9 @@ function RecordingStep({
   onStop: () => void;
   onCancel: () => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (recorder.elapsed >= maxSeconds) onStop();
   }, [recorder.elapsed, maxSeconds, onStop]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [recorder.transcript]);
 
   const warn = recorder.elapsed >= maxSeconds - 60;
 
@@ -335,28 +372,12 @@ function RecordingStep({
 
       <Waveform />
 
-      <p className="mb-3 mt-6 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
-        Transcribiendo en vivo
+      <p className="mb-1 mt-7 font-serif text-[18px] text-text-2">
+        Te escuchamos…
       </p>
-      <div
-        ref={scrollRef}
-        className="max-h-32 w-full max-w-md overflow-y-auto rounded-[12px] border border-line bg-surface-2 p-4 text-left font-serif text-[15px] leading-[1.6]"
-      >
-        {recorder.transcript.length === 0 ? (
-          <span className="text-text-3">…</span>
-        ) : (
-          recorder.transcript.map((w, i) => (
-            <span
-              key={i}
-              className={
-                i === recorder.transcript.length - 1 ? "text-ink" : "text-text-2"
-              }
-            >
-              {w}{" "}
-            </span>
-          ))
-        )}
-      </div>
+      <p className="max-w-xs font-sans text-[13px] leading-relaxed text-text-3">
+        Al terminar, Gemini transcribe y pule tu voz en un artículo.
+      </p>
 
       <button
         type="button"
@@ -383,12 +404,12 @@ function ProcessingStep({ mode }: { mode: "polish" | "publish" }) {
     mode === "polish"
       ? [
           {
-            t: "Puliendo tu voz…",
-            s: "Quitando muletillas y dándole forma de artículo.",
+            t: "Transcribiendo tu voz…",
+            s: "Gemini está escuchando lo que grabaste.",
           },
           {
-            t: "Generando la portada…",
-            s: "Buscando la composición justa.",
+            t: "Puliéndola en artículo…",
+            s: "Quitando muletillas y dándole forma.",
           },
         ]
       : [{ t: "Publicando…", s: "Subiendo tu voz al Pub." }];
@@ -464,6 +485,7 @@ interface EditStepProps {
   coverIndex: number;
   cycleCover: () => void;
   duration: number;
+  audioUrl: string | null;
   error?: string | null;
   onPublish: () => void;
   onSaveDraft: () => void;
@@ -479,6 +501,7 @@ function EditStep({
   coverIndex,
   cycleCover,
   duration,
+  audioUrl,
   error,
   onPublish,
   onSaveDraft,
@@ -512,7 +535,11 @@ function EditStep({
           <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
             Tu audio
           </p>
-          <AudioPlayer durationSeconds={duration} variant="full" />
+          <AudioPlayer
+            src={audioUrl ?? undefined}
+            durationSeconds={duration}
+            variant="full"
+          />
         </div>
 
         <div>

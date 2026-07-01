@@ -28,6 +28,8 @@ export interface Flow {
   bodyMd?: string;
   /** Transcript crudo original. */
   transcriptRaw?: string;
+  /** URL del audio real (Storage). */
+  audioUrl?: string | null;
 }
 
 export interface TrendingTag {

@@ -16,6 +16,7 @@ export async function publishFlow(input: {
   coverKind: CoverKind;
   durationSeconds: number;
   tagNames: string[];
+  audioUrl?: string | null;
 }): Promise<PublishResult> {
   const supabase = createClient();
   const {
@@ -31,6 +32,7 @@ export async function publishFlow(input: {
       body_md: input.bodyMd,
       transcript_raw: input.transcriptRaw ?? null,
       cover_kind: input.coverKind,
+      audio_url: input.audioUrl ?? null,
       lang: "es",
       status: "published",
       duration_s: Math.round(input.durationSeconds),

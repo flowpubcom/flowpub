@@ -58,3 +58,45 @@ export async function geminiGenerate(
     .join("")
     .trim();
 }
+
+/** STT: audio (base64 inline) → transcript crudo, en su idioma original. */
+export async function geminiTranscribeAudio(
+  base64: string,
+  mimeType: string,
+): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) throw new Error("GEMINI_API_KEY no configurada");
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+
+  const body = {
+    contents: [
+      {
+        role: "user",
+        parts: [
+          {
+            text: "Transcribe este audio literalmente, palabra por palabra, en su idioma original. Devuelve SOLO el texto hablado, sin comentarios, etiquetas ni marcas de tiempo.",
+          },
+          { inlineData: { mimeType, data: base64 } },
+        ],
+      },
+    ],
+    generationConfig: { temperature: 0, thinkingConfig: { thinkingBudget: 0 } },
+  };
+
+  const res = await fetch(`${BASE}/${model}:generateContent?key=${apiKey}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(`Gemini STT ${res.status}: ${detail.slice(0, 300)}`);
+  }
+  const data = await res.json();
+  const parts: Array<{ text?: string }> =
+    data?.candidates?.[0]?.content?.parts ?? [];
+  return parts
+    .map((p) => p.text ?? "")
+    .join("")
+    .trim();
+}
