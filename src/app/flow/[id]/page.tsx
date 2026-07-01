@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchFlow } from "@/data/flowsApi";
-import { commentsFor } from "@/data/comments";
+import { fetchComments } from "@/data/commentsApi";
 import { FlowReader } from "@/components/flow/FlowReader";
 
 export async function generateMetadata({
@@ -22,5 +22,6 @@ export default async function FlowPage({
   const { id } = await params;
   const flow = await fetchFlow(id);
   if (!flow) notFound();
-  return <FlowReader flow={flow} initialComments={commentsFor(id)} />;
+  const comments = await fetchComments(id);
+  return <FlowReader flow={flow} initialComments={comments} />;
 }

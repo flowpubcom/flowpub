@@ -230,7 +230,7 @@ export function FlowReader({
             </span>
           </h2>
 
-          <CommentComposer onPost={post} />
+          <CommentComposer flowId={flow.id} onPost={post} />
 
           <div className="mt-7 flex flex-col gap-6">
             {comments.length === 0 ? (

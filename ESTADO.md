@@ -70,10 +70,15 @@ contra Supabase real (registro → 3 temas → perfil → sesión → compuerta 
    autor+tags). El Pub (`/`) y Flow abierto (`/flow/[id]`) ahora leen de Supabase
    (dinámicos). Verificado en vivo: 6 tarjetas con autor/tiempo/tag, Flow abre desde BD.
    De paso, **fix de hidratación en `Cover`** (ver notas).
-3. **(SIGUIENTE) Composer → publica a Supabase** (escribe `flows`+`flow_tags`) + comentarios
-   reales en el Flow abierto (hoy siguen mock → por eso el contador no cuadra con la lista).
-4. **Pipeline Gemini** (transcribe/polish/translate) + audio real a Storage.
-5. Google OAuth click-through (Julio) · Turnstile · Resend · pantallas placeholder.
+3. ✅ **Composer publica a Supabase** (`data/publishApi.ts`: `flows`+`flow_tags`, mapeo de
+   nombres→ids) + **comentarios de texto reales** (`commentsApi.ts` lee server-side,
+   `commentsClient.ts` postea; gate de sesión; el trigger mantiene `comment_count`).
+   Verificado E2E: publicar un Flow (aparece en el Pub) y comentar (persiste tras reload).
+   `migration_02_seed_comments.sql` (opcional) alinea contadores + siembra comentarios demo.
+4. **(SIGUIENTE) Pipeline Gemini** (transcribe/polish/translate) + audio real a Storage
+   (grabación con MediaRecorder) + comentarios de **voz** (hoy marcados "pronto").
+5. Google OAuth click-through (Julio) · Turnstile · Resend · pantallas placeholder ·
+   likes/seguir reales · «Guardar borrador» (hoy solo navega, no persiste draft).
 3. **Pipeline Gemini** (route handlers server-only): transcribe/polish/translate;
    cambiar `useRecorder`/`composeMock` por lo real. Subir audio a Storage.
 4. **Turnstile** (signup/login, server-side) + **Resend** (correos).

@@ -18,6 +18,7 @@ import {
   SUGGESTED_TAGS,
   SUGGESTED_TITLE,
 } from "@/data/composeMock";
+import { publishFlow } from "@/data/publishApi";
 import { StepIndicator } from "./StepIndicator";
 import { MarkdownToolbar } from "./MarkdownToolbar";
 import { TagPicker } from "./TagPicker";
@@ -38,6 +39,8 @@ export function Composer() {
   const [tags, setTags] = useState<string[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [newFlowId, setNewFlowId] = useState<string | null>(null);
+  const [pubError, setPubError] = useState<string | null>(null);
 
   const startRecording = () => {
     recorder.start();
@@ -66,16 +69,33 @@ export function Composer() {
     setStep("edit");
   }, [play]);
 
-  const publish = () => {
+  const publish = async () => {
     play("click");
+    setPubError(null);
     setProc("publish");
     setStep("processing");
+    // Publica de verdad; mantiene ~1.2s de animación mínima.
+    const [res] = await Promise.all([
+      publishFlow({
+        title,
+        bodyMd: body,
+        transcriptRaw: RAW_TRANSCRIPT,
+        coverKind: COVER_KINDS[coverIndex],
+        durationSeconds: duration,
+        tagNames: tags,
+      }),
+      new Promise((r) => setTimeout(r, 1200)),
+    ]);
+    if (res.ok) {
+      play("pop");
+      setNewFlowId(res.id);
+      setStep("published");
+    } else {
+      play("soft");
+      setPubError("No se pudo publicar. Intenta de nuevo.");
+      setStep("edit");
+    }
   };
-
-  const onPublishedDone = useCallback(() => {
-    play("pop");
-    setStep("published");
-  }, [play]);
 
   const recordAnother = () => {
     recorder.reset();
@@ -141,10 +161,7 @@ export function Composer() {
           />
         )}
         {step === "processing" && (
-          <ProcessingStep
-            mode={proc}
-            onDone={proc === "polish" ? onPolished : onPublishedDone}
-          />
+          <ProcessingStep mode={proc} onDone={onPolished} />
         )}
         {step === "edit" && (
           <EditStep
@@ -157,6 +174,7 @@ export function Composer() {
             coverIndex={coverIndex}
             cycleCover={cycleCover}
             duration={duration}
+            error={pubError}
             onPublish={publish}
             onSaveDraft={() => router.push("/")}
           />
@@ -166,6 +184,7 @@ export function Composer() {
             title={title}
             coverIndex={coverIndex}
             duration={duration}
+            flowId={newFlowId}
             onAnother={recordAnother}
           />
         )}
@@ -361,8 +380,11 @@ function ProcessingStep({
       acc += dur[k - 1];
       timers.push(window.setTimeout(() => setI(k), acc));
     }
-    acc += dur[dur.length - 1];
-    timers.push(window.setTimeout(onDone, acc));
+    // Solo el pulido auto-avanza; la publicación la cierra el flujo async real.
+    if (mode === "polish") {
+      acc += dur[dur.length - 1];
+      timers.push(window.setTimeout(onDone, acc));
+    }
     return () => timers.forEach((t) => window.clearTimeout(t));
   }, [mode, onDone]);
 
@@ -422,6 +444,7 @@ interface EditStepProps {
   coverIndex: number;
   cycleCover: () => void;
   duration: number;
+  error?: string | null;
   onPublish: () => void;
   onSaveDraft: () => void;
 }
@@ -436,6 +459,7 @@ function EditStep({
   coverIndex,
   cycleCover,
   duration,
+  error,
   onPublish,
   onSaveDraft,
 }: EditStepProps) {
@@ -524,6 +548,11 @@ function EditStep({
           <TagPicker selected={tags} onChange={setTags} />
         </div>
 
+        {error && (
+          <p className="mt-4 text-right font-sans text-[13px] text-grana">
+            {error}
+          </p>
+        )}
         <div className="mt-7 flex items-center justify-end gap-3 border-t border-line pt-5">
           <Button variant="secondary" sound="soft" onClick={onSaveDraft}>
             Guardar borrador
@@ -542,11 +571,13 @@ function PublishedStep({
   title,
   coverIndex,
   duration,
+  flowId,
   onAnother,
 }: {
   title: string;
   coverIndex: number;
   duration: number;
+  flowId: string | null;
   onAnother: () => void;
 }) {
   return (
@@ -573,10 +604,10 @@ function PublishedStep({
 
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
-          href="/"
+          href={flowId ? `/flow/${flowId}` : "/"}
           className="inline-flex h-11 items-center rounded-pill bg-grana px-5 font-sans text-[15px] font-semibold text-white transition-colors hover:bg-grana-700"
         >
-          Ver en el Pub
+          Ver mi Flow
         </Link>
         <Button variant="secondary" onClick={onAnother}>
           Grabar otro
