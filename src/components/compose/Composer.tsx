@@ -165,6 +165,29 @@ export function Composer() {
     }
   };
 
+  // «Guardar borrador»: persiste con status=draft y lleva al perfil.
+  const saveDraft = async () => {
+    play("click");
+    setPubError(null);
+    const res = await publishFlow({
+      title,
+      bodyMd: body,
+      transcriptRaw: transcript,
+      coverKind: COVER_KINDS[coverIndex],
+      durationSeconds: duration,
+      tagNames: tags,
+      audioUrl,
+      status: "draft",
+    });
+    if (res.ok) {
+      play("pop");
+      router.push("/perfil");
+    } else {
+      play("soft");
+      setPubError("No se pudo guardar el borrador. Intenta de nuevo.");
+    }
+  };
+
   const recordAnother = () => {
     recorder.reset();
     setTitle("");
@@ -253,7 +276,7 @@ export function Composer() {
             transcript={transcript}
             error={pubError}
             onPublish={publish}
-            onSaveDraft={() => router.push("/")}
+            onSaveDraft={saveDraft}
           />
         )}
         {step === "published" && (

@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, Heart, Reply } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, AudioPlayer } from "@/components/ui";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { useAuth } from "@/providers/AuthProvider";
+import { setCommentLike } from "@/data/engagement";
 import { relativeTime } from "@/lib/format";
 import type { Comment } from "@/data/comments";
 
@@ -18,15 +21,27 @@ export function CommentItem({
 }) {
   const { play } = useSound();
   const { t, lang } = useI18n();
+  const { user } = useAuth();
+  const router = useRouter();
   const [liked, setLiked] = useState(comment.liked);
   const [likes, setLikes] = useState(comment.likeCount);
   const [showT, setShowT] = useState(false);
 
-  const toggleLike = () => {
+  const toggleLike = async () => {
+    if (!user) {
+      play("soft");
+      router.push("/entrar");
+      return;
+    }
     const n = !liked;
     setLiked(n);
     setLikes((x) => x + (n ? 1 : -1));
     play(n ? "pop" : "soft");
+    const res = await setCommentLike(comment.id, n);
+    if (!res.ok) {
+      setLiked(!n);
+      setLikes((x) => x + (n ? -1 : 1));
+    }
   };
 
   return (
@@ -58,7 +73,10 @@ export function CommentItem({
           </p>
         ) : (
           <div className="mt-2">
-            <AudioPlayer durationSeconds={comment.audioDurationSeconds ?? 0} />
+            <AudioPlayer
+              src={comment.audioUrl ?? undefined}
+              durationSeconds={comment.audioDurationSeconds ?? 0}
+            />
             <button
               type="button"
               onClick={() => setShowT((v) => !v)}
@@ -84,7 +102,7 @@ export function CommentItem({
             type="button"
             onClick={toggleLike}
             aria-pressed={liked}
-            aria-label="Me gusta"
+            aria-label={t("like")}
             className={cn(
               "flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] transition-colors hover:bg-[var(--hover)]",
               liked ? "text-grana" : "text-text-3 hover:text-ink",
@@ -99,7 +117,7 @@ export function CommentItem({
             className="flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] text-text-3 transition-colors hover:bg-[var(--hover)] hover:text-ink"
           >
             <Reply size={14} />
-            Responder
+            {t("comment.reply")}
           </button>
         </div>
       </div>

@@ -2,19 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Bookmark,
   Heart,
+  Languages,
   MessageCircle,
   Share2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { AudioPlayer, Avatar, Button } from "@/components/ui";
+import { AudioPlayer, Avatar } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { FlowProse } from "@/components/compose/FlowProse";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { useAuth } from "@/providers/AuthProvider";
+import {
+  setFlowLike,
+  setFollow,
+  setSave,
+  shareFlow,
+} from "@/data/engagement";
 import { compactNumber, durationLabel, relativeTime } from "@/lib/format";
 import type { Flow } from "@/data/types";
 import type { Comment } from "@/data/comments";
@@ -30,23 +39,103 @@ export function FlowReader({
 }) {
   const { play } = useSound();
   const { t, lang } = useI18n();
+  const { user } = useAuth();
+  const router = useRouter();
 
   const [view, setView] = useState<"pub" | "raw">("pub");
   const [liked, setLiked] = useState(flow.liked);
   const [likes, setLikes] = useState(flow.likeCount);
-  const [saved, setSaved] = useState(false);
-  const [following, setFollowing] = useState(false);
+  const [saved, setSaved] = useState(flow.saved ?? false);
+  const [following, setFollowing] = useState(flow.followingAuthor ?? false);
   const [comments, setComments] = useState(initialComments);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
+  // Traducción opt-in (Gemini): el contenido se queda en su idioma; el lector
+  // pide la traducción cuando quiere. Se cachea en memoria por visita.
+  const [translated, setTranslated] = useState<string | null>(null);
+  const [showTranslated, setShowTranslated] = useState(false);
+  const [translating, setTranslating] = useState(false);
+
   const body = flow.bodyMd ?? `## ${flow.title}\n\n${flow.excerpt}`;
   const transcript = flow.transcriptRaw ?? flow.excerpt;
+  const isOwn = user?.id === flow.author.id;
 
-  const toggleLike = () => {
+  const requireUser = () => {
+    if (user) return true;
+    play("soft");
+    router.push("/entrar");
+    return false;
+  };
+
+  const toggleLike = async () => {
+    if (!requireUser()) return;
     const n = !liked;
     setLiked(n);
     setLikes((x) => x + (n ? 1 : -1));
     play(n ? "pop" : "soft");
+    const res = await setFlowLike(flow.id, n);
+    if (!res.ok) {
+      setLiked(!n);
+      setLikes((x) => x + (n ? -1 : 1));
+    }
+  };
+
+  const toggleSave = async () => {
+    if (!requireUser()) return;
+    const n = !saved;
+    setSaved(n);
+    play(n ? "pop" : "soft");
+    const res = await setSave(flow.id, n);
+    if (!res.ok) setSaved(!n);
+  };
+
+  const toggleFollow = async () => {
+    if (!requireUser()) return;
+    const n = !following;
+    setFollowing(n);
+    play(n ? "pop" : "soft");
+    const res = await setFollow(flow.author.id, n);
+    if (!res.ok) setFollowing(!n);
+  };
+
+  const onShare = async () => {
+    const out = await shareFlow(flow.title, `/flow/${flow.id}`);
+    play(out === "failed" ? "soft" : "pop");
+  };
+
+  const toggleTranslate = async () => {
+    if (showTranslated) {
+      setShowTranslated(false);
+      play("tick");
+      return;
+    }
+    if (translated) {
+      setShowTranslated(true);
+      play("tick");
+      return;
+    }
+    if (!requireUser()) return; // /api/translate exige sesión (cuota Gemini)
+    setTranslating(true);
+    const flowLang = flow.lang ?? "es";
+    const target = lang !== flowLang ? lang : flowLang === "es" ? "en" : "es";
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: body, target }),
+      });
+      const j = res.ok ? await res.json() : null;
+      if (j?.text) {
+        setTranslated(j.text);
+        setShowTranslated(true);
+        play("pop");
+      } else {
+        play("soft");
+      }
+    } catch {
+      play("soft");
+    }
+    setTranslating(false);
   };
 
   const post = (c: Comment) => {
@@ -68,7 +157,7 @@ export function FlowReader({
         <span className="font-sans text-[13px] font-semibold text-text-2">Flow</span>
         <button
           type="button"
-          onClick={() => play("click")}
+          onClick={onShare}
           aria-label={t("share")}
           className="grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
@@ -114,23 +203,21 @@ export function FlowReader({
               </span>
             </span>
           </Link>
-          <button
-            type="button"
-            aria-pressed={following}
-            onClick={() => {
-              const n = !following;
-              setFollowing(n);
-              play(n ? "pop" : "soft");
-            }}
-            className={cn(
-              "flex-none rounded-pill border px-5 py-2 font-sans text-[13px] font-semibold transition-colors duration-150 ease-flow",
-              following
-                ? "border-ink bg-ink text-ink-on"
-                : "border-ink text-ink hover:bg-ink hover:text-ink-on",
-            )}
-          >
-            {following ? t("following") : t("follow")}
-          </button>
+          {!isOwn && (
+            <button
+              type="button"
+              aria-pressed={following}
+              onClick={toggleFollow}
+              className={cn(
+                "flex-none rounded-pill border px-5 py-2 font-sans text-[13px] font-semibold transition-colors duration-150 ease-flow",
+                following
+                  ? "border-ink bg-ink text-ink-on"
+                  : "border-ink text-ink hover:bg-ink hover:text-ink-on",
+              )}
+            >
+              {following ? t("following") : t("follow")}
+            </button>
+          )}
         </div>
 
         {/* portada */}
@@ -147,8 +234,9 @@ export function FlowReader({
           />
         </div>
 
-        {/* toggle publicación / transcript */}
-        <div className="mt-7 inline-flex rounded-pill border border-line bg-surface-2 p-[3px]">
+        {/* toggle publicación / transcript + traducir */}
+        <div className="mt-7 flex flex-wrap items-center justify-between gap-3">
+        <div className="inline-flex rounded-pill border border-line bg-surface-2 p-[3px]">
           {(
             [
               ["pub", "Publicación"],
@@ -175,10 +263,40 @@ export function FlowReader({
           ))}
         </div>
 
+        <button
+          type="button"
+          onClick={toggleTranslate}
+          disabled={translating}
+          aria-pressed={showTranslated}
+          className={cn(
+            "flex items-center gap-1.5 rounded-pill border border-line-2 px-3.5 py-1.5 font-sans text-[13px] font-medium transition-colors duration-150 ease-flow disabled:opacity-60",
+            showTranslated
+              ? "border-ink bg-ink text-ink-on"
+              : "text-text-2 hover:border-ink hover:text-ink",
+          )}
+        >
+          <Languages size={14} />
+          {translating
+            ? t("translate.loading")
+            : showTranslated
+              ? t("translate.original")
+              : t("translate")}
+        </button>
+        </div>
+
         {/* cuerpo */}
         <div className="mt-6">
           {view === "pub" ? (
-            <FlowProse source={body} />
+            <>
+              {showTranslated && translated && (
+                <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+                  {t("translate.note")}
+                </p>
+              )}
+              <FlowProse
+                source={showTranslated && translated ? translated : body}
+              />
+            </>
           ) : (
             <div>
               <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
@@ -212,7 +330,7 @@ export function FlowReader({
           </span>
           <button
             type="button"
-            onClick={() => play("click")}
+            onClick={onShare}
             aria-label={t("share")}
             className="ml-auto grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
           >
@@ -220,10 +338,7 @@ export function FlowReader({
           </button>
           <button
             type="button"
-            onClick={() => {
-              setSaved((s) => !s);
-              play(saved ? "soft" : "pop");
-            }}
+            onClick={toggleSave}
             aria-pressed={saved}
             aria-label={t("save")}
             className={cn(

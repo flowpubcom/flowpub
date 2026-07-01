@@ -7,6 +7,7 @@ export interface Comment {
   kind: "text" | "voice";
   /** Texto del comentario (text) o transcript visible del de voz. */
   text?: string;
+  audioUrl?: string | null;
   audioDurationSeconds?: number;
   /** Transcript crudo del comentario de voz (sin pulir, per spec). */
   transcript?: string;

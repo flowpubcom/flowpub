@@ -1,14 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Send } from "lucide-react";
+import { Mic, Send, Square } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar } from "@/components/ui";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
-import { postTextComment } from "@/data/commentsClient";
+import { useRecorder } from "@/lib/useRecorder";
+import { postTextComment, postVoiceComment } from "@/data/commentsClient";
+import { formatDuration } from "@/lib/format";
 import type { Comment } from "@/data/comments";
+
+// Un comentario de voz es breve: hasta minuto y medio.
+const MAX_VOICE = 90;
+
+const WAVE = ["bg-grana", "bg-ocre", "bg-grana", "bg-ink", "bg-grana", "bg-ocre", "bg-grana"];
+
+function MiniWave() {
+  return (
+    <div className="flex h-8 items-center gap-1" aria-hidden>
+      {WAVE.map((c, i) => (
+        <span
+          key={i}
+          className={cn("w-[3px] rounded-pill", c)}
+          style={{
+            height: 24,
+            transformOrigin: "center",
+            animation: `fp-bar 1s ease-in-out ${i * 0.1}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export function CommentComposer({
   flowId,
@@ -19,9 +44,60 @@ export function CommentComposer({
 }) {
   const { play } = useSound();
   const { user } = useAuth();
+  const recorder = useRecorder(MAX_VOICE);
   const [tab, setTab] = useState<"text" | "voice">("text");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [voiceState, setVoiceState] = useState<"idle" | "recording" | "processing">("idle");
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  const stopAndPost = async () => {
+    const result = await recorder.stop();
+    if (!result) {
+      setVoiceState("idle");
+      play("soft");
+      return;
+    }
+    setVoiceState("processing");
+    const res = await postVoiceComment(flowId, result.blob, result.durationSeconds);
+    if (!res.ok) {
+      setVoiceState("idle");
+      setVoiceError(
+        res.error === "transcribe"
+          ? "No pudimos transcribir tu voz. Intenta de nuevo."
+          : "Algo salió mal. Intenta de nuevo.",
+      );
+      play("soft");
+      return;
+    }
+    play("pop");
+    onPost({
+      id: res.id,
+      author: {
+        id: user!.id,
+        username: user!.username,
+        displayName: user!.displayName,
+        avatarColor: user!.avatarColor,
+        avatarUrl: user!.avatarUrl,
+      },
+      kind: "voice",
+      audioUrl: res.audioUrl,
+      audioDurationSeconds: Math.max(1, Math.round(result.durationSeconds)),
+      transcript: res.transcript,
+      ageMinutes: 0,
+      likeCount: 0,
+      liked: false,
+    });
+    setVoiceState("idle");
+  };
+
+  // Tope duro: al llegar al máximo, se detiene y publica solo.
+  useEffect(() => {
+    if (voiceState === "recording" && recorder.elapsed >= MAX_VOICE) {
+      void stopAndPost();
+    }
+     
+  }, [recorder.elapsed, voiceState]);
 
   // Solo con sesión se comenta (RLS lo exige). Invitado → compuerta a /entrar.
   if (!user) {
@@ -65,6 +141,13 @@ export function CommentComposer({
       liked: false,
     });
     setText("");
+  };
+
+  const startVoice = async () => {
+    setVoiceError(null);
+    play("rec");
+    const ok = await recorder.start();
+    if (ok) setVoiceState("recording");
   };
 
   return (
@@ -125,9 +208,55 @@ export function CommentComposer({
           </button>
         </div>
       ) : (
-        <p className="px-1 py-2 font-sans text-[14px] text-text-3">
-          Los comentarios de voz llegan pronto —con transcripción por Gemini.
-        </p>
+        <div className="flex min-h-[40px] flex-col gap-2">
+          {voiceState === "idle" && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void startVoice()}
+                className="inline-flex items-center gap-2 rounded-pill bg-grana px-4 py-2.5 font-sans text-[14px] font-semibold text-white transition-transform duration-150 ease-flow active:scale-[.97]"
+              >
+                <Mic size={16} />
+                Grabar comentario
+              </button>
+              <span className="font-mono text-[12px] text-text-3">
+                máx {formatDuration(MAX_VOICE)}
+              </span>
+            </div>
+          )}
+
+          {voiceState === "recording" && (
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-2 font-mono text-[14px] tabular-nums text-grana">
+                <span className="h-2 w-2 animate-pulse rounded-pill bg-grana" />
+                {formatDuration(recorder.elapsed)}
+              </span>
+              <div className="flex-1">
+                <MiniWave />
+              </div>
+              <button
+                type="button"
+                onClick={() => void stopAndPost()}
+                aria-label="Detener y publicar"
+                className="grid h-10 w-10 flex-none place-items-center rounded-pill bg-grana text-white transition-transform duration-150 ease-flow active:scale-[.94]"
+              >
+                <Square size={16} fill="currentColor" />
+              </button>
+            </div>
+          )}
+
+          {voiceState === "processing" && (
+            <p role="status" className="px-1 py-2 font-sans text-[14px] text-text-2">
+              Transcribiendo tu voz…
+            </p>
+          )}
+
+          {(voiceError || recorder.error) && (
+            <p role="status" className="px-1 font-sans text-[13px] text-grana">
+              {voiceError ?? recorder.error}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

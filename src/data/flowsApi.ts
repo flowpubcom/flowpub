@@ -8,7 +8,7 @@ import type { CoverKind } from "@/lib/covers";
 // el autor sus propios borradores).
 
 const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
   "author:profiles(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 
@@ -65,7 +65,34 @@ function mapRow(r: any): Flow | null {
     transcriptRaw: r.transcript_raw ?? undefined,
     audioUrl: r.audio_url ?? null,
     createdAt: r.created_at ?? undefined,
+    lang: r.lang ?? "es",
+    status: r.status ?? undefined,
   };
+}
+
+/** Mapeo fila→Flow reutilizable (perfiles, likes, etc.). */
+ 
+export function mapFlowRow(r: any): Flow | null {
+  return mapRow(r);
+}
+
+/** Marca `liked` en un lote de flows según el usuario con sesión (si hay). */
+async function enrichLiked(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  flows: Flow[],
+): Promise<void> {
+  if (!flows.length) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  const { data } = await supabase
+    .from("likes")
+    .select("flow_id")
+    .eq("user_id", user.id)
+    .in("flow_id", flows.map((f) => f.id));
+  const likedSet = new Set((data ?? []).map((l) => l.flow_id as string));
+  for (const f of flows) f.liked = likedSet.has(f.id);
 }
 
 /** Timeline del Pub: publicados/destacados, más recientes primero.
@@ -83,7 +110,9 @@ export const fetchFlows = cache(async (): Promise<Flow[]> => {
     console.error("[fetchFlows]", error.message);
     return [];
   }
-  return (data ?? []).map(mapRow).filter((f): f is Flow => f !== null);
+  const flows = (data ?? []).map(mapRow).filter((f): f is Flow => f !== null);
+  await enrichLiked(supabase, flows);
+  return flows;
 });
 
 // Variante con !inner: el filtro por slug del tag exige el join (tema/[slug]).
@@ -125,5 +154,37 @@ export const fetchFlow = cache(async (id: string): Promise<Flow | null> => {
     return null;
   }
   if (!data) return null;
-  return mapRow(data);
+  const flow = mapRow(data);
+  if (!flow) return null;
+
+  // Estado del lector (like/guardado/sigue-al-autor) si hay sesión.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user) {
+    const [likeRes, saveRes, followRes] = await Promise.all([
+      supabase
+        .from("likes")
+        .select("flow_id")
+        .eq("user_id", user.id)
+        .eq("flow_id", flow.id)
+        .maybeSingle(),
+      supabase
+        .from("saves")
+        .select("flow_id")
+        .eq("user_id", user.id)
+        .eq("flow_id", flow.id)
+        .maybeSingle(),
+      supabase
+        .from("follows")
+        .select("followee_id")
+        .eq("follower_id", user.id)
+        .eq("followee_id", flow.author.id)
+        .maybeSingle(),
+    ]);
+    flow.liked = !!likeRes.data;
+    flow.saved = !!saveRes.data; // si la tabla aún no existe, queda false
+    flow.followingAuthor = !!followRes.data;
+  }
+  return flow;
 });

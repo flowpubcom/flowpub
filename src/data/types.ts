@@ -34,6 +34,13 @@ export interface Flow {
   audioUrl?: string | null;
   /** Fecha de publicación ISO (SEO: JSON-LD, OpenGraph, sitemap). */
   createdAt?: string;
+  /** Idioma del contenido (para el «Traducir» opt-in). */
+  lang?: string;
+  /** Estado del lector actual (enriquecido server-side si hay sesión). */
+  saved?: boolean;
+  followingAuthor?: boolean;
+  /** draft | published | … (solo se expone al autor vía RLS). */
+  status?: string;
 }
 
 export interface TrendingTag {

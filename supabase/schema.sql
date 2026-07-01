@@ -147,6 +147,7 @@ create table if not exists public.comments (
   body_text      text,
   audio_url      text,
   transcript_raw text,
+  duration_s     int not null default 0,
   like_count     int not null default 0,
   parent_id      uuid references public.comments(id) on delete cascade,
   created_at     timestamptz not null default now()
@@ -192,6 +193,16 @@ create trigger trg_like_counts after insert or delete on public.likes
 drop trigger if exists trg_comment_counts on public.comments;
 create trigger trg_comment_counts after insert or delete on public.comments
   for each row execute function public.bump_counts();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- saves (guardados: el «bookmark» del lector)
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists public.saves (
+  user_id    uuid not null references public.profiles(id) on delete cascade,
+  flow_id    uuid not null references public.flows(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (user_id, flow_id)
+);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- follows (seguir mutuo)
@@ -274,6 +285,7 @@ alter table public.flow_tags enable row level security;
 alter table public.profile_tags enable row level security;
 alter table public.comments enable row level security;
 alter table public.likes enable row level security;
+alter table public.saves enable row level security;
 alter table public.follows enable row level security;
 alter table public.conversations enable row level security;
 alter table public.conversation_members enable row level security;
@@ -346,6 +358,11 @@ drop policy if exists likes_insert on public.likes;
 create policy likes_insert on public.likes for insert with check (user_id = auth.uid());
 drop policy if exists likes_delete on public.likes;
 create policy likes_delete on public.likes for delete using (user_id = auth.uid());
+
+-- saves (privados: cada quien ve y maneja solo los suyos)
+drop policy if exists saves_own on public.saves;
+create policy saves_own on public.saves for all
+  using (user_id = auth.uid()) with check (user_id = auth.uid());
 
 -- follows
 drop policy if exists follows_read on public.follows;

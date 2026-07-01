@@ -2,13 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, AudioPlayer, Card } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { useAuth } from "@/providers/AuthProvider";
 import { useRadio } from "@/providers/RadioProvider";
+import { setFlowLike, shareFlow } from "@/data/engagement";
 import { compactNumber, durationLabel, relativeTime } from "@/lib/format";
 import type { Flow } from "@/data/types";
 
@@ -20,12 +23,20 @@ const BADGE =
 export function FlowCard({ flow }: { flow: Flow }) {
   const { play } = useSound();
   const { t, lang } = useI18n();
+  const { user } = useAuth();
+  const router = useRouter();
   const radio = useRadio();
   const [liked, setLiked] = useState(flow.liked);
   const [likes, setLikes] = useState(flow.likeCount);
   const [pop, setPop] = useState(false);
 
-  const toggleLike = () => {
+  // Optimista con revert: pinta ya, persiste atrás, revierte si falla.
+  const toggleLike = async () => {
+    if (!user) {
+      play("soft");
+      router.push("/entrar");
+      return;
+    }
     const next = !liked;
     setLiked(next);
     setLikes((n) => n + (next ? 1 : -1));
@@ -34,6 +45,16 @@ export function FlowCard({ flow }: { flow: Flow }) {
       setPop(true);
       window.setTimeout(() => setPop(false), 320);
     }
+    const res = await setFlowLike(flow.id, next);
+    if (!res.ok) {
+      setLiked(!next);
+      setLikes((n) => n + (next ? -1 : 1));
+    }
+  };
+
+  const onShare = async () => {
+    const out = await shareFlow(flow.title, `/flow/${flow.id}`);
+    play(out === "failed" ? "soft" : "pop");
   };
 
   return (
@@ -120,7 +141,10 @@ export function FlowCard({ flow }: { flow: Flow }) {
             </button>
             <button
               type="button"
-              onClick={() => play("click")}
+              onClick={() => {
+                play("click");
+                router.push(`/flow/${flow.id}`);
+              }}
               aria-label={t("comment")}
               className="flex items-center gap-1.5 rounded-pill px-2.5 py-1.5 font-sans text-[13px] text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
             >
@@ -129,7 +153,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
             </button>
             <button
               type="button"
-              onClick={() => play("click")}
+              onClick={onShare}
               aria-label={t("share")}
               className="grid h-8 w-8 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
             >

@@ -5,6 +5,7 @@ import { PubRightRail } from "@/components/feed/PubRightRail";
 import { FlowCard } from "@/components/feed/FlowCard";
 import { fetchFlowsByTag } from "@/data/flowsApi";
 import { fetchTags } from "@/data/tagsApi";
+import { fetchSuggested, fetchTrending } from "@/data/railApi";
 
 // Hub SEO por tema: una página indexable por categoría (/tema/arte, …), con
 // los Flows del tema, copy propio y JSON-LD. Los chips y el riel enlazan aquí.
@@ -33,7 +34,12 @@ export default async function TemaPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [tags, flows] = await Promise.all([fetchTags(), fetchFlowsByTag(slug)]);
+  const [tags, flows, trending, suggested] = await Promise.all([
+    fetchTags(),
+    fetchFlowsByTag(slug),
+    fetchTrending(),
+    fetchSuggested(),
+  ]);
   const tag = tags.find((t) => t.slug === slug);
   if (!tag) notFound();
 
@@ -48,7 +54,10 @@ export default async function TemaPage({
   };
 
   return (
-    <AppShell active="pub" rightRail={<PubRightRail />}>
+    <AppShell
+      active="pub"
+      rightRail={<PubRightRail trending={trending} suggested={suggested} />}
+    >
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

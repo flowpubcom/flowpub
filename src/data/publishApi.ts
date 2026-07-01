@@ -17,6 +17,8 @@ export async function publishFlow(input: {
   durationSeconds: number;
   tagNames: string[];
   audioUrl?: string | null;
+  /** 'published' (default) o 'draft' («Guardar borrador»). */
+  status?: "published" | "draft";
 }): Promise<PublishResult> {
   const supabase = createClient();
   const {
@@ -34,7 +36,7 @@ export async function publishFlow(input: {
       cover_kind: input.coverKind,
       audio_url: input.audioUrl ?? null,
       lang: "es",
-      status: "published",
+      status: input.status ?? "published",
       duration_s: Math.round(input.durationSeconds),
     })
     .select("id")
