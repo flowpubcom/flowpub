@@ -30,6 +30,58 @@ export type OnboardingResult =
   | { ok: true }
   | { ok: false; error: "no-session" | "username-taken" | "generic" };
 
+/** Edición de perfil (pantalla Perfil → «Editar perfil»). */
+export async function updateProfile(input: {
+  displayName: string;
+  username: string;
+  bio?: string;
+}): Promise<OnboardingResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "no-session" };
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({
+      display_name: input.displayName.trim(),
+      username: input.username,
+      bio: input.bio?.trim() || null,
+    })
+    .eq("id", user.id);
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "username-taken" };
+    return { ok: false, error: "generic" };
+  }
+  return { ok: true };
+}
+
+/** Sube la foto al bucket `avatars` y la fija en el perfil. */
+export async function uploadAvatar(file: File): Promise<string | null> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${user.id}/avatar-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, {
+    contentType: file.type || "image/jpeg",
+    upsert: false,
+  });
+  if (error) return null;
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const url = data.publicUrl;
+  const { error: pErr } = await supabase
+    .from("profiles")
+    .update({ avatar_url: url })
+    .eq("id", user.id);
+  return pErr ? null : url;
+}
+
 export async function completeOnboarding(input: {
   displayName: string;
   username: string;

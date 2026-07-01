@@ -37,9 +37,49 @@
     aria-pressed en toggles segmentados; errores con role="status".
 - **Primer Flow real de Julio publicado** (con audio, @julio). El Pub vive.
 
-**👉 Julio debe correr en el SQL Editor:** `supabase/migration_03_radio_y_hardening.sql`
-(tope 3 min + duraciones demo bajo el tope + hardening). Sin esto, el filtro de
-duración deja fuera a los 6 Flows demo (duran >3 min) y el hardening no aplica.
+**👉 Julio debe correr en el SQL Editor (en orden):**
+1. `supabase/migration_03_radio_y_hardening.sql` — tope 3 min + duraciones demo
+   bajo el tope + hardening. Sin esto, el filtro de duración deja fuera a los 6
+   Flows demo (duran >3 min).
+2. `supabase/migration_04_interacciones.sql` — tabla `saves` (guardados) +
+   `comments.duration_s` (voz). El código tiene cascada tolerante y funciona sin
+   ella, pero «Guardar» no persiste y los comentarios de voz salen sin duración.
+
+## Sesión 3 (cont.) — Olas 1+2: todo lo maquetado ahora FUNCIONA
+
+**Ola 1 — interacciones reales** (verificado E2E contra Supabase):
+- **Likes** de Flows y comentarios: persisten (`data/engagement.ts`), estado
+  inicial enriquecido server-side, optimista con revert, invitado → /entrar.
+- **Seguir**: real en byline del Flow, riel y perfil; oculto en lo propio.
+- **Guardar** (`saves`, privado) y **Compartir** (Web Share API → clipboard).
+- **Comentarios de VOZ**: grabar → Storage → Gemini STT → insert (audio +
+  transcript sin pulir + duración). Verificado E2E con voz TTS: transcripción
+  palabra por palabra, persiste tras reload. Tope 1:30.
+- **Traducir** en el Flow abierto (la ruta ya existía): verificado en vivo
+  (el Flow de Julio en inglés), nota «Traducido con Gemini» + «Ver original».
+- **Riel derecho real**: trending por conteo de `flow_tags`, voces sugeridas de
+  `profiles` reales con sus temas y estado de seguir.
+- **Guardar borrador**: persiste `status='draft'` → aparece en el perfil propio.
+
+**Ola 2 — perfiles** (pixel per Perfil.dc.html; verificado en vivo):
+- **`/@usuario`** (`app/[username]/`, valida el prefijo @): banner generativo
+  sembrado por username, avatar traslapado, bio serif, chips de temas, stats
+  REALES (flows/seguidores/siguiendo), tabs Flows · Me gusta · Borradores
+  (borradores solo el dueño), grid de mini-portadas 16:11, JSON-LD ProfilePage.
+- **Editar perfil** (modal): nombre/usuario/bio + **subir foto** al bucket
+  `avatars`; si cambia el username, redirige al nuevo. Verificado (bio editada
+  y persistida).
+- **`/perfil`** → redirige al propio (o a /entrar).
+
+**Datos de prueba que quedaron** (bórralos si quieres): un like y un follow de
+demodos a Julio, y un comentario de VOZ sintética de demodos en el Flow de
+Julio («Qué bonito quedó este Flow…» — el primer comentario de voz de la
+historia de FlowPub, transcrito por Gemini).
+
+**Pendiente (siguiente sesión): Ola 3-4** — `/notificaciones` (fan-out con
+triggers + página), `/mensajes` (Realtime, milestone 7), `/explorar` (sin
+.dc.html: definir con Julio), `/admin` (milestone 8), respuestas anidadas a
+comentarios (parent_id ya existe en BD).
 
 **Pendientes que dejó la auditoría (colita):** paginación real del feed ·
 cachear páginas públicas (cliente sin cookies + revalidate) · og:image por Flow
