@@ -60,12 +60,20 @@ contra Supabase real (registro → 3 temas → perfil → sesión → compuerta 
 - **Pendiente en `.env.local`:** `GEMINI_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY`
   (no bloquean auth; sí el pipeline de Gemini y ops admin server-side).
 
-## Lo que sigue (Claude), una vez verificado el flujo
+## Lo que sigue (Claude)
 
-1. **Google OAuth**: configurar en Supabase (Auth → Providers → Google) + Google Cloud;
-   el botón y el callback ya están en código.
-2. **Swap de lecturas mock → Supabase**: El Pub (`/`) y Flow abierto (`/flow/[id]`) →
-   `src/data/*Api.ts` con cascada tolerante a columnas.
+1. ✅ **Google OAuth** — configurado en Google Cloud + Supabase y verificado a nivel
+   endpoint (`authorize?provider=google` → 302 a accounts.google.com con el client_id).
+   Código ya estaba (botón + `/auth/callback`). Falta solo el click-through humano de Julio.
+2. ✅ **Pub con datos reales** — seed (`migration_01_seed_demo.sql`: 6 autores demo +
+   6 Flows) + `data/flowsApi.ts` (`fetchFlows`/`fetchFlow`, mapeo a `Flow`, embeds
+   autor+tags). El Pub (`/`) y Flow abierto (`/flow/[id]`) ahora leen de Supabase
+   (dinámicos). Verificado en vivo: 6 tarjetas con autor/tiempo/tag, Flow abre desde BD.
+   De paso, **fix de hidratación en `Cover`** (ver notas).
+3. **(SIGUIENTE) Composer → publica a Supabase** (escribe `flows`+`flow_tags`) + comentarios
+   reales en el Flow abierto (hoy siguen mock → por eso el contador no cuadra con la lista).
+4. **Pipeline Gemini** (transcribe/polish/translate) + audio real a Storage.
+5. Google OAuth click-through (Julio) · Turnstile · Resend · pantallas placeholder.
 3. **Pipeline Gemini** (route handlers server-only): transcribe/polish/translate;
    cambiar `useRecorder`/`composeMock` por lo real. Subir audio a Storage.
 4. **Turnstile** (signup/login, server-side) + **Resend** (correos).
@@ -74,9 +82,13 @@ contra Supabase real (registro → 3 temas → perfil → sesión → compuerta 
 
 ## Notas que cuestan caro (ya resueltas — no re-romper)
 
-- **Boundary server/client:** `data/tagsApi.ts` importa el cliente server (`next/headers`);
-  NO lo importes desde un Client Component. La parte pura (tipo + `tagName`) vive en
-  `data/tags.ts`. Mismo patrón para futuras `*Api.ts`.
+- **Boundary server/client:** `data/tagsApi.ts` / `data/flowsApi.ts` importan el cliente
+  server (`next/headers`); NO los importes desde un Client Component. La parte pura (tipo +
+  `tagName`) vive en `data/tags.ts`. Mismo patrón para futuras `*Api.ts`.
+- **Portadas (`Cover`) = render puro:** cada sub-portada crea su propio RNG desde el seed
+  numérico dentro de su render. NO pases un RNG con estado como prop para consumirlo en el
+  hijo: Strict Mode (dev) doble-invoca el hijo con el RNG ya avanzado → mismatch de
+  hidratación SSR/CSR (portada distinta en server vs client). Ya corregido.
 - **`create table if not exists` NO agrega columnas** a una tabla existente. Si `profiles`
   ya existiera sin `onboarded`, habría que un `alter table ... add column if not exists`.
   Hoy no aplica (se corre en limpio), pero tenlo presente al migrar.

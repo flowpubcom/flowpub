@@ -55,7 +55,8 @@ function cube(
   );
 }
 
-function Escher({ r, uid }: { r: Rng; uid: string }) {
+function Escher({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
   const hatchId = `hatch-${uid}`;
   const cubes: React.ReactNode[] = [];
   for (let i = 0; i < 5; i++) {
@@ -91,7 +92,8 @@ function Escher({ r, uid }: { r: Rng; uid: string }) {
 }
 
 // ── turrell — apertura con resplandor ──────────────────────────────────────
-function Turrell({ r, uid }: { r: Rng; uid: string }) {
+function Turrell({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
   const gid = `tur-${uid}`;
   const blur = `tb-${uid}`;
   const hue = pick(r, [P.grana, P.ocre, P.champagne]);
@@ -142,7 +144,8 @@ function Turrell({ r, uid }: { r: Rng; uid: string }) {
 }
 
 // ── flavin — barras de neón con glow ───────────────────────────────────────
-function Flavin({ r, uid }: { r: Rng; uid: string }) {
+function Flavin({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
   const glow = `fg-${uid}`;
   const cols = [P.grana, P.ocre, P.champagne, P.grana700];
   const bars: React.ReactNode[] = [];
@@ -184,7 +187,8 @@ function Flavin({ r, uid }: { r: Rng; uid: string }) {
 }
 
 // ── collage 90s — Lichtenstein + Ben-Day ───────────────────────────────────
-function Collage({ r, uid }: { r: Rng; uid: string }) {
+function Collage({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
   const dots = `dot-${uid}`;
   const cols = [P.grana, P.ocre, P.champagne, P.amate2, P.tinta];
   const shapes: React.ReactNode[] = [];
@@ -253,7 +257,7 @@ export function Cover({
   grain = true,
   className,
 }: CoverProps) {
-  const r = mulberry32(hashSeed(seed));
+  const seedInt = hashSeed(seed);
   const k: CoverKind = kind === "auto" ? kindFromSeed(seed) : kind;
   const uid = `${sanitizeId(seed)}-${k}`;
   const grainId = `grain-${uid}`;
@@ -266,10 +270,10 @@ export function Cover({
       aria-label={title ?? `Portada ${k}`}
       className={cn("block aspect-[16/9] w-full", className)}
     >
-      {k === "escher" && <Escher r={r} uid={uid} />}
-      {k === "turrell" && <Turrell r={r} uid={uid} />}
-      {k === "flavin" && <Flavin r={r} uid={uid} />}
-      {k === "collage" && <Collage r={r} uid={uid} />}
+      {k === "escher" && <Escher seed={seedInt} uid={uid} />}
+      {k === "turrell" && <Turrell seed={seedInt} uid={uid} />}
+      {k === "flavin" && <Flavin seed={seedInt} uid={uid} />}
+      {k === "collage" && <Collage seed={seedInt} uid={uid} />}
       {grain && (
         <>
           <defs>
