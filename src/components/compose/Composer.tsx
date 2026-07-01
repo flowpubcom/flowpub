@@ -39,6 +39,7 @@ export function Composer() {
   const [tags, setTags] = useState<string[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
   const [duration, setDuration] = useState(0);
+  const [transcript, setTranscript] = useState("");
   const [newFlowId, setNewFlowId] = useState<string | null>(null);
   const [pubError, setPubError] = useState<string | null>(null);
 
@@ -47,27 +48,57 @@ export function Composer() {
     setStep("recording");
   };
 
+  // Pule el transcript con Gemini (/api/polish); si falla, cae al mock para que
+  // el usuario nunca se quede atorado. Mantiene ~1.6s de animación mínima.
+  const runPolish = useCallback(
+    async (transcriptText: string) => {
+      let result: { title: string; bodyMd: string; tags: string[] } | null = null;
+      try {
+        const [res] = await Promise.all([
+          fetch("/api/polish", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ transcript: transcriptText }),
+          }).then((r) => (r.ok ? r.json() : null)),
+          new Promise((r) => setTimeout(r, 1600)),
+        ]);
+        if (res && typeof res.bodyMd === "string" && res.bodyMd) result = res;
+      } catch {
+        // cae al fallback
+      }
+      if (result) {
+        setTitle(result.title || SUGGESTED_TITLE);
+        setBody(result.bodyMd);
+        setTags(result.tags?.length ? result.tags : SUGGESTED_TAGS);
+      } else {
+        setTitle(SUGGESTED_TITLE);
+        setBody(POLISHED_MD);
+        setTags(SUGGESTED_TAGS);
+      }
+      setCoverIndex(0);
+      play("pop");
+      setStep("edit");
+    },
+    [play],
+  );
+
   const stopRecording = useCallback(() => {
     const dur = recorder.stop();
     setDuration(Math.max(8, Math.round(dur)));
+    // El audio real y su transcripción con Gemini entran después; por ahora el
+    // transcript "grabado" es el simulado, que sí pulimos de verdad con Gemini.
+    const t = RAW_TRANSCRIPT;
+    setTranscript(t);
     setProc("polish");
     setStep("processing");
-  }, [recorder]);
+    void runPolish(t);
+  }, [recorder, runPolish]);
 
   const cancelRecording = useCallback(() => {
     recorder.reset();
     setStep("record");
     play("soft");
   }, [recorder, play]);
-
-  const onPolished = useCallback(() => {
-    setTitle(SUGGESTED_TITLE);
-    setBody(POLISHED_MD);
-    setTags(SUGGESTED_TAGS);
-    setCoverIndex(0);
-    play("pop");
-    setStep("edit");
-  }, [play]);
 
   const publish = async () => {
     play("click");
@@ -79,7 +110,7 @@ export function Composer() {
       publishFlow({
         title,
         bodyMd: body,
-        transcriptRaw: RAW_TRANSCRIPT,
+        transcriptRaw: transcript,
         coverKind: COVER_KINDS[coverIndex],
         durationSeconds: duration,
         tagNames: tags,
@@ -160,9 +191,7 @@ export function Composer() {
             onCancel={cancelRecording}
           />
         )}
-        {step === "processing" && (
-          <ProcessingStep mode={proc} onDone={onPolished} />
-        )}
+        {step === "processing" && <ProcessingStep mode={proc} />}
         {step === "edit" && (
           <EditStep
             title={title}
@@ -349,13 +378,7 @@ function RecordingStep({
 }
 
 // ── processing ───────────────────────────────────────────────────────────────
-function ProcessingStep({
-  mode,
-  onDone,
-}: {
-  mode: "polish" | "publish";
-  onDone: () => void;
-}) {
+function ProcessingStep({ mode }: { mode: "polish" | "publish" }) {
   const phases =
     mode === "polish"
       ? [
@@ -371,6 +394,8 @@ function ProcessingStep({
       : [{ t: "Publicando…", s: "Subiendo tu voz al Pub." }];
   const [i, setI] = useState(0);
 
+  // Solo anima las fases; el avance de paso lo controla el flujo async real
+  // (runPolish / publish), así la pantalla dura lo que tarde Gemini.
   useEffect(() => {
     const dur = mode === "polish" ? [1200, 1100] : [1500];
     setI(0);
@@ -380,13 +405,8 @@ function ProcessingStep({
       acc += dur[k - 1];
       timers.push(window.setTimeout(() => setI(k), acc));
     }
-    // Solo el pulido auto-avanza; la publicación la cierra el flujo async real.
-    if (mode === "polish") {
-      acc += dur[dur.length - 1];
-      timers.push(window.setTimeout(onDone, acc));
-    }
     return () => timers.forEach((t) => window.clearTimeout(t));
-  }, [mode, onDone]);
+  }, [mode]);
 
   return (
     <div className="flex flex-col items-center py-16 text-center">
