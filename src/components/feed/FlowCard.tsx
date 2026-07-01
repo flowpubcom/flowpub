@@ -8,16 +8,19 @@ import { Avatar, AudioPlayer, Card } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { useRadio } from "@/providers/RadioProvider";
 import { compactNumber, durationLabel, relativeTime } from "@/lib/format";
 import type { Flow } from "@/data/types";
 
-// Badge sobre la portada (paleta fija: la portada no voltea con el tema).
+// Badge sobre la portada (etiqueta fija tipo sticker: legible sobre ambas
+// variantes de portada, clara y oscura).
 const BADGE =
   "inline-flex items-center gap-1.5 rounded-pill bg-[rgba(251,250,246,0.92)] px-2.5 py-1 text-[#1A1714]";
 
 export function FlowCard({ flow }: { flow: Flow }) {
   const { play } = useSound();
   const { t, lang } = useI18n();
+  const radio = useRadio();
   const [liked, setLiked] = useState(flow.liked);
   const [likes, setLikes] = useState(flow.likeCount);
   const [pop, setPop] = useState(false);
@@ -34,7 +37,14 @@ export function FlowCard({ flow }: { flow: Flow }) {
   };
 
   return (
-    <Card hover padded={false} className="overflow-hidden">
+    <Card
+      hover
+      padded={false}
+      className="overflow-hidden"
+      ref={(el: HTMLDivElement | null) => {
+        if (flow.audioUrl) radio?.registerCard(flow.id, el);
+      }}
+    >
       <Link
         href={`/flow/${flow.id}`}
         className="relative block"
@@ -63,7 +73,11 @@ export function FlowCard({ flow }: { flow: Flow }) {
         </p>
 
         <div className="mt-4">
-          <AudioPlayer durationSeconds={flow.durationSeconds} />
+          <AudioPlayer
+            src={flow.audioUrl ?? undefined}
+            durationSeconds={flow.durationSeconds}
+            radioId={flow.audioUrl ? flow.id : undefined}
+          />
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">

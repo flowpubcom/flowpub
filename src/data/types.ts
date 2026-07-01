@@ -20,6 +20,8 @@ export interface Flow {
   ageMinutes: number;
   /** Tag primario (etiqueta visible). */
   tag: string;
+  /** Slug del tag primario (filtros + páginas /tema/[slug]). */
+  tagSlug?: string;
   coverKind: CoverKind;
   likeCount: number;
   commentCount: number;
@@ -30,9 +32,12 @@ export interface Flow {
   transcriptRaw?: string;
   /** URL del audio real (Storage). */
   audioUrl?: string | null;
+  /** Fecha de publicación ISO (SEO: JSON-LD, OpenGraph, sitemap). */
+  createdAt?: string;
 }
 
 export interface TrendingTag {
   name: string;
+  slug: string;
   flows: number;
 }

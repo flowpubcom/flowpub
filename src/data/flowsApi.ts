@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { Flow, Profile } from "./types";
 import type { CoverKind } from "@/lib/covers";
@@ -55,6 +56,7 @@ function mapRow(r: any): Flow | null {
     durationSeconds: r.duration_s ?? 0,
     ageMinutes: ageMinutesFrom(r.created_at),
     tag: primary?.name_es ?? "",
+    tagSlug: primary?.slug ?? undefined,
     coverKind: (r.cover_kind ?? "collage") as CoverKind,
     likeCount: r.like_count ?? 0,
     commentCount: r.comment_count ?? 0,
@@ -62,24 +64,55 @@ function mapRow(r: any): Flow | null {
     bodyMd: bodyMd || undefined,
     transcriptRaw: r.transcript_raw ?? undefined,
     audioUrl: r.audio_url ?? null,
+    createdAt: r.created_at ?? undefined,
   };
 }
 
-/** Timeline del Pub: publicados/destacados, más recientes primero. */
-export async function fetchFlows(): Promise<Flow[]> {
+/** Timeline del Pub: publicados/destacados, más recientes primero.
+ *  Tope defensivo; la paginación real llega con el scroll infinito. */
+export const fetchFlows = cache(async (): Promise<Flow[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("flows")
     .select(SELECT)
     .in("status", ["published", "featured"])
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(60);
 
-  if (error || !data) return [];
-  return data.map(mapRow).filter((f): f is Flow => f !== null);
-}
+  if (error) {
+    console.error("[fetchFlows]", error.message);
+    return [];
+  }
+  return (data ?? []).map(mapRow).filter((f): f is Flow => f !== null);
+});
 
-/** Un Flow por id (RLS decide si es visible para quien lo pide). */
-export async function fetchFlow(id: string): Promise<Flow | null> {
+// Variante con !inner: el filtro por slug del tag exige el join (tema/[slug]).
+const SELECT_BY_TAG =
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at," +
+  "author:profiles(id,username,display_name,avatar_url)," +
+  "flow_tags!inner(tags!inner(slug,name_es,name_en,sort))";
+
+/** Flows de un tema (páginas /tema/[slug]); el embed !inner filtra por slug. */
+export const fetchFlowsByTag = cache(async (slug: string): Promise<Flow[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("flows")
+    .select(SELECT_BY_TAG)
+    .eq("flow_tags.tags.slug", slug)
+    .in("status", ["published", "featured"])
+    .order("created_at", { ascending: false })
+    .limit(60);
+
+  if (error) {
+    console.error("[fetchFlowsByTag]", error.message);
+    return [];
+  }
+  return (data ?? []).map(mapRow).filter((f): f is Flow => f !== null);
+});
+
+/** Un Flow por id (RLS decide si es visible para quien lo pide).
+ *  cache(): generateMetadata + página comparten UNA sola consulta por request. */
+export const fetchFlow = cache(async (id: string): Promise<Flow | null> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("flows")
@@ -87,6 +120,10 @@ export async function fetchFlow(id: string): Promise<Flow | null> {
     .eq("id", id)
     .maybeSingle();
 
-  if (error || !data) return null;
+  if (error) {
+    console.error("[fetchFlow]", error.message);
+    return null;
+  }
+  if (!data) return null;
   return mapRow(data);
-}
+});

@@ -12,12 +12,6 @@ import { Logo, FlowMark } from "@/components/brand";
 import { AudioPlayer, Button } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
-import {
-  POLISHED_MD,
-  RAW_TRANSCRIPT,
-  SUGGESTED_TAGS,
-  SUGGESTED_TITLE,
-} from "@/data/composeMock";
 import { publishFlow } from "@/data/publishApi";
 import { uploadAudio } from "@/data/storage";
 import { StepIndicator } from "./StepIndicator";
@@ -26,7 +20,7 @@ import { TagPicker } from "./TagPicker";
 import { FlowProse } from "./FlowProse";
 
 type Step = "record" | "recording" | "processing" | "edit" | "published";
-const MAX = 540; // 9:00 (configurable en admin más adelante)
+const MAX = 180; // 3:00 — un Flow es una voz concentrada (configurable en admin)
 
 export function Composer() {
   const router = useRouter();
@@ -44,6 +38,8 @@ export function Composer() {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [newFlowId, setNewFlowId] = useState<string | null>(null);
   const [pubError, setPubError] = useState<string | null>(null);
+  const [pipeError, setPipeError] = useState<string | null>(null);
+  const [audioWarn, setAudioWarn] = useState<string | null>(null);
 
   const startRecording = async () => {
     const ok = await recorder.start();
@@ -51,8 +47,8 @@ export function Composer() {
     // Si no, recorder.error se muestra en la pantalla de grabar.
   };
 
-  // Pule el transcript con Gemini (/api/polish); si falla, cae al mock para que
-  // el usuario nunca se quede atorado. Mantiene ~1.6s de animación mínima.
+  // Pule el transcript con Gemini (/api/polish). Si el pulido falla, somos
+  // honestos: el cuerpo queda como el transcript crudo y el usuario lo edita.
   const runPolish = useCallback(
     async (transcriptText: string) => {
       let result: { title: string; bodyMd: string; tags: string[] } | null = null;
@@ -67,17 +63,11 @@ export function Composer() {
         ]);
         if (res && typeof res.bodyMd === "string" && res.bodyMd) result = res;
       } catch {
-        // cae al fallback
+        // sin red: caemos al transcript crudo
       }
-      if (result) {
-        setTitle(result.title || SUGGESTED_TITLE);
-        setBody(result.bodyMd);
-        setTags(result.tags?.length ? result.tags : SUGGESTED_TAGS);
-      } else {
-        setTitle(SUGGESTED_TITLE);
-        setBody(POLISHED_MD);
-        setTags(SUGGESTED_TAGS);
-      }
+      setTitle(result?.title ?? "");
+      setBody(result?.bodyMd ?? transcriptText);
+      setTags(result?.tags ?? []);
       setCoverIndex(0);
       play("pop");
       setStep("edit");
@@ -85,11 +75,14 @@ export function Composer() {
     [play],
   );
 
-  // Pipeline real: sube el audio a Storage + lo transcribe con Gemini (en
-  // paralelo), luego pule el transcript. Si la transcripción falla, cae al mock.
+  // Pipeline real: sube el audio a Storage + transcribe con Gemini (en
+  // paralelo), luego pule. Sin transcript NO fingimos contenido: se avisa y se
+  // vuelve a grabar. Sin subida, se avisa que el Flow saldría sin audio.
   const runPipeline = useCallback(
     async (blob: Blob, durationSeconds: number) => {
       setDuration(Math.max(1, Math.round(durationSeconds)));
+      setPipeError(null);
+      setAudioWarn(null);
       setProc("polish");
       setStep("processing");
 
@@ -100,17 +93,31 @@ export function Composer() {
         uploadAudio(blob).catch(() => null),
         fetch("/api/transcribe", { method: "POST", body: form })
           .then((r) => (r.ok ? r.json() : null))
-          .then((j) => (typeof j?.transcript === "string" ? j.transcript : ""))
+          .then((j) =>
+            typeof j?.transcript === "string" ? j.transcript.trim() : "",
+          )
           .catch(() => ""),
       ]);
 
+      if (!transcriptText) {
+        play("soft");
+        setPipeError(
+          "No pudimos transcribir tu voz. Revisa tu conexión e intenta de nuevo.",
+        );
+        setStep("record");
+        return;
+      }
+
       setAudioUrl(url);
-      const raw =
-        transcriptText.trim().length > 3 ? transcriptText.trim() : RAW_TRANSCRIPT;
-      setTranscript(raw);
-      await runPolish(raw);
+      if (!url) {
+        setAudioWarn(
+          "El audio no se pudo subir: el Flow se publicaría solo con el texto.",
+        );
+      }
+      setTranscript(transcriptText);
+      await runPolish(transcriptText);
     },
-    [runPolish],
+    [runPolish, play],
   );
 
   const stopRecording = useCallback(async () => {
@@ -218,7 +225,7 @@ export function Composer() {
           <RecordStep
             onStart={startRecording}
             maxSeconds={MAX}
-            error={recorder.error}
+            error={recorder.error ?? pipeError}
           />
         )}
         {step === "recording" && (
@@ -242,6 +249,8 @@ export function Composer() {
             cycleCover={cycleCover}
             duration={duration}
             audioUrl={audioUrl}
+            audioWarn={audioWarn}
+            transcript={transcript}
             error={pubError}
             onPublish={publish}
             onSaveDraft={() => router.push("/")}
@@ -297,7 +306,9 @@ function RecordStep({
         lo que quieras, con tus pausas.
       </p>
       {error && (
-        <p className="mt-5 max-w-xs font-sans text-[14px] text-grana">{error}</p>
+        <p role="status" className="mt-5 max-w-xs font-sans text-[14px] text-grana">
+          {error}
+        </p>
       )}
     </div>
   );
@@ -457,6 +468,7 @@ function ViewToggle({
         <button
           key={v}
           type="button"
+          aria-pressed={view === v}
           onClick={() => {
             onChange(v);
             play("tick");
@@ -486,6 +498,8 @@ interface EditStepProps {
   cycleCover: () => void;
   duration: number;
   audioUrl: string | null;
+  audioWarn?: string | null;
+  transcript: string;
   error?: string | null;
   onPublish: () => void;
   onSaveDraft: () => void;
@@ -502,6 +516,8 @@ function EditStep({
   cycleCover,
   duration,
   audioUrl,
+  audioWarn,
+  transcript,
   error,
   onPublish,
   onSaveDraft,
@@ -540,6 +556,11 @@ function EditStep({
             durationSeconds={duration}
             variant="full"
           />
+          {audioWarn && (
+            <p role="status" className="mt-2 font-sans text-[13px] text-grana">
+              {audioWarn}
+            </p>
+          )}
         </div>
 
         <div>
@@ -556,8 +577,8 @@ function EditStep({
             Ver transcript original
           </button>
           {showT && (
-            <div className="mt-2 rounded-[12px] border border-line bg-surface-2 p-4 font-serif text-[14.5px] leading-[1.6] text-text-2">
-              {RAW_TRANSCRIPT}
+            <div className="mt-2 whitespace-pre-wrap rounded-[12px] border border-line bg-surface-2 p-4 font-serif text-[14.5px] leading-[1.6] text-text-2">
+              {transcript}
             </div>
           )}
         </div>
@@ -569,6 +590,7 @@ function EditStep({
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título de tu Flow"
+          aria-label="Título de tu Flow"
           className="w-full border-0 border-b border-line bg-transparent pb-2 font-serif text-[28px] font-medium text-ink outline-none placeholder:text-text-3 focus:border-grana"
         />
 
@@ -583,6 +605,7 @@ function EditStep({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             spellCheck
+            aria-label="Cuerpo del artículo"
             className="min-h-[260px] w-full resize-y rounded-[12px] border border-line bg-surface p-4 font-serif text-[17px] leading-[1.7] text-ink outline-none focus:border-grana"
           />
         ) : (
@@ -596,7 +619,7 @@ function EditStep({
         </div>
 
         {error && (
-          <p className="mt-4 text-right font-sans text-[13px] text-grana">
+          <p role="status" className="mt-4 text-right font-sans text-[13px] text-grana">
             {error}
           </p>
         )}

@@ -16,6 +16,11 @@ const es = {
   "tagline": "Habla. FlowPub lo vuelve publicación.",
 
   "filter.all": "Todos",
+  "filter.duration": "Duración",
+  "filter.anyDuration": "Cualquier duración",
+  "pub.empty": "Aún no hay Flows aquí. Sé la primera voz.",
+
+  "player.speed": "Velocidad de reproducción",
 
   "audio": "Audio",
   "play": "Reproducir",
@@ -121,6 +126,11 @@ const en: Record<DictKey, string> = {
   "tagline": "Speak. FlowPub turns it into a publication.",
 
   "filter.all": "All",
+  "filter.duration": "Duration",
+  "filter.anyDuration": "Any length",
+  "pub.empty": "No Flows here yet. Be the first voice.",
+
+  "player.speed": "Playback speed",
 
   "audio": "Audio",
   "play": "Play",

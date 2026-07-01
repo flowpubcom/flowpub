@@ -121,9 +121,9 @@ export const FLOWS: Flow[] = [
 ];
 
 export const TRENDING: TrendingTag[] = [
-  { name: "Arte", flows: 1200 },
-  { name: "Cultura", flows: 860 },
-  { name: "Ciencia", flows: 540 },
+  { name: "Arte", slug: "arte", flows: 1200 },
+  { name: "Cultura", slug: "cultura", flows: 860 },
+  { name: "Ciencia", slug: "ciencia", flows: 540 },
 ];
 
 export const SUGGESTED: { profile: Profile; topics: string }[] = [

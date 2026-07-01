@@ -1,11 +1,13 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import type { TagRow } from "./tags";
 
 // Lectura server-side de la tabla `tags` (fuente de verdad del onboarding +
-// filtros del Pub). RLS: anon puede leer las activas.
+// filtros del Pub). RLS: anon puede leer las activas. cache(): una consulta
+// por request aunque la pidan página + metadata.
 export type { TagRow } from "./tags";
 
-export async function fetchTags(): Promise<TagRow[]> {
+export const fetchTags = cache(async (): Promise<TagRow[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tags")
@@ -20,4 +22,4 @@ export async function fetchTags(): Promise<TagRow[]> {
     nameEs: t.name_es as string,
     nameEn: t.name_en as string,
   }));
-}
+});
