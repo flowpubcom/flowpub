@@ -76,8 +76,9 @@ export function ProfileView({
 
   return (
     <div className="px-4 pb-16 lg:px-9">
-      {/* avatar + acciones */}
-      <div className="-mt-11 mb-4 flex items-end justify-between">
+      {/* avatar + acciones — relative+z para pintar ENCIMA del banner
+          (el banner es positioned y sin esto taparía el traslape) */}
+      <div className="relative z-10 -mt-11 mb-4 flex items-end justify-between">
         <span className="inline-block rounded-pill border-[5px] border-surface shadow-[var(--shadow-card)]">
           <Avatar
             name={profile.displayName}
