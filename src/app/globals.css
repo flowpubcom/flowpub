@@ -63,6 +63,8 @@
   --papel: #fbfaf6;
   --champagne: #f6d49a;
   --ok: #2e9a5b;
+  /* abismo de marca: fondo fijo del panel hipnótico (onboarding/reproductor) */
+  --brand-abyss: #15110e;
 
   /* roles semánticos — CLARO */
   --ink: #1a1714;
@@ -337,6 +339,48 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* blobs a la deriva del panel hipnótico (onboarding · welcome) */
+@keyframes fp-blob1 {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(34px, -26px) scale(1.18);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes fp-blob2 {
+  0% {
+    transform: translate(0, 0) scale(1.1);
+  }
+  50% {
+    transform: translate(-30px, 22px) scale(0.88);
+  }
+  100% {
+    transform: translate(0, 0) scale(1.1);
+  }
+}
+@keyframes fp-blob3 {
+  0% {
+    transform: translate(0, 0) scale(0.95);
+  }
+  50% {
+    transform: translate(20px, 28px) scale(1.12);
+  }
+  100% {
+    transform: translate(0, 0) scale(0.95);
+  }
+}
+
+/* anillos que giran alrededor de la marca */
+@keyframes fp-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

@@ -4,16 +4,6 @@
 create extension if not exists "pgcrypto";
 
 -- ─────────────────────────────────────────────────────────────────────────────
--- Helper: ¿el usuario actual es admin?
--- ─────────────────────────────────────────────────────────────────────────────
-create or replace function public.is_admin()
-returns boolean language sql security definer stable set search_path = public as $$
-  select exists (
-    select 1 from public.profiles where id = auth.uid() and role = 'admin'
-  );
-$$;
-
--- ─────────────────────────────────────────────────────────────────────────────
 -- profiles (1:1 con auth.users)
 -- ─────────────────────────────────────────────────────────────────────────────
 create table if not exists public.profiles (
@@ -26,6 +16,7 @@ create table if not exists public.profiles (
   role         text not null default 'user' check (role in ('user','admin')),
   lang         text not null default 'auto',
   theme        text not null default 'system',
+  onboarded    boolean not null default false,
   created_at   timestamptz not null default now()
 );
 
@@ -51,6 +42,15 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Helper: ¿el usuario actual es admin? (Va tras `profiles`: una función SQL valida
+-- sus tablas al crearse, así que profiles debe existir primero.)
+create or replace function public.is_admin()
+returns boolean language sql security definer stable set search_path = public as $$
+  select exists (
+    select 1 from public.profiles where id = auth.uid() and role = 'admin'
+  );
+$$;
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- tags (las 12 categorías; fuente de verdad del onboarding/filtros)
@@ -125,6 +125,16 @@ end; $$;
 drop trigger if exists trg_max_tags on public.flow_tags;
 create trigger trg_max_tags before insert on public.flow_tags
   for each row execute function public.enforce_max_tags();
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- profile_tags (intereses del usuario elegidos en el onboarding; editables luego)
+-- La UI pide 3 al arrancar; no ponemos tope duro en BD para poder crecer después.
+-- ─────────────────────────────────────────────────────────────────────────────
+create table if not exists public.profile_tags (
+  profile_id uuid not null references public.profiles(id) on delete cascade,
+  tag_id     bigint not null references public.tags(id) on delete cascade,
+  primary key (profile_id, tag_id)
+);
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- comments (texto | voz)
@@ -261,6 +271,7 @@ alter table public.profiles enable row level security;
 alter table public.tags enable row level security;
 alter table public.flows enable row level security;
 alter table public.flow_tags enable row level security;
+alter table public.profile_tags enable row level security;
 alter table public.comments enable row level security;
 alter table public.likes enable row level security;
 alter table public.follows enable row level security;
@@ -304,6 +315,13 @@ drop policy if exists flow_tags_write on public.flow_tags;
 create policy flow_tags_write on public.flow_tags for all
   using (exists (select 1 from public.flows f where f.id = flow_id and f.author_id = auth.uid()))
   with check (exists (select 1 from public.flows f where f.id = flow_id and f.author_id = auth.uid()));
+
+-- profile_tags (lectura pública; cada quien escribe los suyos)
+drop policy if exists profile_tags_read on public.profile_tags;
+create policy profile_tags_read on public.profile_tags for select using (true);
+drop policy if exists profile_tags_write on public.profile_tags;
+create policy profile_tags_write on public.profile_tags for all
+  using (profile_id = auth.uid()) with check (profile_id = auth.uid());
 
 -- comments
 drop policy if exists comments_read on public.comments;

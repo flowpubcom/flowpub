@@ -35,7 +35,22 @@ export async function updateSession(request: NextRequest) {
   );
 
   // IMPORTANTE: no metas lógica entre crear el cliente y getUser().
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Rutas privadas: sin sesión → a /entrar (con ?next para volver después).
+  const path = request.nextUrl.pathname;
+  const PROTECTED = ["/componer"];
+  if (!user && PROTECTED.some((p) => path === p || path.startsWith(`${p}/`))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/entrar";
+    url.searchParams.set("next", path);
+    const redirect = NextResponse.redirect(url);
+    // Conserva las cookies de sesión que el cliente pudo refrescar.
+    response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+    return redirect;
+  }
 
   return response;
 }

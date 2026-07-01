@@ -26,15 +26,19 @@ function GoogleIcon() {
   );
 }
 
-/** Compuerta de auth al intentar grabar sin sesión. (OAuth real = fase Auth.) */
+/** Compuerta de auth al intentar grabar sin sesión. `onChoose` lleva a /entrar. */
 export function AuthGateModal({
   open,
   onClose,
+  onChoose,
 }: {
   open: boolean;
   onClose: () => void;
+  /** Elegir un método → arranca el onboarding (/entrar). */
+  onChoose?: () => void;
 }) {
   const { t } = useI18n();
+  const choose = onChoose ?? onClose;
 
   return (
     <Modal
@@ -45,13 +49,13 @@ export function AuthGateModal({
         <div className="flex flex-col gap-2.5">
           <button
             type="button"
-            onClick={onClose}
+            onClick={choose}
             className="flex w-full items-center justify-center gap-2.5 rounded-pill border border-[rgba(120,120,120,0.4)] bg-white py-3 font-sans text-[15px] font-semibold text-[#1A1714] transition-transform duration-150 ease-flow active:scale-[.98]"
           >
             <GoogleIcon />
             {t("auth.google")}
           </button>
-          <Button fullWidth sound="pop" onClick={onClose}>
+          <Button fullWidth sound="pop" onClick={choose}>
             {t("auth.email")}
           </Button>
           <button

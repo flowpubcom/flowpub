@@ -1,0 +1,72 @@
+import { createClient } from "@/lib/supabase/client";
+
+// Escrituras del onboarding desde el cliente (como el usuario autenticado; RLS
+// exige que profile_id / id == auth.uid()).
+
+const USERNAME_RE = /^[a-z0-9_]+$/;
+
+/** Normaliza a lo que aceptamos como usuario: minúsculas, a-z 0-9 _ */
+export function normalizeUsername(raw: string): string {
+  return raw.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+}
+
+export function isValidUsername(u: string): boolean {
+  return u.length >= 3 && u.length <= 30 && USERNAME_RE.test(u);
+}
+
+/** ¿El usuario está libre? (best-effort; la unicidad real la garantiza la BD.) */
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  let q = supabase.from("profiles").select("id").eq("username", username);
+  if (user) q = q.neq("id", user.id); // no cuentes el mío propio
+  const { data } = await q.maybeSingle();
+  return !data;
+}
+
+export type OnboardingResult =
+  | { ok: true }
+  | { ok: false; error: "no-session" | "username-taken" | "generic" };
+
+export async function completeOnboarding(input: {
+  displayName: string;
+  username: string;
+  bio?: string;
+  tagIds: number[];
+}): Promise<OnboardingResult> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false, error: "no-session" };
+
+  const { error: pErr } = await supabase
+    .from("profiles")
+    .update({
+      display_name: input.displayName.trim(),
+      username: input.username,
+      bio: input.bio?.trim() || null,
+      onboarded: true,
+    })
+    .eq("id", user.id);
+
+  if (pErr) {
+    if (pErr.code === "23505") return { ok: false, error: "username-taken" };
+    return { ok: false, error: "generic" };
+  }
+
+  // Reescribe los intereses (idempotente si repite el onboarding).
+  await supabase.from("profile_tags").delete().eq("profile_id", user.id);
+  if (input.tagIds.length) {
+    const rows = input.tagIds.map((tag_id) => ({
+      profile_id: user.id,
+      tag_id,
+    }));
+    const { error: tErr } = await supabase.from("profile_tags").insert(rows);
+    if (tErr) return { ok: false, error: "generic" };
+  }
+
+  return { ok: true };
+}

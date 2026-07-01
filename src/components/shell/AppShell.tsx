@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, Mic } from "lucide-react";
@@ -9,6 +9,8 @@ import { Logo } from "@/components/brand";
 import { Avatar, Button } from "@/components/ui";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
+import { useAuth, type SessionUser } from "@/providers/AuthProvider";
+import { AuthGateModal } from "./AuthGateModal";
 import { NAV, type NavItem } from "./nav";
 
 export interface AppShellProps {
@@ -23,13 +25,15 @@ export interface AppShellProps {
 export function AppShell({ children, active = "pub", rightRail }: AppShellProps) {
   const { t } = useI18n();
   const { play } = useSound();
+  const { user } = useAuth();
   const router = useRouter();
+  const [gateOpen, setGateOpen] = useState(false);
 
   const onRecord = () => {
     play("rec");
-    // Front-first: sin auth real, vamos directo a crear. Cuando entre la auth,
-    // aquí se abre la compuerta (AuthGateModal) si !user.
-    router.push("/componer");
+    // Con sesión → a crear; sin sesión → abre la compuerta (arranca /entrar).
+    if (user) router.push("/componer");
+    else setGateOpen(true);
   };
 
   return (
@@ -60,7 +64,7 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
 
       {/* Columna central */}
       <main className="min-w-0 flex-1 pb-24 lg:border-r lg:border-line lg:pb-0">
-        <MobileTopBar />
+        <MobileTopBar user={user} />
         {children}
       </main>
 
@@ -72,6 +76,15 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
       )}
 
       <MobileBottomNav active={active} onRecord={onRecord} recordLabel={t("record")} />
+
+      <AuthGateModal
+        open={gateOpen}
+        onClose={() => setGateOpen(false)}
+        onChoose={() => {
+          setGateOpen(false);
+          router.push("/entrar");
+        }}
+      />
     </div>
   );
 }
@@ -109,24 +122,41 @@ function NavLink({
   );
 }
 
-function MobileTopBar() {
+function MobileTopBar({ user }: { user: SessionUser | null }) {
+  const { t } = useI18n();
   return (
     <header className="glass sticky top-0 z-20 flex items-center justify-between border-b border-line-soft px-4 py-3 lg:hidden">
       <Link href="/" aria-label="FlowPub">
         <Logo markSize={24} textSize={19} />
       </Link>
       <div className="flex items-center gap-1">
-        <Link
-          href="/notificaciones"
-          aria-label="Notificaciones"
-          className="relative grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
-        >
-          <Bell size={20} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-pill bg-grana" aria-hidden />
-        </Link>
-        <Link href="/perfil" aria-label="Perfil">
-          <Avatar name="Invitado" size={30} />
-        </Link>
+        {user ? (
+          <>
+            <Link
+              href="/notificaciones"
+              aria-label={t("nav.notifications")}
+              className="relative grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+            >
+              <Bell size={20} />
+              <span className="absolute right-2 top-2 h-2 w-2 rounded-pill bg-grana" aria-hidden />
+            </Link>
+            <Link href="/perfil" aria-label={t("nav.profile")}>
+              <Avatar
+                name={user.displayName}
+                src={user.avatarUrl}
+                color={user.avatarColor}
+                size={30}
+              />
+            </Link>
+          </>
+        ) : (
+          <Link
+            href="/entrar"
+            className="rounded-pill px-3 py-1.5 font-sans text-[14px] font-semibold text-grana transition-colors hover:bg-[var(--hover)]"
+          >
+            {t("onb.login")}
+          </Link>
+        )}
       </div>
     </header>
   );

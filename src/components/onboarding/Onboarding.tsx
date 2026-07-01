@@ -1,0 +1,743 @@
+"use client";
+
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Camera, Check, ChevronLeft, Mail, Mic } from "lucide-react";
+import { cn } from "@/lib/cn";
+import { useI18n } from "@/providers/I18nProvider";
+import { useSound } from "@/providers/SoundProvider";
+import { useAuth } from "@/providers/AuthProvider";
+import { createClient } from "@/lib/supabase/client";
+import {
+  completeOnboarding,
+  isUsernameAvailable,
+  isValidUsername,
+  normalizeUsername,
+} from "@/data/profileApi";
+import { tagName, type TagRow } from "@/data/tags";
+import type { DictKey } from "@/lib/i18n/dictionaries";
+import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
+
+type Step = "auth" | "themes" | "profile" | "ready";
+type AuthMode = "choose" | "signup" | "login";
+type AvailState = "idle" | "checking" | "free" | "taken";
+
+const inputCls =
+  "w-full rounded-md border border-line-2 bg-surface px-3.5 py-3 font-sans text-[15px] text-ink outline-none transition-colors placeholder:text-text-3 focus-visible:border-grana";
+
+const granaBtn =
+  "flex items-center justify-center gap-2.5 rounded-pill bg-grana px-6 py-3.5 font-sans text-[15px] font-semibold text-white shadow-[var(--shadow-grana)] transition-[transform,opacity] duration-150 ease-flow active:scale-[.98] disabled:cursor-not-allowed";
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.4 5.4 0 0 1-2.4 3.58v2.97h3.86c2.26-2.09 3.56-5.17 3.56-8.79z" />
+      <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-2.97c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z" />
+      <path fill="#FBBC05" d="M5.27 14.32a7.2 7.2 0 0 1 0-4.63V6.6H1.29a12 12 0 0 0 0 10.81l3.98-3.09z" />
+      <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A11.99 11.99 0 0 0 1.29 6.6l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" />
+    </svg>
+  );
+}
+
+export function Onboarding({ tags }: { tags: TagRow[] }) {
+  const { t, lang } = useI18n();
+  const { play } = useSound();
+  const { user, refresh } = useAuth();
+  const router = useRouter();
+
+  const [step, setStep] = useState<Step>("auth");
+  const [authMode, setAuthMode] = useState<AuthMode>("choose");
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [bio, setBio] = useState("");
+  const [selected, setSelected] = useState<number[]>([]);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<DictKey | null>(null);
+  const [checkEmail, setCheckEmail] = useState(false);
+  const [shakeId, setShakeId] = useState<number | null>(null);
+  const [avail, setAvail] = useState<AvailState>("idle");
+
+  const usernameNorm = normalizeUsername(username);
+
+  // Sesión ya presente en el paso de auth: salta el auth (OAuth / login previo).
+  useEffect(() => {
+    if (!user || step !== "auth") return;
+    if (user.onboarded) {
+      router.replace("/");
+      return;
+    }
+    setStep("themes");
+    setDisplayName((v) => v || user.displayName);
+  }, [user, step, router]);
+
+  // Disponibilidad de usuario (debounce).
+  useEffect(() => {
+    const u = normalizeUsername(username);
+    if (u.length < 3) {
+      setAvail("idle");
+      return;
+    }
+    setAvail("checking");
+    let active = true;
+    const id = window.setTimeout(async () => {
+      const ok = await isUsernameAvailable(u);
+      if (active) setAvail(ok ? "free" : "taken");
+    }, 420);
+    return () => {
+      active = false;
+      window.clearTimeout(id);
+    };
+  }, [username]);
+
+  const onGoogle = async () => {
+    play("click");
+    const supabase = createClient();
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=/entrar`,
+      },
+    });
+  };
+
+  const onSignup = async (e: FormEvent) => {
+    e.preventDefault();
+    if (password.length < 8) {
+      setError("onb.err.weakPassword");
+      play("soft");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    const supabase = createClient();
+    const { data, error: err } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/entrar`,
+      },
+    });
+    setSubmitting(false);
+    if (err) {
+      setError(
+        err.message?.toLowerCase().includes("already")
+          ? "onb.err.emailInUse"
+          : "onb.err.generic",
+      );
+      play("soft");
+      return;
+    }
+    if (data.session) {
+      play("pop");
+      await refresh();
+      setStep("themes");
+    } else {
+      setCheckEmail(true);
+      play("soft");
+    }
+  };
+
+  const onLogin = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const supabase = createClient();
+    const { error: err } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setSubmitting(false);
+    if (err) {
+      setError("onb.err.credentials");
+      play("soft");
+      return;
+    }
+    play("pop");
+    await refresh();
+    // El efecto de arriba enruta: onboarded → «/», si no → temas.
+  };
+
+  const toggleTag = (id: number) => {
+    setError(null);
+    if (selected.includes(id)) {
+      setSelected((s) => s.filter((x) => x !== id));
+      play("soft");
+      return;
+    }
+    if (selected.length >= 3) {
+      setShakeId(id);
+      play("soft");
+      window.setTimeout(() => setShakeId(null), 280);
+      return;
+    }
+    setSelected((s) => [...s, id]);
+    play("pop");
+  };
+
+  const onCreatePub = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!displayName.trim()) {
+      setError("onb.err.generic");
+      return;
+    }
+    if (!isValidUsername(usernameNorm)) {
+      setError("onb.profile.usernameMin");
+      play("soft");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    const res = await completeOnboarding({
+      displayName,
+      username: usernameNorm,
+      bio,
+      tagIds: selected,
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      setError(
+        res.error === "username-taken"
+          ? "onb.err.usernameTaken"
+          : "onb.err.generic",
+      );
+      play("soft");
+      return;
+    }
+    play("pop");
+    await refresh();
+    setStep("ready");
+  };
+
+  const goStep = (s: Step) => {
+    play("click");
+    setError(null);
+    setStep(s);
+  };
+
+  // ── Piezas compartidas ────────────────────────────────────────────────────
+
+  const errText = (dark = false) =>
+    error ? (
+      <p
+        className={cn(
+          "font-sans text-[13px]",
+          dark ? "text-[#EC9DA2]" : "text-grana",
+        )}
+      >
+        {t(error)}
+      </p>
+    ) : null;
+
+  const emailPassFields = () => (
+    <>
+      <label className="block">
+        <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+          {t("onb.email.label")}
+        </span>
+        <input
+          type="email"
+          required
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder={t("onb.email.placeholder")}
+          className={inputCls}
+        />
+      </label>
+      <label className="block">
+        <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+          {t("onb.password.label")}
+        </span>
+        <input
+          type="password"
+          required
+          autoComplete={authMode === "login" ? "current-password" : "new-password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder={t("onb.password.placeholder")}
+          className={inputCls}
+        />
+      </label>
+    </>
+  );
+
+  /** Formulario de correo (signup/login), siempre sobre superficie clara. */
+  const authFormLight = () => {
+    if (checkEmail) {
+      return (
+        <div className="max-w-[380px]">
+          <p className="font-sans text-[15px] leading-relaxed text-text-2">
+            {t("onb.check.email")}
+          </p>
+        </div>
+      );
+    }
+    const isLogin = authMode === "login";
+    return (
+      <form
+        onSubmit={isLogin ? onLogin : onSignup}
+        className="flex max-w-[380px] flex-col gap-3.5"
+      >
+        {emailPassFields()}
+        {errText()}
+        <button type="submit" disabled={submitting} className={cn(granaBtn, submitting && "opacity-60")}>
+          {t(isLogin ? "onb.login.submit" : "onb.signup.submit")}
+        </button>
+        <p className="mt-1 font-sans text-[13px] text-text-3">
+          {isLogin ? t("onb.noAccount") : t("onb.haveAccount")}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setAuthMode(isLogin ? "signup" : "login");
+            }}
+            className="font-semibold text-grana"
+          >
+            {isLogin ? t("onb.createOne") : t("onb.login")}
+          </button>
+        </p>
+      </form>
+    );
+  };
+
+  const googleButton = (dark = false) => (
+    <button
+      type="button"
+      onClick={onGoogle}
+      className={cn(
+        "flex items-center justify-center gap-2.5 rounded-pill py-3.5 font-sans text-[15px] font-semibold transition-transform duration-150 ease-flow active:scale-[.98]",
+        "bg-white text-tinta",
+        !dark && "border border-line-2",
+      )}
+    >
+      <GoogleIcon />
+      {t("auth.google")}
+    </button>
+  );
+
+  /** Botones «elige método» en superficie clara (desktop). */
+  const chooseLight = () => (
+    <>
+      <div className="flex max-w-[380px] flex-col gap-3">
+        {googleButton()}
+        <button
+          type="button"
+          onClick={() => {
+            play("click");
+            setAuthMode("signup");
+          }}
+          className={granaBtn}
+        >
+          <Mail size={17} strokeWidth={1.9} />
+          {t("auth.email")}
+        </button>
+      </div>
+      <p className="mt-5 font-sans text-[13px] text-text-3">
+        {t("onb.haveAccount")}{" "}
+        <button
+          type="button"
+          onClick={() => {
+            play("click");
+            setAuthMode("login");
+          }}
+          className="font-semibold text-grana"
+        >
+          {t("onb.login")}
+        </button>
+      </p>
+      <p className="mt-4 max-w-[40ch] font-sans text-[11px] leading-relaxed text-text-3">
+        {t("onb.legal")}
+      </p>
+    </>
+  );
+
+  // ── Contenido por paso (themes/profile/ready — compartido desktop/móvil) ────
+
+  const themesBody = () => (
+    <div className="flex flex-col p-10 max-lg:min-h-dvh max-lg:p-6 max-lg:pt-14">
+      <BackButton to="auth" onGo={() => goStep("auth")} label={t("common.back")} />
+      <div className="mb-1.5 flex items-end justify-between gap-4">
+        <h2 className="font-serif text-[28px] font-medium leading-[1.1] max-lg:text-[25px]">
+          {t("onb.themes.title")}
+        </h2>
+        <span className="whitespace-nowrap font-mono text-[14px] text-grana">
+          <b>{selected.length}</b> / 3
+        </span>
+      </div>
+      <p className="mb-5 font-sans text-[14px] text-text-2">
+        {t("onb.themes.subtitle")}
+      </p>
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+        {tags.map((tag) => {
+          const on = selected.includes(tag.id);
+          return (
+            <button
+              key={tag.id}
+              type="button"
+              onClick={() => toggleTag(tag.id)}
+              aria-pressed={on}
+              className={cn(
+                "flex items-center gap-2.5 rounded-[12px] border px-3 py-3 text-left transition-colors duration-150 ease-flow",
+                on
+                  ? "border-grana bg-grana-wash"
+                  : "border-line-2 bg-surface hover:border-ink",
+                shakeId === tag.id && "[animation:fp-shake_.28s_ease]",
+              )}
+            >
+              <span
+                className={cn(
+                  "grid h-5 w-5 flex-none place-items-center rounded-pill border-[1.5px]",
+                  on ? "border-grana bg-grana text-white" : "border-line-2",
+                )}
+              >
+                {on && <Check size={12} strokeWidth={3.4} />}
+              </span>
+              <span className="font-serif text-[16px] text-ink">
+                {tagName(tag, lang)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        disabled={selected.length !== 3}
+        onClick={() => goStep("profile")}
+        className={cn(
+          granaBtn,
+          "mt-6 self-start max-lg:mt-8 max-lg:w-full",
+          selected.length !== 3 && "pointer-events-none opacity-40",
+        )}
+      >
+        {t("onb.continue")}
+        <ArrowRight size={16} />
+      </button>
+    </div>
+  );
+
+  const profileBody = () => (
+    <form
+      onSubmit={onCreatePub}
+      className="flex flex-col p-10 max-lg:min-h-dvh max-lg:p-6 max-lg:pt-14"
+    >
+      <BackButton to="themes" onGo={() => goStep("themes")} label={t("common.back")} />
+      <h2 className="mb-1.5 font-serif text-[28px] font-medium leading-[1.1] max-lg:text-[25px]">
+        {t("onb.profile.title")}
+      </h2>
+      <p className="mb-6 font-sans text-[14px] text-text-2">
+        {t("onb.profile.subtitle")}
+      </p>
+
+      <div className="mb-6 flex items-center gap-[18px] max-lg:justify-center">
+        <div
+          className={cn(
+            "relative grid h-[86px] w-[86px] place-items-center overflow-hidden rounded-pill",
+            displayName.trim()
+              ? "bg-ink"
+              : "border-2 border-dashed border-line-2 bg-surface-2 text-text-3",
+          )}
+        >
+          {displayName.trim() ? (
+            <span className="font-serif text-[34px] italic text-ink-on">
+              {displayName.trim()[0]?.toUpperCase()}
+            </span>
+          ) : (
+            <Camera size={26} strokeWidth={1.7} />
+          )}
+        </div>
+        <div className="font-sans text-[13px] leading-snug text-text-3 max-lg:hidden">
+          {t("onb.profile.photo")}
+          <br />({t("onb.profile.optional")})
+        </div>
+      </div>
+
+      <div className="flex max-w-[420px] flex-col gap-4">
+        <label className="block">
+          <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+            {t("onb.profile.name")}
+          </span>
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            placeholder={t("onb.profile.namePlaceholder")}
+            className={inputCls}
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+            {t("onb.profile.username")}
+          </span>
+          <span className="flex items-center overflow-hidden rounded-md border border-line-2 bg-surface focus-within:border-grana">
+            <span className="py-3 pl-3.5 pr-1 font-sans text-[15px] text-text-3">@</span>
+            <input
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder={t("onb.profile.usernamePlaceholder")}
+              autoCapitalize="none"
+              autoComplete="off"
+              className="flex-1 border-none bg-transparent py-3 pl-0.5 pr-3.5 font-sans text-[15px] text-ink outline-none placeholder:text-text-3"
+            />
+          </span>
+          <span className="mt-1.5 block font-sans text-[12px]">
+            {avail === "free" && usernameNorm.length >= 3 ? (
+              <span className="font-semibold text-ok">
+                {t("onb.profile.usernameAvailable", { u: usernameNorm })}
+              </span>
+            ) : avail === "taken" ? (
+              <span className="font-semibold text-grana">
+                {t("onb.err.usernameTaken")}
+              </span>
+            ) : usernameNorm.length > 0 && usernameNorm.length < 3 ? (
+              <span className="text-text-3">{t("onb.profile.usernameMin")}</span>
+            ) : (
+              <span className="text-text-3">{t("onb.profile.usernameHint")}</span>
+            )}
+          </span>
+        </label>
+
+        <label className="block">
+          <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+            {t("onb.profile.bio")}{" "}
+            <span className="font-normal text-text-3">· {t("onb.profile.optional")}</span>
+          </span>
+          <textarea
+            rows={2}
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            placeholder={t("onb.profile.bioPlaceholder")}
+            className={cn(inputCls, "resize-none font-serif text-[16px]")}
+          />
+        </label>
+      </div>
+
+      {errText()}
+
+      <button
+        type="submit"
+        disabled={submitting}
+        className={cn(granaBtn, "mt-6 self-start max-lg:mt-8 max-lg:w-full", submitting && "opacity-60")}
+      >
+        {t("onb.profile.submit")}
+        <ArrowRight size={16} />
+      </button>
+    </form>
+  );
+
+  const readyBody = () => {
+    const chosen = tags.filter((tg) => selected.includes(tg.id));
+    const first = displayName.trim().split(" ")[0];
+    return (
+      <div className="flex flex-col items-center justify-center gap-1.5 p-12 text-center max-lg:min-h-dvh max-lg:p-8">
+        <span className="fp-breathe mb-2 inline-block leading-[0] [transform-origin:50%_50%]">
+          <svg width="64" height="64" viewBox="0 0 200 200" aria-hidden>
+            <path
+              d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92"
+              fill="none"
+              stroke="var(--grana)"
+              strokeWidth={12}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+        <h2 className="font-serif text-[30px] font-medium leading-[1.12] max-lg:text-[27px]">
+          {first
+            ? t("onb.ready.titleNamed", { name: first })
+            : t("onb.ready.title")}
+        </h2>
+        <p className="mb-4 mt-2 max-w-[34ch] font-sans text-[14px] text-text-2">
+          {t("onb.ready.subtitle")}
+        </p>
+        <div className="mb-7 flex flex-wrap justify-center gap-2">
+          {(chosen.length ? chosen : tags.slice(0, 3)).map((tg) => (
+            <span
+              key={tg.id}
+              className="rounded-pill bg-grana-wash px-3.5 py-1.5 font-sans text-[13px] font-semibold text-grana-700"
+            >
+              {tagName(tg, lang)}
+            </span>
+          ))}
+        </div>
+        <div className="flex flex-wrap justify-center gap-3 max-lg:w-full max-lg:flex-col">
+          <button
+            type="button"
+            onClick={() => {
+              play("pop");
+              router.push("/");
+            }}
+            className={granaBtn}
+          >
+            {t("onb.ready.enter")}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              play("rec");
+              router.push("/componer");
+            }}
+            className="flex items-center justify-center gap-2.5 rounded-pill border border-line-2 bg-transparent px-6 py-3.5 font-sans text-[15px] font-semibold text-ink transition-transform duration-150 ease-flow active:scale-[.98]"
+          >
+            <Mic size={16} strokeWidth={1.9} />
+            {t("onb.ready.record")}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const stepBody = () =>
+    step === "themes"
+      ? themesBody()
+      : step === "profile"
+        ? profileBody()
+        : readyBody();
+
+  // Encabezado del panel de auth (desktop) según el modo.
+  const authHeader = () => {
+    const login = authMode === "login";
+    return (
+      <>
+        {!login && (
+          <p className="mb-3 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana">
+            {t("onb.eyebrow")}
+          </p>
+        )}
+        <h2 className="mb-2.5 font-serif text-[30px] font-medium leading-[1.12]">
+          {t(login ? "onb.login.title" : "onb.auth.title")}
+        </h2>
+        <p className="mb-7 max-w-[42ch] font-sans text-[14px] text-text-2">
+          {t(login ? "onb.login.subtitle" : "onb.auth.subtitle")}
+        </p>
+      </>
+    );
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────
+
+  return (
+    <div className="relative min-h-dvh w-full font-sans text-ink">
+      {/* DESKTOP · ventana con panel hipnótico a la izquierda */}
+      <div className="hidden min-h-dvh place-items-center p-8 lg:grid">
+        <div className="flex h-[680px] w-[1080px] max-w-full overflow-hidden rounded-[18px] border border-line bg-surface shadow-[var(--shadow-window)]">
+          <BrandHypnotic className="flex w-[460px] flex-none flex-col items-center justify-center gap-[26px] p-12">
+            <BrandLockup />
+          </BrandHypnotic>
+          <div className="relative flex-1 overflow-y-auto">
+            {step === "auth" ? (
+              <div className="flex min-h-full flex-col justify-center px-14 py-12">
+                {authHeader()}
+                {authMode === "choose" ? chooseLight() : authFormLight()}
+              </div>
+            ) : (
+              stepBody()
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* MÓVIL · welcome hipnótico + hoja glass; pasos a pantalla completa */}
+      <div className="min-h-dvh lg:hidden">
+        {step === "auth" ? (
+          authMode === "choose" ? (
+            <BrandHypnotic className="flex min-h-dvh flex-col justify-end">
+              <div className="absolute inset-x-0 top-0 flex h-[54%] flex-col items-center justify-center gap-[18px] p-8 text-center">
+                <BrandLockup markSize={70} />
+              </div>
+              <div
+                className="relative m-3.5 mb-6 rounded-[28px] border p-6"
+                style={{
+                  background: "color-mix(in srgb, var(--amate) 10%, transparent)",
+                  backdropFilter: "blur(18px)",
+                  WebkitBackdropFilter: "blur(18px)",
+                  borderColor: "color-mix(in srgb, var(--amate) 18%, transparent)",
+                }}
+              >
+                <p
+                  className="mb-4 text-center font-sans text-[13px]"
+                  style={{ color: "color-mix(in srgb, var(--amate) 70%, transparent)" }}
+                >
+                  {t("onb.auth.sheet")}
+                </p>
+                <div className="flex flex-col gap-3">
+                  {googleButton(true)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      play("click");
+                      setAuthMode("signup");
+                    }}
+                    className="flex items-center justify-center gap-2.5 rounded-pill border py-3.5 font-sans text-[15px] font-semibold transition-transform duration-150 ease-flow active:scale-[.98]"
+                    style={{
+                      color: "var(--amate)",
+                      borderColor: "color-mix(in srgb, var(--amate) 30%, transparent)",
+                    }}
+                  >
+                    {t("auth.email")}
+                  </button>
+                </div>
+                <p
+                  className="mt-3.5 text-center font-sans text-[12px]"
+                  style={{ color: "color-mix(in srgb, var(--amate) 60%, transparent)" }}
+                >
+                  {t("onb.haveAccount")}{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      play("click");
+                      setAuthMode("login");
+                    }}
+                    className="font-semibold"
+                    style={{ color: "#EC9DA2" }}
+                  >
+                    {t("onb.login")}
+                  </button>
+                </p>
+              </div>
+            </BrandHypnotic>
+          ) : (
+            <div className="flex min-h-dvh flex-col bg-surface p-6 pt-14">
+              <BackButton
+                to="auth"
+                onGo={() => {
+                  setError(null);
+                  setCheckEmail(false);
+                  setAuthMode("choose");
+                }}
+                label={t("common.back")}
+              />
+              {authHeader()}
+              {authFormLight()}
+            </div>
+          )
+        ) : (
+          <div className="min-h-dvh bg-surface">{stepBody()}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BackButton({
+  onGo,
+  label,
+}: {
+  to: Step;
+  onGo: () => void;
+  label: string;
+}): ReactNode {
+  return (
+    <button
+      type="button"
+      onClick={onGo}
+      className="mb-4 flex items-center gap-1.5 self-start font-sans text-[13px] font-semibold text-text-2 transition-colors hover:text-ink"
+    >
+      <ChevronLeft size={16} />
+      {label}
+    </button>
+  );
+}

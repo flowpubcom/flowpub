@@ -1,79 +1,90 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 1 — 2026-06-29**.
+> Última actualización: **sesión 2 — 2026-07-01**.
 
 ## En una frase
 
-App montada **front-first** con el **loop central completo** (navegar → grabar →
-leer → comentar), todo con **datos mock**. **Siguiente: cablear el backend
-(Supabase + Gemini)** — estamos justo en la configuración (pasos abajo).
+Loop central completo con datos mock (sesión 1). **Sesión 2: backend cableado y
+Milestone 2 (Auth email/password + onboarding) COMPLETO y verificado en vivo**
+contra Supabase real (registro → 3 temas → perfil → sesión → compuerta abierta).
+**Siguiente: Google OAuth + swap de lecturas mock→Supabase + pipeline Gemini.**
 
-> ⚠️ La sesión 1 arrancó rooteada por error en `D:\Gulu\Webapp-claude`. Todo el
-> trabajo se generó con rutas absolutas en `D:\FlowPub\app` (su propio repo git).
-> Gulu quedó **intacto**. Esta sesión se abre ya en `D:\FlowPub\app` ✅.
-
-## Hecho (todo commiteado, build verde, lint limpio, verificado en vivo)
+## Hecho — sesión 1 (commiteado, build verde, verificado)
 
 | Commit | Qué |
 |---|---|
-| `5995f76` | **Fundación**: Next 16 + React 19 + TS + Tailwind v4; tokens claro/oscuro; marca FlowMark/Wordmark/Logo; librería base (Button, Chip, Avatar, Card, AudioPlayer-vírgula, Switch, Slider, Modal, Cover); providers Theme/Sound/I18n; `/styleguide`. |
-| `606b10c` | **El Pub** (`/`): shell responsive (3 columnas desktop / top bar + bottom nav + FAB móvil), FlowCard, filtro de tags, riel derecho, auth-gate, capa de datos mock. |
-| `b12af5d` | **Grabar un Flow** (`/componer`): máquina de 5 pasos (record→recording→processing→edit→published) con IA **simulada**; editor markdown (toolbar + preview react-markdown), TagPicker (≤3), portada regenerable. + fix de ESLint. |
-| `5c0b4e9` | **Flow abierto** (`/flow/[id]`, SSG): lectura + toggle Publicación/Transcript, audio, engagement, **comentarios texto + voz**. |
-| `854d041` | **Backend scaffolding**: clientes Supabase (`@supabase/ssr`), middleware (inerte sin env), `.env.example`, **`supabase/schema.sql`** (12 tablas + RLS + storage + triggers). |
+| `5995f76` | **Fundación**: Next 16 + React 19 + TS + Tailwind v4; tokens claro/oscuro; marca; librería base; providers Theme/Sound/I18n; `/styleguide`. |
+| `606b10c` | **El Pub** (`/`): shell responsive, FlowCard, filtro de tags, riel derecho, auth-gate, datos mock. |
+| `b12af5d` | **Grabar un Flow** (`/componer`): máquina de 5 pasos con IA simulada. |
+| `5c0b4e9` | **Flow abierto** (`/flow/[id]`): lectura + transcript + audio + comentarios texto/voz. |
+| `854d041` | **Backend scaffolding**: clientes Supabase, middleware (inerte sin env), `schema.sql`. |
 
-## Rutas
+## Hecho — sesión 2 (⚠️ EN EL WORKING TREE, SIN COMMITEAR — Julio decide cuándo)
 
-- **Existen:** `/` (El Pub) · `/componer` · `/flow/[id]` · `/styleguide`.
-- **Placeholder (404 por ahora):** `/explorar` · `/mensajes` · `/notificaciones` ·
-  `/perfil` · `/@usuario`. (Pantallas de fases futuras.)
+- **Arreglado `.env.local`:** la `NEXT_PUBLIC_SUPABASE_URL` traía `/rest/v1/` de más
+  (era el endpoint REST, no el Project URL). Ya conecta al proyecto `syesetjvlhfbniicdgeg`.
+- **Descubierto:** el proyecto Supabase tenía 3 tablas legacy **vacías**
+  (`comments`/`likes`/`messages`) de un experimento previo que **chocan** con nuestros
+  nombres. → Nueva **`supabase/migration_00_cleanup_legacy.sql`** (tira solo si tienen
+  forma legacy; segura e idempotente).
+- **Esquema ampliado** (`supabase/schema.sql`): tabla **`profile_tags`** (intereses del
+  usuario del onboarding) + columna **`profiles.onboarded`** + sus políticas RLS.
+- **Milestone 2 — Auth + onboarding (código completo; typecheck/lint/build verdes):**
+  - `AuthProvider` real (sesión Supabase + perfil → `SessionUser`; `refresh`/`signOut`).
+  - Ruta **`/entrar`** (server: trae tags, redirige a onboarded) + `components/onboarding/`
+    (`Onboarding.tsx` máquina de 4 pasos **auth → temas(3) → perfil → listo**,
+    `BrandHypnotic.tsx` panel de blobs/anillos/marca). Email/password + botón Google.
+  - `data/tags.ts` (tipo+`tagName` puros) · `data/tagsApi.ts` (`fetchTags` server) ·
+    `data/profileApi.ts` (`completeOnboarding`, `isUsernameAvailable`).
+  - `app/auth/callback/route.ts` (OAuth + confirm email).
+  - `middleware.ts` ahora **gatea `/componer`** (sin sesión → `/entrar?next=`).
+  - `AppShell` abre la compuerta si `!user`; barra móvil con avatar real / «Inicia sesión».
+  - i18n: catálogo de onboarding completo (ES+EN). globals.css: keyframes
+    `fp-blob1/2/3`, `fp-spin`, token `--brand-abyss`.
+  - **Verificado en vivo E2E** contra Supabase real: registro email/password → el trigger
+    crea el perfil → 3 temas (tags reales) → perfil (usuario con check de disponibilidad)
+    → escribe `profiles`+`profile_tags`+`onboarded` → sesión → `/componer` accesible →
+    onboarded en `/entrar` redirige a `/`. Claro/oscuro y desktop/móvil OK, cero errores.
+    (Screenshots se atoran por animaciones infinitas → usar `inspect`/`snapshot`/`eval`.
+     El click sintético del preview NO lo cacha React: usar `.click()`/setter nativo vía `eval`.)
 
-## Capa mock → puntos de swap a Supabase
+## ✅ Milestone 2 — Auth + onboarding: HECHO y verificado
 
-- `src/data/mock.ts` (FLOWS, TAGS, CATEGORIES, perfiles) · `composeMock.ts` (IA
-  simulada del composer) · `comments.ts`.
-- `src/providers/AuthProvider.tsx` → hoy `user = null`. `src/lib/useRecorder.ts` →
-  grabación simulada.
-- **Al cablear backend:** crear `src/data/*Api.ts` que lean de Supabase y sustituir
-  los imports de mock; `AuthProvider` → sesión real; route handlers para Gemini.
-  Las portadas (`Cover`) ya son SVG reales (no cambian).
+- SQL corrido (`migration_00_cleanup_legacy.sql` + `schema.sql` con el fix de orden de
+  `is_admin()`). **"Confirm email" apagado** en el dashboard (dev).
+- Usuarios de prueba en el proyecto: `demo1` (sin confirmar, inofensivo) y `demodos`
+  (onboarded, 3 intereses). Bórralos desde Authentication → Users si quieres limpiar.
+- **Cambios en el working tree SIN commitear** — Julio decide cuándo.
+- **Pendiente de dashboard para prod:** reactivar "Confirm email" + Resend cuando toque.
+- **Pendiente en `.env.local`:** `GEMINI_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY`
+  (no bloquean auth; sí el pipeline de Gemini y ops admin server-side).
 
----
+## Lo que sigue (Claude), una vez verificado el flujo
 
-## 👉 SIGUIENTE PASO — configuración de Supabase (en curso)
-
-**Julio YA tiene:** proyecto Supabase creado + **Gemini API key**. Quiere guía paso a paso.
-
-**Lo que falta hacer (Julio):**
-1. Del dashboard de su proyecto Supabase, sacar dos valores **públicos**:
-   **Project URL** + la **API key pública** (`anon`/`public`, o la nueva
-   `publishable` `sb_publishable_…`). La `service_role`/`secret` es para después.
-2. Pegarlas en **`.env.local`** (ya existe, vacío, gitignored):
-   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`.
-   **Los secretos NUNCA en el chat** — directo al archivo.
-3. Correr **`supabase/schema.sql`** en el SQL Editor (es idempotente).
-
-**Lo que sigue (Claude), una vez existan las claves:**
-1. Reiniciar el dev server (lee `.env.local` al arrancar; el middleware se activa).
-2. **Email auth + onboarding** (registro/login + elegir 3 tags + perfil).
-3. Cambiar las **primeras lecturas** (El Pub, Flow abierto) de mock → Supabase
-   (`src/data/*Api.ts` con cascada tolerante a columnas).
-4. **Google OAuth** (Supabase → Auth → Providers → Google, con OAuth de Google Cloud).
-5. **Pipeline Gemini** en route handlers server-only (`/api/flows/transcribe`,
-   `/polish`, `/translate`) — cambiar `useRecorder`/`composeMock` por lo real.
-6. **Turnstile** (signup/login) + **Resend** (correos). Subida de audio a Storage.
+1. **Google OAuth**: configurar en Supabase (Auth → Providers → Google) + Google Cloud;
+   el botón y el callback ya están en código.
+2. **Swap de lecturas mock → Supabase**: El Pub (`/`) y Flow abierto (`/flow/[id]`) →
+   `src/data/*Api.ts` con cascada tolerante a columnas.
+3. **Pipeline Gemini** (route handlers server-only): transcribe/polish/translate;
+   cambiar `useRecorder`/`composeMock` por lo real. Subir audio a Storage.
+4. **Turnstile** (signup/login, server-side) + **Resend** (correos).
+5. Pantallas pendientes (placeholder 404 hoy): `/explorar` `/mensajes` `/notificaciones`
+   `/perfil` `/@usuario`.
 
 ## Notas que cuestan caro (ya resueltas — no re-romper)
 
-- **Tema:** `@media (prefers-color-scheme)` para el default del SO + `data-theme`
-  explícito para overrides. **Sin `<script>` anti-FOUC** (consola limpia). Default = SO.
-- **ESLint:** flat config **nativo** (`eslint.config.mjs`) con parser TS + plugin de
-  Next; `FlatCompat` rompía con ESLint 9/10 (ciclo en el plugin de React). eslint fijado a `^9`.
-- **Preview:** server **`flowpub`** (puerto 3000) en `.claude/launch.json`. dpr 1.5 hace
-  ver chicos los screenshots — **medir en vivo** con `preview_eval`/`inspect`, no fiarse de la captura.
-- **Reglas duras:** secretos solo server-side · IA = **Gemini** (no Anthropic) · estilos
-  **solo por tokens** · sin emoji · RLS en todo. (Detalle en `CLAUDE.md`.)
+- **Boundary server/client:** `data/tagsApi.ts` importa el cliente server (`next/headers`);
+  NO lo importes desde un Client Component. La parte pura (tipo + `tagName`) vive en
+  `data/tags.ts`. Mismo patrón para futuras `*Api.ts`.
+- **`create table if not exists` NO agrega columnas** a una tabla existente. Si `profiles`
+  ya existiera sin `onboarded`, habría que un `alter table ... add column if not exists`.
+  Hoy no aplica (se corre en limpio), pero tenlo presente al migrar.
+- **Preview:** las animaciones infinitas del panel hipnótico atoran `preview_screenshot`.
+  Verifica con `preview_snapshot`/`preview_inspect`/`preview_eval`.
+- **Tema:** `@media (prefers-color-scheme)` para el default + `data-theme` para overrides.
+- **Reglas duras:** secretos solo server-side · IA = **Gemini** · estilos **solo por tokens**
+  · sin emoji · RLS en todo.
 
 ## Comandos
 
@@ -81,12 +92,12 @@ leer → comentar), todo con **datos mock**. **Siguiente: cablear el backend
 npm run dev        # :3000  (server "flowpub" en preview)
 npm run typecheck  # tsc --noEmit
 npm run lint       # eslint
-npm run build      # next build (compila + chequea tipos)
+npm run build      # next build
 ```
 
 ## Mapa rápido
 
 - `CLAUDE.md` — guía operativa + design system vinculante.
-- `docs/design-map.json` — verdad visual por pantalla (tokens, componentes, copy).
-- `design_handoff_flowpub/` — spec exhaustivo + referencias `.dc.html`.
-- `supabase/schema.sql` — el backend a correr.
+- `docs/design-map.json` — verdad visual por pantalla.
+- `design_handoff_flowpub/` — spec exhaustivo + referencias `.dc.html` (incl. `Onboarding.dc.html`).
+- `supabase/` — `migration_00_cleanup_legacy.sql` → `schema.sql` (correr en ese orden).

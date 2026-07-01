@@ -1,0 +1,25 @@
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { fetchTags } from "@/data/tagsApi";
+import { Onboarding } from "@/components/onboarding/Onboarding";
+
+// Onboarding / auth. Ruta full-screen (fuera del chrome del Pub).
+export default async function EntrarPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Quien ya completó el onboarding no ve esta pantalla.
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarded")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.onboarded) redirect("/");
+  }
+
+  const tags = await fetchTags();
+  return <Onboarding tags={tags} />;
+}
