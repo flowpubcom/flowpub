@@ -9,22 +9,33 @@ export interface FlowMarkProps
   extends Omit<React.SVGProps<SVGSVGElement>, "viewBox"> {
   size?: number;
   strokeWidth?: number;
-  /** Respira (idle ambiente). Apagado dentro de prefers-reduced-motion. */
+  /** Respira (idle ambiente). Default: siempre — la marca está viva. */
   breathe?: boolean;
+  /** Se dibuja una vez al aparecer. Apagado dentro de prefers-reduced-motion. */
+  intro?: boolean;
   /** Trazo de tinta en bucle (estado «procesando»). */
   draw?: boolean;
   title?: string;
 }
 
+/**
+ * Marca viva: se dibuja al aparecer, respira en idle y se inclina al hover
+ * (clases fp-mark-* en globals.css). Todo se apaga con prefers-reduced-motion.
+ */
 export function FlowMark({
   size = 30,
   strokeWidth = 14,
-  breathe = false,
+  breathe = true,
+  intro = true,
   draw = false,
   title = "FlowPub",
   className,
   ...props
 }: FlowMarkProps) {
+  const drawing = draw;
+  const entering = intro && !draw;
+  const dashed = drawing || entering;
+
   return (
     <svg
       width={size}
@@ -33,19 +44,26 @@ export function FlowMark({
       fill="none"
       role="img"
       aria-label={title}
-      className={cn(breathe && "fp-breathe", className)}
+      className={cn("fp-mark", breathe && "fp-breathe", className)}
       {...props}
     >
-      <path
-        d={VIRGULA}
-        stroke="currentColor"
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        pathLength={draw ? 1 : undefined}
-        strokeDasharray={draw ? 1 : undefined}
-        style={draw ? { animation: "fp-draw 1.7s var(--ease-flow) infinite" } : undefined}
-      />
+      <g className="fp-mark-g">
+        <path
+          d={VIRGULA}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          pathLength={dashed ? 1 : undefined}
+          strokeDasharray={dashed ? 1 : undefined}
+          className={cn(entering && "fp-mark-intro")}
+          style={
+            drawing
+              ? { animation: "fp-draw 1.7s var(--ease-flow) infinite" }
+              : undefined
+          }
+        />
+      </g>
     </svg>
   );
 }

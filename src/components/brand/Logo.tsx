@@ -20,7 +20,9 @@ export function Logo({
   markOnly = false,
 }: LogoProps) {
   return (
-    <span className={cn("inline-flex items-center gap-2 text-ink", className)}>
+    <span
+      className={cn("fp-logo inline-flex items-center gap-2 text-ink", className)}
+    >
       <FlowMark size={markSize} breathe={breathe} />
       {!markOnly && <Wordmark size={textSize} />}
     </span>

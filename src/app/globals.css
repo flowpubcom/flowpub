@@ -82,6 +82,14 @@
   --grana-wash: #f6e6e4;
   --wave: rgba(26, 23, 20, 0.16);
 
+  /* portadas — doble capa por tema (roles del lienzo; los ACENTOS quedan fijos
+     en lib/covers.ts). Única extensión permitida de la capa de covers. */
+  --cover-canvas: #f2efe8; /* lienzo amate (escher/collage) */
+  --cover-shadow: #1a1714; /* cara/figura de tinta */
+  --cover-line: #1a1714; /* hatch + puntos Ben-Day */
+  --cover-night: #1a1714; /* fondo nocturno (turrell/flavin) */
+  --cover-grain: multiply; /* blend del grano */
+
   /* fondo de página (gradiente radial) */
   --bg-1: #f4f1ea;
   --bg-2: #ede7da;
@@ -113,6 +121,12 @@
   --grana-wash: rgba(192, 48, 58, 0.18);
   --wave: rgba(242, 239, 232, 0.18);
 
+  --cover-canvas: #262019;
+  --cover-shadow: #0e0c0a;
+  --cover-line: #f2efe8;
+  --cover-night: #12100d;
+  --cover-grain: soft-light;
+
   --bg-1: #1e1913;
   --bg-2: #141110;
   --bg-3: #0e0c0a;
@@ -141,6 +155,11 @@
     --glass: rgba(20, 17, 14, 0.72);
     --grana-wash: rgba(192, 48, 58, 0.18);
     --wave: rgba(242, 239, 232, 0.18);
+    --cover-canvas: #262019;
+    --cover-shadow: #0e0c0a;
+    --cover-line: #f2efe8;
+    --cover-night: #12100d;
+    --cover-grain: soft-light;
     --bg-1: #1e1913;
     --bg-2: #141110;
     --bg-3: #0e0c0a;
@@ -386,6 +405,25 @@
 
 .fp-breathe {
   animation: fp-breathe 6s var(--ease-flow) infinite;
+}
+
+/* ── marca viva ─────────────────────────────────────────────────────────────
+   La vírgula se dibuja al aparecer (una vez), respira en idle y se inclina
+   al hover — como una voluta que responde a la mano. */
+.fp-mark-intro {
+  stroke-dasharray: 1;
+  animation: fp-draw 1.4s var(--ease-flow) 80ms both;
+}
+
+.fp-mark-g {
+  transform-box: fill-box;
+  transform-origin: 50% 54%;
+  transition: transform 240ms var(--ease-flow);
+}
+.fp-mark:hover .fp-mark-g,
+.fp-logo:hover .fp-mark-g,
+a:hover .fp-logo .fp-mark-g {
+  transform: rotate(-7deg) scale(1.045);
 }
 
 /* ── accesibilidad: respeta prefers-reduced-motion (apaga TODO) ────────────── */

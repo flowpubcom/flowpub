@@ -26,11 +26,18 @@ const pick = <T,>(r: Rng, arr: readonly T[]): T =>
   arr[Math.floor(r() * arr.length)];
 const range = (r: Rng, a: number, b: number) => a + r() * (b - a);
 
+// Roles del lienzo que voltean con el tema (tokens --cover-* en globals.css);
+// los ACENTOS (grana/ocre/champagne) quedan fijos: son la marca.
+const CANVAS = "var(--cover-canvas)";
+const SHADOW = "var(--cover-shadow)";
+const LINE = "var(--cover-line)";
+const NIGHT = "var(--cover-night)";
+
 // ── escher / leWitt — cubos isométricos con hatch ──────────────────────────
 const TRIOS: [string, string, string][] = [
   [P.champagne, P.ocre, P.grana700],
-  [P.amate, P.grana, P.tinta],
-  [P.papel, P.ocre, P.tinta],
+  [P.amate, P.grana, SHADOW],
+  [P.papel, P.ocre, SHADOW],
   [P.champagne, P.grana, P.grana700],
 ];
 
@@ -82,10 +89,10 @@ function Escher({ seed, uid }: { seed: number; uid: string }) {
           patternUnits="userSpaceOnUse"
           patternTransform="rotate(45)"
         >
-          <line x1="0" y1="0" x2="0" y2="6" stroke={P.tinta} strokeWidth="1.2" opacity="0.45" />
+          <line x1="0" y1="0" x2="0" y2="6" stroke={LINE} strokeWidth="1.2" opacity="0.45" />
         </pattern>
       </defs>
-      <rect width={W} height={H} fill={P.amate} />
+      <rect width={W} height={H} fill={CANVAS} />
       {cubes}
     </>
   );
@@ -111,7 +118,7 @@ function Turrell({ seed, uid }: { seed: number; uid: string }) {
           <feGaussianBlur stdDeviation="10" />
         </filter>
       </defs>
-      <rect width={W} height={H} fill={P.tinta} />
+      <rect width={W} height={H} fill={NIGHT} />
       <rect width={W} height={H} fill={`url(#${gid})`} opacity="0.55" />
       {[0, 1, 2, 3].map((i) => {
         const k = 1 - i * 0.22;
@@ -180,7 +187,7 @@ function Flavin({ seed, uid }: { seed: number; uid: string }) {
           </feMerge>
         </filter>
       </defs>
-      <rect width={W} height={H} fill={P.tinta} />
+      <rect width={W} height={H} fill={NIGHT} />
       {bars}
     </>
   );
@@ -190,7 +197,7 @@ function Flavin({ seed, uid }: { seed: number; uid: string }) {
 function Collage({ seed, uid }: { seed: number; uid: string }) {
   const r = mulberry32(seed);
   const dots = `dot-${uid}`;
-  const cols = [P.grana, P.ocre, P.champagne, P.amate2, P.tinta];
+  const cols = [P.grana, P.ocre, P.champagne, P.amate2, SHADOW];
   const shapes: React.ReactNode[] = [];
   const n = 6 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
@@ -239,10 +246,10 @@ function Collage({ seed, uid }: { seed: number; uid: string }) {
     <>
       <defs>
         <pattern id={dots} width="10" height="10" patternUnits="userSpaceOnUse">
-          <circle cx="2" cy="2" r="1.6" fill={P.tinta} opacity="0.3" />
+          <circle cx="2" cy="2" r="1.6" fill={LINE} opacity="0.3" />
         </pattern>
       </defs>
-      <rect width={W} height={H} fill={P.amate} />
+      <rect width={W} height={H} fill={CANVAS} />
       {shapes}
       <rect width={W} height={H} fill={`url(#${dots})`} opacity="0.4" />
     </>
@@ -292,7 +299,10 @@ export function Cover({
             height={H}
             filter={`url(#${grainId})`}
             opacity={0.5}
-            style={{ mixBlendMode: "multiply" }}
+            style={{
+              mixBlendMode:
+                "var(--cover-grain)" as React.CSSProperties["mixBlendMode"],
+            }}
           />
         </>
       )}
