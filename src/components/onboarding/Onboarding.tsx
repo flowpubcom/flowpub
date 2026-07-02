@@ -20,6 +20,7 @@ import {
   isValidUsername,
   normalizeUsername,
 } from "@/data/profileApi";
+import { redeemInvite } from "@/data/invitesClient";
 import { tagName, type TagRow } from "@/data/tags";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
@@ -72,6 +73,19 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   const captchaReset = useRef<(() => void) | null>(null);
 
   const usernameNorm = normalizeUsername(username);
+
+  // ¿Llegó con invitación (?invite= o la landing /i/CODIGO)? Se guarda para
+  // canjearla al terminar de crear la cuenta (sobrevive el redirect OAuth).
+  useEffect(() => {
+    try {
+      const code = new URLSearchParams(window.location.search).get("invite");
+      if (code && /^[a-f0-9]{8}$/i.test(code)) {
+        localStorage.setItem("fp-invite", code);
+      }
+    } catch {
+      /* noop */
+    }
+  }, []);
 
   // Sesión ya presente en el paso de auth: salta el auth (OAuth / login previo).
   useEffect(() => {
@@ -222,6 +236,17 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
       return;
     }
     play("pop");
+    // Si llegó con una invitación (/i/CODIGO la dejó en localStorage), se
+    // canjea aquí: enlaza con quien invitó y se siguen mutuamente.
+    try {
+      const inviteCode = localStorage.getItem("fp-invite");
+      if (inviteCode) {
+        await redeemInvite(inviteCode);
+        localStorage.removeItem("fp-invite");
+      }
+    } catch {
+      /* best-effort: la cuenta ya quedó; la invitación no bloquea */
+    }
     await refresh();
     setStep("ready");
   };

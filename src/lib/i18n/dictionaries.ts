@@ -195,6 +195,24 @@ const es = {
   "onb.ready.enter": "Entrar al Pub",
   "onb.ready.record": "Grabar mi primer Flow",
 
+  "invite.title": "Invitaciones",
+  "invite.remaining": "{n} de 6 disponibles",
+  "invite.hint": "Comparte tu enlace: cada invitación trae a una voz nueva al Pub.",
+  "invite.copy": "Copiar enlace",
+  "invite.copied": "Enlace copiado",
+  "invite.whatsapp": "Compartir por WhatsApp",
+  "invite.none": "Ya usaste tus 6 — gracias por correr la voz.",
+  "invite.waText":
+    "Te invito a FlowPub: hablas y tu voz se vuelve publicación. Entra con mi invitación:",
+  "invite.landing.eyebrow": "Tienes una invitación",
+  "invite.landing.title": "{name} te invita a FlowPub",
+  "invite.landing.body":
+    "Habla hasta 3 minutos y FlowPub vuelve tu voz un artículo con portada — y una comunidad que escucha.",
+  "invite.landing.cta": "Crear mi cuenta",
+  "invite.landing.listen": "Primero quiero escuchar el Pub",
+  "invite.landing.used": "Esta invitación ya fue usada.",
+  "invite.landing.usedHint": "Pídele otra a quien te la mandó, o entra a escuchar.",
+
   "version.new": "Hay una versión nueva de FlowPub",
   "version.reload": "Actualizar",
   "pwa.title": "Instala FlowPub en tu pantalla de inicio",
@@ -398,6 +416,24 @@ const en: Record<DictKey, string> = {
     "These are your voices to start. The Pub is already being written.",
   "onb.ready.enter": "Enter the Pub",
   "onb.ready.record": "Record my first Flow",
+
+  "invite.title": "Invitations",
+  "invite.remaining": "{n} of 6 available",
+  "invite.hint": "Share your link: every invitation brings a new voice to the Pub.",
+  "invite.copy": "Copy link",
+  "invite.copied": "Link copied",
+  "invite.whatsapp": "Share on WhatsApp",
+  "invite.none": "You've used all 6 — thanks for spreading the word.",
+  "invite.waText":
+    "I'm inviting you to FlowPub: you speak and your voice becomes a publication. Join with my invitation:",
+  "invite.landing.eyebrow": "You have an invitation",
+  "invite.landing.title": "{name} invites you to FlowPub",
+  "invite.landing.body":
+    "Speak for up to 3 minutes and FlowPub turns your voice into an article with cover art — and a community that listens.",
+  "invite.landing.cta": "Create my account",
+  "invite.landing.listen": "I want to listen to the Pub first",
+  "invite.landing.used": "This invitation has already been used.",
+  "invite.landing.usedHint": "Ask for another one, or come in and listen.",
 
   "version.new": "A new version of FlowPub is here",
   "version.reload": "Refresh",

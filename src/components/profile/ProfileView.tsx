@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { FlowEditModal } from "@/components/flow/FlowEditModal";
+import { InvitesCard } from "./InvitesCard";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -217,6 +218,9 @@ export function ProfileView({
         <Stat n={stats.followers} label={t("profile.followers")} />
         <Stat n={stats.following} label={t("profile.followingCount")} />
       </div>
+
+      {/* invitaciones (solo el dueño): 6 enlaces para correr la voz */}
+      {isOwn && <InvitesCard />}
 
       {/* tabs */}
       <div className="mb-5 mt-4 flex gap-1 border-b border-line">
