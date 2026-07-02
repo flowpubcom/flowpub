@@ -1,7 +1,57 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 3 — 2026-07-01 (ronda Fable 5)**.
+> Última actualización: **sesión 3, última tanda — 2026-07-01 (Notificaciones)**.
+
+## Sesión 3, última tanda — `/notificaciones` completo
+
+**Hecho** (typecheck/lint/build verdes; **sin verificar en vivo** — otra sesión
+tenía el dev server tomando el puerto 3000 y Next bloquea un segundo server en
+el mismo directorio por el lockfile de `.next/`, incluso en otro puerto):
+
+- **`supabase/migration_05_notificaciones.sql`** (nueva, pendiente de correr):
+  fan-out por triggers `security definer` — `likes` → dueño del Flow/comentario,
+  `follows` → seguido, `comments` → dueño del Flow + dueño del comentario padre
+  (reply) + menciones `@usuario` en el texto (regex sobre `body_text`, cruza
+  contra `profiles.username`), `flows` → seguidores del autor al publicarse
+  (insert o transición de `status` a `published`). Nunca te notificas a ti
+  mismo. Cierra el privilegio de columna: `authenticated` solo puede tocar
+  `read` (patrón ya usado en `profiles`).
+- **`data/notificationsApi.ts`** (server): `fetchNotifications()` trae items +
+  actor + Flow + comentario relacionado (un solo `select` con embeds; sin hint
+  `!` porque cada FK de `notifications` apunta una sola vez, a diferencia de
+  `flows`/`comments`), enriquece `followingActor` en lote.
+- **`data/notificationsClient.ts`** (client): `markNotificationRead`,
+  `markAllNotificationsRead`, `fetchUnreadNotifCount`.
+- **`components/notifications/`**: `NotificationsView.tsx` (tabs Todas/Sin
+  leer, agrupado Hoy/Esta semana/Antes, fondo `grana-wash` en no-leídas,
+  click marca leído y navega —al Flow o al perfil del actor—, botón Seguir
+  inline, bloque de voz con `AudioPlayer` real + «Ver transcript», portada
+  mini para Flows nuevos vía `<Cover>`) + `useUnreadCount.ts` (hook del punto
+  de la campana).
+- **Iconos de tipo por avatar:** mapeados a tokens existentes (nunca hex
+  nuevo) — like `grana`, voz `grana-700`, comentario/mención `ocre`, seguir/
+  Flow `ink`. El handoff pedía un azul custom para seguir/mención que **no**
+  está en la paleta bloqueada de CLAUDE.md; se sustituyó por `ink` a propósito
+  (discrepancia documentada en `design-map.json`, no es un error).
+- **`AppShell`**: la campana (móvil) y el ítem del riel (desktop) ahora
+  muestran el punto solo si hay notificaciones sin leer de verdad (antes era
+  un punto hardcoded siempre visible).
+- **`middleware.ts`**: `/notificaciones` gatea igual que `/componer` (sin
+  sesión → `/entrar?next=/notificaciones`).
+- i18n: catálogo `notif.*` completo ES/EN.
+
+**👉 Julio debe correr en el SQL Editor:**
+3. `supabase/migration_05_notificaciones.sql` — sin esto la tabla
+  `notifications` sigue vacía (existe desde antes, pero nada la llena): la
+  pantalla carga bien pero no verás actividad real hasta correrla.
+
+**Pendiente de verificación en vivo** (siguiente sesión, o ahora si hay puerto
+libre): login real → dar like/seguir/comentar desde otra cuenta → confirmar
+que aparece en `/notificaciones`, que «Marcar todo como leído» limpia el
+fondo y el punto de la campana, y que el filtro «Sin leer» esconde bien los
+grupos vacíos. También pendiente: `.claude/launch.json` quedó con
+`"autoPort": true` (antes fallaba si el puerto 3000 estaba ocupado).
 
 ## Sesión 3 — auditoría + ronda de features (Fable 5)
 
@@ -99,10 +149,11 @@ demodos a Julio, y un comentario de VOZ sintética de demodos en el Flow de
 Julio («Qué bonito quedó este Flow…» — el primer comentario de voz de la
 historia de FlowPub, transcrito por Gemini).
 
-**Pendiente (siguiente sesión): Ola 3-4** — `/notificaciones` (fan-out con
-triggers + página), `/mensajes` (Realtime, milestone 7), `/explorar` (sin
-.dc.html: definir con Julio), `/admin` (milestone 8), respuestas anidadas a
-comentarios (parent_id ya existe en BD).
+**Pendiente (siguiente sesión): Ola 4** — ✅ `/notificaciones` (hecho, ver
+arriba) · `/mensajes` (Realtime, milestone 7) · `/explorar` (sin .dc.html:
+definir con Julio) · `/admin` (milestone 8) · respuestas anidadas a
+comentarios (parent_id ya existe en BD, y `notify_on_comment` ya sabe
+notificar al padre — falta la UI de threading).
 
 **Pendientes que dejó la auditoría (colita):** paginación real del feed ·
 cachear páginas públicas (cliente sin cookies + revalidate) · og:image por Flow

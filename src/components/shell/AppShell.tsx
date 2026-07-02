@@ -10,6 +10,7 @@ import { Avatar, Button } from "@/components/ui";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth, type SessionUser } from "@/providers/AuthProvider";
+import { useUnreadCount } from "@/components/notifications/useUnreadCount";
 import { AuthGateModal } from "./AuthGateModal";
 import { NAV, type NavItem } from "./nav";
 
@@ -28,6 +29,7 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
   const { user } = useAuth();
   const router = useRouter();
   const [gateOpen, setGateOpen] = useState(false);
+  const unreadCount = useUnreadCount();
 
   const onRecord = () => {
     play("rec");
@@ -51,6 +53,7 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
               active={active === item.key}
               label={t(item.i18n)}
               onPlay={() => play("click")}
+              unread={item.key === "notifications" ? unreadCount : 0}
             />
           ))}
         </nav>
@@ -64,7 +67,7 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
 
       {/* Columna central */}
       <main className="min-w-0 flex-1 pb-24 lg:border-r lg:border-line lg:pb-0">
-        <MobileTopBar user={user} />
+        <MobileTopBar user={user} unreadCount={unreadCount} />
         {children}
       </main>
 
@@ -94,11 +97,13 @@ function NavLink({
   active,
   label,
   onPlay,
+  unread = 0,
 }: {
   item: NavItem;
   active: boolean;
   label: string;
   onPlay: () => void;
+  unread?: number;
 }) {
   const { Icon } = item;
   return (
@@ -115,14 +120,20 @@ function NavLink({
     >
       <Icon size={20} strokeWidth={active ? 2.4 : 2} />
       {label}
-      {item.key === "messages" && (
+      {(item.key === "messages" || (item.key === "notifications" && unread > 0)) && (
         <span className="ml-auto h-2 w-2 rounded-pill bg-grana" aria-hidden />
       )}
     </Link>
   );
 }
 
-function MobileTopBar({ user }: { user: SessionUser | null }) {
+function MobileTopBar({
+  user,
+  unreadCount,
+}: {
+  user: SessionUser | null;
+  unreadCount: number;
+}) {
   const { t } = useI18n();
   return (
     <header className="glass sticky top-0 z-20 flex items-center justify-between border-b border-line-soft px-4 py-3 lg:hidden">
@@ -138,7 +149,12 @@ function MobileTopBar({ user }: { user: SessionUser | null }) {
               className="relative grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
             >
               <Bell size={20} />
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-pill bg-grana" aria-hidden />
+              {unreadCount > 0 && (
+                <span
+                  className="absolute right-2 top-2 h-2 w-2 rounded-pill bg-grana"
+                  aria-hidden
+                />
+              )}
             </Link>
             <Link href="/perfil" aria-label={t("nav.profile")}>
               <Avatar
