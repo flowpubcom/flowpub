@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     template: "%s · FlowPub",
   },
   description:
-    "Transforma tu voz en publicaciones completas con IA. Graba hasta 9 minutos, obtén transcripción automática, edición e imágenes generativas al instante.",
+    "Transforma tu voz en publicaciones completas con IA. Graba hasta 3 minutos, obtén transcripción automática, edición e imágenes generativas al instante.",
   applicationName: "FlowPub",
   openGraph: {
     type: "website",
