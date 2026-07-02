@@ -28,14 +28,19 @@ const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),
   title: {
-    default: "FlowPub — la voz que se vuelve publicación",
+    default: "FlowPub | Speak, Flow, Publish",
     template: "%s · FlowPub",
   },
   description:
-    "Graba tu voz y FlowPub la vuelve artículo: transcripción y pulido con IA, portada generativa y una comunidad que escucha. Voces de arte, ciencia, libros, cultura, viajes y más.",
+    "Transforma tu voz en publicaciones completas con IA. Graba hasta 9 minutos, obtén transcripción automática, edición e imágenes generativas al instante.",
   applicationName: "FlowPub",
-  openGraph: { type: "website", siteName: "FlowPub", locale: "es_MX" },
-  twitter: { card: "summary" },
+  openGraph: {
+    type: "website",
+    siteName: "FlowPub",
+    locale: "es_MX",
+    alternateLocale: "en_US",
+  },
+  twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
 };
 
