@@ -43,13 +43,19 @@
 1. En Vercel: **Project → Settings → Domains** → agrega `flowpub.lat` y
    `www.flowpub.lat`. Vercel te muestra los registros exactos.
 2. En Namecheap: **Domain List → flowpub.lat → Advanced DNS** → borra los
-   registros de estacionamiento y agrega (valores típicos; usa los que diga
-   Vercel si difieren):
+   registros de estacionamiento (`URL Redirect` en `@` y `www`) y agrega el
+   que Vercel indique en Domains → tu dominio → *Learn more* (Vercel rota la
+   IP; usa siempre el valor que muestre ahí, no lo copies de memoria):
 
-   | Tipo | Host | Valor |
+   | Tipo | Host | Valor (visto 2026-07-01) |
    |---|---|---|
-   | A | `@` | `76.76.21.21` |
-   | CNAME | `www` | `cname.vercel-dns.com` |
+   | A | `@` | `216.198.79.1` |
+
+   No agregamos `www` a propósito: desmarcamos "Redirect apex domains to www"
+   al conectar el dominio en Vercel, porque `flowpub.lat` (sin www) es la URL
+   canónica en todo el sitio (`NEXT_PUBLIC_SITE_URL`, sitemap, OpenGraph). Si
+   más adelante quieres que `www.flowpub.lat` también funcione, agrégalo en
+   Vercel como dominio con "Redirect to Another Domain" → `flowpub.lat`.
 
    *(Alternativa: cambiar los nameservers a `ns1/ns2.vercel-dns.com` y
    administrar el DNS desde Vercel — más simple si el dominio solo es para

@@ -7,9 +7,12 @@ import type { CoverKind } from "@/lib/covers";
 // Supabase a nuestro tipo `Flow`. RLS decide visibilidad (published/featured, o
 // el autor sus propios borradores).
 
+// OJO: el embed de profiles lleva el hint !author_id — desde que existen
+// `likes` y `saves` hay VARIOS caminos flows↔profiles y PostgREST exige
+// desambiguar (PGRST201). Sin el hint, producción se cae con feed vacío.
 const SELECT =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
-  "author:profiles(id,username,display_name,avatar_url)," +
+  "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 
 function excerptOf(md: string, max = 180): string {
@@ -117,8 +120,8 @@ export const fetchFlows = cache(async (): Promise<Flow[]> => {
 
 // Variante con !inner: el filtro por slug del tag exige el join (tema/[slug]).
 const SELECT_BY_TAG =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at," +
-  "author:profiles(id,username,display_name,avatar_url)," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
+  "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags!inner(tags!inner(slug,name_es,name_en,sort))";
 
 /** Flows de un tema (páginas /tema/[slug]); el embed !inner filtra por slug. */

@@ -79,9 +79,10 @@ export const fetchProfileStats = cache(
   },
 );
 
+// Hint !author_id: desambigua flows↔profiles (hay caminos vía likes/saves).
 const SELECT =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
-  "author:profiles(id,username,display_name,avatar_url)," +
+  "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 
 /** Flows de un autor. La RLS ya decide: otros ven published/featured; el

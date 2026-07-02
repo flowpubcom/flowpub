@@ -4,14 +4,15 @@ import type { Profile } from "./types";
 
 // Lectura server-side de comentarios de un Flow (RLS decide visibilidad).
 
+// Hint !author_id: desambigua comments↔profiles (likes crea otro camino).
 const SEL =
   "id,kind,body_text,audio_url,transcript_raw,duration_s,like_count,created_at," +
-  "author:profiles(id,username,display_name,avatar_url)";
+  "author:profiles!author_id(id,username,display_name,avatar_url)";
 // Cascada tolerante: si el esquema aún no tiene duration_s (migración 04
 // pendiente), reintenta sin la columna.
 const SEL_LEGACY =
   "id,kind,body_text,audio_url,transcript_raw,like_count,created_at," +
-  "author:profiles(id,username,display_name,avatar_url)";
+  "author:profiles!author_id(id,username,display_name,avatar_url)";
 
 function ageMinutesFrom(createdAt: string | null): number {
   if (!createdAt) return 0;
