@@ -27,7 +27,7 @@ import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
 import { Turnstile, captchaEnabled } from "./Turnstile";
 
 type Step = "auth" | "themes" | "profile" | "ready";
-type AuthMode = "choose" | "signup" | "login";
+type AuthMode = "choose" | "signup" | "login" | "forgot";
 type AvailState = "idle" | "checking" | "free" | "taken";
 
 const inputCls =
@@ -67,6 +67,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<DictKey | null>(null);
   const [checkEmail, setCheckEmail] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [shakeId, setShakeId] = useState<number | null>(null);
   const [avail, setAvail] = useState<AvailState>("idle");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -189,6 +190,28 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
     // El efecto de arriba enruta: onboarded → «/», si no → temas.
   };
 
+  const onForgot = async (e: FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    const supabase = createClient();
+    // El enlace del correo pasa por /auth/callback (intercambia el code por
+    // sesión) y aterriza en /restablecer con sesión viva.
+    const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/restablecer`,
+      captchaToken: captchaToken ?? undefined,
+    });
+    setSubmitting(false);
+    if (err) {
+      setError("onb.err.generic");
+      captchaReset.current?.(); // token de un solo uso
+      play("soft");
+      return;
+    }
+    play("pop");
+    setResetSent(true);
+  };
+
   const toggleTag = (id: number) => {
     setError(null);
     if (selected.includes(id)) {
@@ -303,6 +326,10 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           />
           <button
             type="button"
+            // preventDefault en el *down*: el botón no roba el foco del input
+            // y el teclado móvil se queda abierto mientras alternas el ojo.
+            onPointerDown={(e) => e.preventDefault()}
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => {
               play("tick");
               setShowPassword((v) => !v);
@@ -329,6 +356,59 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         </div>
       );
     }
+    if (authMode === "forgot") {
+      if (resetSent) {
+        return (
+          <div className="max-w-[380px]">
+            <p className="font-sans text-[15px] leading-relaxed text-text-2">
+              {t("onb.forgot.sent")}
+            </p>
+          </div>
+        );
+      }
+      return (
+        <form onSubmit={onForgot} className="flex max-w-[380px] flex-col gap-3.5">
+          <label className="block">
+            <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
+              {t("onb.email.label")}
+            </span>
+            <input
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder={t("onb.email.placeholder")}
+              className={inputCls}
+            />
+          </label>
+          <Turnstile onToken={setCaptchaToken} resetRef={captchaReset} />
+          {errText()}
+          <button
+            type="submit"
+            disabled={submitting || (captchaEnabled && !captchaToken)}
+            className={cn(
+              granaBtn,
+              (submitting || (captchaEnabled && !captchaToken)) && "opacity-60",
+            )}
+          >
+            {t("onb.forgot.submit")}
+          </button>
+          <p className="mt-1 font-sans text-[13px] text-text-3">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setAuthMode("login");
+              }}
+              className="font-semibold text-grana"
+            >
+              {t("onb.login")}
+            </button>
+          </p>
+        </form>
+      );
+    }
     const isLogin = authMode === "login";
     return (
       <form
@@ -336,6 +416,21 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         className="flex max-w-[380px] flex-col gap-3.5"
       >
         {emailPassFields()}
+        {isLogin && (
+          <p className="-mt-1 text-right font-sans text-[13px]">
+            <button
+              type="button"
+              onClick={() => {
+                setError(null);
+                setResetSent(false);
+                setAuthMode("forgot");
+              }}
+              className="font-medium text-text-3 transition-colors hover:text-grana"
+            >
+              {t("onb.forgot")}
+            </button>
+          </p>
+        )}
         <Turnstile onToken={setCaptchaToken} resetRef={captchaReset} />
         {errText()}
         <button
@@ -661,18 +756,19 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   // Encabezado del panel de auth (desktop) según el modo.
   const authHeader = () => {
     const login = authMode === "login";
+    const forgot = authMode === "forgot";
     return (
       <>
-        {!login && (
+        {!login && !forgot && (
           <p className="mb-3 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana">
             {t("onb.eyebrow")}
           </p>
         )}
         <h2 className="mb-2.5 font-serif text-[30px] font-medium leading-[1.12]">
-          {t(login ? "onb.login.title" : "onb.auth.title")}
+          {t(forgot ? "onb.forgot.title" : login ? "onb.login.title" : "onb.auth.title")}
         </h2>
         <p className="mb-7 max-w-[42ch] font-sans text-[14px] text-text-2">
-          {t(login ? "onb.login.subtitle" : "onb.auth.subtitle")}
+          {t(forgot ? "onb.forgot.subtitle" : login ? "onb.login.subtitle" : "onb.auth.subtitle")}
         </p>
       </>
     );

@@ -37,9 +37,25 @@ limpia: solo `julio` (admin) + un registro nuevo `pentroxyl_01ff`.
 - **Temas nuevos** Filosofía y Chistes (`migration_09` ⚠️ pendiente).
 - **Deploy:** este cierre se PUSHEA a `main` → Vercel lo publica.
 
-**👉 Julio — SQL Editor:** correr `migration_09` (temas) y `migration_10`
-(invitaciones). Luego: entrar a su perfil para ver su tarjeta de
-invitaciones, y a `/admin` para el panel.
+**Remate de la noche (post-push):**
+- **Invitaciones ∞ para admins** (`migration_11` ⚠️): al canjearse un código
+  de un admin se le acuña otro — nunca baja de 6. La tarjeta muestra «∞».
+- **Recuperar contraseña:** «¿Olvidaste tu contraseña?» en el login →
+  `resetPasswordForEmail` (con Turnstile) → el correo aterriza en
+  `/auth/callback?next=/restablecer` → `/restablecer` (gateada) pide la
+  nueva con ojo y `updateUser`. OJO: los correos salen por el SMTP default
+  de Supabase (≈2-4/hora) hasta configurar Resend. Verificado en preview:
+  modo forgot renderiza; el flujo E2E real necesita el correo.
+- **El ojo del password ya no cierra el teclado móvil** (preventDefault en
+  pointer/mousedown: el botón no roba el foco). Verificado el toggle.
+- **Temas Ambiental y Rants** (`migration_12` ⚠️).
+- Skills evaluadas: webapp-testing (sí — para E2E Realtime con 2 navegadores,
+  instalar con /plugin) · Ponytail (solo su review puntual; sus reglas
+  always-on chocarían con CLAUDE.md).
+
+**👉 Julio — SQL Editor:** correr `migration_11` (invitaciones ∞ admin) y
+`migration_12` (temas nuevos). 09 y 10 ya corrieron. Luego: perfil → tarjeta
+de invitaciones, y `/admin` para el panel.
 
 **Pendiente de verificar en prod:** prompt de instalación PWA (Chrome
 Android/desktop), aviso de versión en el PRÓXIMO deploy, invitación E2E con

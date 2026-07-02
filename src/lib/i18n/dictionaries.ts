@@ -160,6 +160,19 @@ const es = {
   "onb.login.subtitle": "Entra para seguir publicando tu voz.",
   "onb.login.submit": "Entrar",
 
+  "onb.forgot": "¿Olvidaste tu contraseña?",
+  "onb.forgot.title": "Recupera tu voz",
+  "onb.forgot.subtitle":
+    "Dinos tu correo y te mandamos un enlace para crear una contraseña nueva.",
+  "onb.forgot.submit": "Enviar enlace",
+  "onb.forgot.sent":
+    "Si ese correo tiene cuenta, ya va en camino un enlace para restablecer tu contraseña. Revisa tu bandeja (y el spam, por si acaso).",
+  "reset.title": "Contraseña nueva",
+  "reset.subtitle": "Elige una nueva y quedas dentro.",
+  "reset.submit": "Guardar contraseña",
+  "reset.done": "Listo — tu voz está de vuelta.",
+  "reset.enter": "Entrar al Pub",
+
   "onb.err.credentials": "Correo o contraseña incorrectos.",
   "onb.err.emailInUse": "Ese correo ya tiene cuenta. Inicia sesión.",
   "onb.err.weakPassword": "La contraseña debe tener al menos 8 caracteres.",
@@ -382,6 +395,19 @@ const en: Record<DictKey, string> = {
   "onb.login.title": "Welcome back",
   "onb.login.subtitle": "Sign in to keep publishing your voice.",
   "onb.login.submit": "Sign in",
+
+  "onb.forgot": "Forgot your password?",
+  "onb.forgot.title": "Recover your voice",
+  "onb.forgot.subtitle":
+    "Tell us your email and we'll send you a link to create a new password.",
+  "onb.forgot.submit": "Send link",
+  "onb.forgot.sent":
+    "If that email has an account, a reset link is on its way. Check your inbox (and spam, just in case).",
+  "reset.title": "New password",
+  "reset.subtitle": "Pick a new one and you're back in.",
+  "reset.submit": "Save password",
+  "reset.done": "Done — your voice is back.",
+  "reset.enter": "Enter the Pub",
 
   "onb.err.credentials": "Wrong email or password.",
   "onb.err.emailInUse": "That email already has an account. Sign in.",
