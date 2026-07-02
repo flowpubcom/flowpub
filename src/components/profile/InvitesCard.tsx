@@ -58,7 +58,9 @@ export function InvitesCard() {
           {t("invite.title")}
         </h2>
         <span className="font-mono text-[12px] text-text-2">
-          {t("invite.remaining", { n: invites.remaining })}
+          {invites.unlimited
+            ? t("invite.unlimited")
+            : t("invite.remaining", { n: invites.remaining })}
         </span>
       </div>
 

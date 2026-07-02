@@ -8,6 +8,8 @@ export interface MyInvites {
   remaining: number;
   /** El siguiente código a compartir (el más viejo sin usar). */
   nextCode: string | null;
+  /** Admin = invitaciones infinitas (se reponen al canjearse). */
+  unlimited: boolean;
 }
 
 export async function fetchMyInvites(): Promise<MyInvites | null> {
@@ -16,17 +18,21 @@ export async function fetchMyInvites(): Promise<MyInvites | null> {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data, error } = await supabase
-    .from("invites")
-    .select("code,used_at")
-    .is("used_at", null)
-    .order("created_at")
-    .limit(6);
+  const [{ data, error }, { data: me }] = await Promise.all([
+    supabase
+      .from("invites")
+      .select("code,used_at")
+      .is("used_at", null)
+      .order("created_at")
+      .limit(6),
+    supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
+  ]);
   // 42P01 = la tabla aún no existe (migración pendiente): la tarjeta se oculta.
   if (error) return null;
   return {
     remaining: data?.length ?? 0,
     nextCode: (data?.[0]?.code as string | undefined) ?? null,
+    unlimited: me?.role === "admin",
   };
 }
 

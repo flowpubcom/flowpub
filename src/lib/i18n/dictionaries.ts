@@ -197,6 +197,7 @@ const es = {
 
   "invite.title": "Invitaciones",
   "invite.remaining": "{n} de 6 disponibles",
+  "invite.unlimited": "∞ ilimitadas",
   "invite.hint": "Comparte tu enlace: cada invitación trae a una voz nueva al Pub.",
   "invite.copy": "Copiar enlace",
   "invite.copied": "Enlace copiado",
@@ -419,6 +420,7 @@ const en: Record<DictKey, string> = {
 
   "invite.title": "Invitations",
   "invite.remaining": "{n} of 6 available",
+  "invite.unlimited": "∞ unlimited",
   "invite.hint": "Share your link: every invitation brings a new voice to the Pub.",
   "invite.copy": "Copy link",
   "invite.copied": "Link copied",
