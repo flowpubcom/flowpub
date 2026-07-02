@@ -45,6 +45,29 @@
    `comments.duration_s` (voz). El código tiene cascada tolerante y funciona sin
    ella, pero «Guardar» no persiste y los comentarios de voz salen sin duración.
 
+## 🚀 EN PRODUCCIÓN — https://flowpub.lat (sesión 3, cont. 2)
+
+- **Deploy vivo en Vercel** (repo `flowpubcom/flowpub`, público, rama `main` =
+  producción; push = deploy). Dominio `flowpub.lat` por registro A en Namecheap
+  (`@` → la IP que indique Vercel). Env vars puestas por Julio en el dashboard.
+- **Tropiezos resueltos del primer deploy** (para no repetir):
+  1. Credencial de GitHub equivocada en Windows (era de otra cuenta) → `cmdkey
+     /delete` y re-login como `flowpubcom`.
+  2. Hobby plan bloquea repos privados con autor de commit distinto → repo
+     **público** (verificado antes: cero secretos en el historial).
+  3. Framework Preset quedó "Other" al importar → cambiarlo a **Next.js** en
+     Build and Deployment (si no, busca carpeta `public` y falla).
+  4. **PGRST201**: al nacer `saves` (migración 04) hubo >1 relación
+     flows↔profiles y comments↔profiles; TODOS los embeds de profiles llevan
+     ahora el hint **`!author_id`**. Regla: al crear una tabla puente nueva
+     hacia profiles, revisar los embeds existentes.
+- **Migraciones 03 y 04: corridas** (saves existe en prod). Turnstile y Resend:
+  Julio ya tiene las llaves (en Vercel y .env.local); integración = siguiente fase.
+- **Pendiente de dashboard (Julio):** Supabase → Auth → URL Configuration:
+  Site URL = `https://flowpub.lat` y agregar `https://flowpub.lat/**` a
+  Redirect URLs (sin esto el login NO funciona en el dominio). Google Cloud:
+  agregar `https://flowpub.lat` a Authorized JavaScript origins.
+
 ## Sesión 3 (cont.) — Olas 1+2: todo lo maquetado ahora FUNCIONA
 
 **Ola 1 — interacciones reales** (verificado E2E contra Supabase):
