@@ -41,7 +41,7 @@ export async function updateSession(request: NextRequest) {
 
   // Rutas privadas: sin sesión → a /entrar (con ?next para volver después).
   const path = request.nextUrl.pathname;
-  const PROTECTED = ["/componer", "/notificaciones", "/mensajes"];
+  const PROTECTED = ["/componer", "/notificaciones", "/mensajes", "/admin"];
   if (!user && PROTECTED.some((p) => path === p || path.startsWith(`${p}/`))) {
     const url = request.nextUrl.clone();
     url.pathname = "/entrar";
