@@ -105,7 +105,7 @@ export function FlowEditModal({
       </label>
 
       {error && (
-        <p role="status" className="mt-3 font-sans text-[13px] text-grana">
+        <p role="status" className="mt-3 font-sans text-[13px] text-grana-text">
           {error}
         </p>
       )}

@@ -17,7 +17,7 @@ function fmt(s: number) {
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
 
-/** Reproductor compacto para burbuja de voz. `out` = saliente (grana/blanco). */
+/** Reproductor compacto para burbuja de voz. `out` = saliente (tinta). */
 function VoicePlayer({
   src,
   durationSeconds,
@@ -55,7 +55,7 @@ function VoicePlayer({
         aria-label={playing ? t("pause") : t("play")}
         className={cn(
           "grid h-[34px] w-[34px] flex-none place-items-center rounded-pill transition-transform duration-150 ease-flow active:scale-[.94]",
-          out ? "bg-white text-grana" : "bg-ink text-ink-on",
+          out ? "bg-ink-on text-ink" : "bg-ink text-ink-on",
         )}
       >
         {playing ? (
@@ -67,13 +67,17 @@ function VoicePlayer({
       <svg viewBox="0 0 130 22" fill="none" className="h-[22px] w-[130px]" aria-hidden>
         <path
           d={WAVE}
-          stroke={out ? "rgba(255,255,255,.45)" : "var(--wave)"}
+          stroke="var(--ink-on)"
+          strokeOpacity={out ? 0.4 : 0}
           strokeWidth={2}
           strokeLinecap="round"
         />
+        {!out && (
+          <path d={WAVE} stroke="var(--wave)" strokeWidth={2} strokeLinecap="round" />
+        )}
         <path
           d={WAVE}
-          stroke={out ? "#fff" : "var(--grana)"}
+          stroke={out ? "var(--ink-on)" : "var(--grana)"}
           strokeWidth={2}
           strokeLinecap="round"
           pathLength={1}
@@ -84,7 +88,7 @@ function VoicePlayer({
       <span
         className={cn(
           "flex-none font-mono text-[12px] tabular-nums",
-          out ? "text-[rgba(255,255,255,.85)]" : "text-text-2",
+          out ? "text-ink-on opacity-85" : "text-text-2",
         )}
       >
         {fmt(playing || elapsed ? elapsed : total)}
@@ -124,7 +128,7 @@ export function MessageBubble({ message, mine }: { message: DirectMessage; mine:
           "px-[14px] py-[10px] text-[14.5px] leading-[1.45]",
           isVoice && "px-[12px] py-[9px]",
           mine
-            ? "rounded-[18px_18px_5px_18px] bg-grana text-white"
+            ? "rounded-[18px_18px_5px_18px] bg-ink text-ink-on"
             : "rounded-[18px_18px_18px_5px] border border-line-soft bg-surface-2 text-ink",
         )}
       >
@@ -149,7 +153,7 @@ export function MessageBubble({ message, mine }: { message: DirectMessage; mine:
               aria-expanded={showT}
               className={cn(
                 "mt-[7px] flex items-center gap-1.5 font-sans text-[12px] font-semibold transition-opacity hover:opacity-80",
-                mine ? "text-[rgba(255,255,255,.8)]" : "text-text-2",
+                mine ? "text-ink-on opacity-80" : "text-text-2",
               )}
             >
               <ChevronDown
@@ -162,7 +166,7 @@ export function MessageBubble({ message, mine }: { message: DirectMessage; mine:
               <p
                 className={cn(
                   "mt-1.5 max-w-[280px] font-serif text-[13.5px] leading-[1.5] [animation:fp-fade_.2s_ease-out]",
-                  mine ? "text-[rgba(255,255,255,.92)]" : "text-text-2",
+                  mine ? "text-ink-on opacity-90" : "text-text-2",
                 )}
               >
                 {message.transcript}

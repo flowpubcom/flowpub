@@ -169,7 +169,7 @@ export function ProfileView({
       </div>
 
       {dmError && (
-        <p role="status" className="mb-3 font-sans text-[13px] text-grana">
+        <p role="status" className="mb-3 font-sans text-[13px] text-grana-text">
           {dmError}
         </p>
       )}

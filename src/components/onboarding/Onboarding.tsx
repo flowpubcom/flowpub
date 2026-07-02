@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Camera, Check, ChevronLeft, Mail, Mic } from "lucide-react";
+import { ArrowRight, Camera, Check, ChevronLeft, Eye, EyeOff, Mail, Mic } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
@@ -57,6 +57,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
@@ -265,15 +266,29 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
           {t("onb.password.label")}
         </span>
-        <input
-          type="password"
-          required
-          autoComplete={authMode === "login" ? "current-password" : "new-password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder={t("onb.password.placeholder")}
-          className={inputCls}
-        />
+        <span className="relative block">
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            autoComplete={authMode === "login" ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t("onb.password.placeholder")}
+            className={cn(inputCls, "pr-11")}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              play("tick");
+              setShowPassword((v) => !v);
+            }}
+            aria-pressed={showPassword}
+            aria-label={t(showPassword ? "onb.password.hide" : "onb.password.show")}
+            className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
+          >
+            {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+          </button>
+        </span>
       </label>
     </>
   );

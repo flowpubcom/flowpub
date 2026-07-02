@@ -116,7 +116,7 @@ export function MessageComposer({
             type="button"
             onClick={() => void startVoice()}
             aria-label={t("msg.record")}
-            className="grid h-11 w-11 flex-none place-items-center rounded-pill border border-line-2 text-grana transition-colors hover:bg-grana-wash"
+            className="grid h-11 w-11 flex-none place-items-center rounded-pill border border-line-2 text-ink transition-colors hover:bg-[var(--hover)]"
           >
             <Mic size={19} />
           </button>
@@ -134,7 +134,7 @@ export function MessageComposer({
 
       {voiceState === "recording" && (
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-2 font-mono text-[13px] font-bold tabular-nums text-grana">
+          <span className="flex items-center gap-2 font-mono text-[13px] font-bold tabular-nums text-grana-text">
             <span className="h-2 w-2 animate-pulse rounded-pill bg-grana" />
             {formatDuration(recorder.elapsed)}
           </span>
@@ -159,7 +159,7 @@ export function MessageComposer({
       )}
 
       {(error || recorder.error) && (
-        <p role="status" className="mt-2 px-1 font-sans text-[13px] text-grana">
+        <p role="status" className="mt-2 px-1 font-sans text-[13px] text-grana-text">
           {error ?? recorder.error}
         </p>
       )}

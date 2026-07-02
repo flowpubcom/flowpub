@@ -13,6 +13,7 @@
   --color-grana: var(--grana);
   --color-grana-700: var(--grana-700);
   --color-grana-wash: var(--grana-wash);
+  --color-grana-text: var(--grana-text);
   --color-ocre: var(--ocre);
   --color-amate: var(--amate);
   --color-amate-2: var(--amate-2);
@@ -80,6 +81,10 @@
   --hover: rgba(26, 23, 20, 0.04);
   --glass: rgba(251, 250, 246, 0.82);
   --grana-wash: #f6e6e4;
+  /* grana COMO TEXTO sobre superficies (timers, errores): en claro es el grana
+     pleno (5.9:1 sobre papel); en oscuro sube a un grana-rosado legible —
+     el grana pleno solo da 3.07:1 sobre superficies oscuras (medido). */
+  --grana-text: #c0303a;
   --wave: rgba(26, 23, 20, 0.16);
 
   /* portadas — doble capa por tema (roles del lienzo; los ACENTOS quedan fijos
@@ -119,6 +124,7 @@
   --hover: rgba(242, 239, 232, 0.06);
   --glass: rgba(20, 17, 14, 0.72);
   --grana-wash: rgba(192, 48, 58, 0.18);
+  --grana-text: #ec9da2;
   --wave: rgba(242, 239, 232, 0.18);
 
   --cover-canvas: #262019;
@@ -154,6 +160,7 @@
     --hover: rgba(242, 239, 232, 0.06);
     --glass: rgba(20, 17, 14, 0.72);
     --grana-wash: rgba(192, 48, 58, 0.18);
+    --grana-text: #ec9da2;
     --wave: rgba(242, 239, 232, 0.18);
     --cover-canvas: #262019;
     --cover-shadow: #0e0c0a;

@@ -200,8 +200,10 @@ function MobileBottomNav({
   const left = items.slice(0, 2);
   const right = items.slice(2);
 
+  // Franja baja y compacta: los botones se arriman al centro (gap fijo, no
+  // justify-around) y el FAB de grabar conserva su tamaño — por eso resalta.
   return (
-    <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-around border-t border-line-soft px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 lg:hidden">
+    <nav className="glass fixed inset-x-0 bottom-0 z-20 flex items-center justify-center gap-3 border-t border-line-soft px-2 pb-[max(4px,env(safe-area-inset-bottom))] pt-1 lg:hidden">
       {left.map((it) => (
         <BottomItem
           key={it.key}
@@ -215,7 +217,7 @@ function MobileBottomNav({
         type="button"
         onClick={onRecord}
         aria-label={recordLabel}
-        className="grid h-[54px] w-[54px] flex-none -translate-y-2 place-items-center rounded-pill bg-grana text-white shadow-[var(--shadow-grana)] transition-transform duration-150 ease-flow active:scale-[.94]"
+        className="mx-1 -my-2 grid h-[54px] w-[54px] flex-none -translate-y-2.5 place-items-center rounded-pill bg-grana text-white shadow-[var(--shadow-grana)] transition-transform duration-150 ease-flow active:scale-[.94]"
       >
         <Mic size={24} />
       </button>
@@ -251,7 +253,7 @@ function BottomItem({
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "grid h-12 w-14 place-items-center rounded-[12px] transition-colors",
+        "grid h-11 w-12 place-items-center rounded-[12px] transition-colors",
         active ? "text-grana" : "text-text-3 hover:text-ink",
       )}
     >
