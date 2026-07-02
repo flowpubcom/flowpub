@@ -5,16 +5,23 @@ import { ThemeProvider } from "./ThemeProvider";
 import { I18nProvider } from "./I18nProvider";
 import { SoundProvider } from "./SoundProvider";
 import { AuthProvider } from "./AuthProvider";
+import { VersionWatcher } from "@/components/shell/VersionWatcher";
+import { InstallPrompt } from "@/components/shell/InstallPrompt";
 
 /**
- * Raíz de providers de cliente. Realtime entra en su fase.
+ * Raíz de providers de cliente + vigías globales (versión nueva, instalar
+ * PWA): van aquí y no en AppShell para cubrir también /flow y /entrar.
  */
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <I18nProvider>
         <SoundProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            <VersionWatcher />
+            <InstallPrompt />
+          </AuthProvider>
         </SoundProvider>
       </I18nProvider>
     </ThemeProvider>

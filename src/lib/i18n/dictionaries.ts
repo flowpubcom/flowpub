@@ -195,6 +195,12 @@ const es = {
   "onb.ready.enter": "Entrar al Pub",
   "onb.ready.record": "Grabar mi primer Flow",
 
+  "version.new": "Hay una versión nueva de FlowPub",
+  "version.reload": "Actualizar",
+  "pwa.title": "Instala FlowPub en tu pantalla de inicio",
+  "pwa.install": "Instalar",
+  "pwa.dismiss": "Ahora no",
+
   "common.cancel": "Cancelar",
   "common.back": "Atrás",
   "common.minutes": "{n} min",
@@ -392,6 +398,12 @@ const en: Record<DictKey, string> = {
     "These are your voices to start. The Pub is already being written.",
   "onb.ready.enter": "Enter the Pub",
   "onb.ready.record": "Record my first Flow",
+
+  "version.new": "A new version of FlowPub is here",
+  "version.reload": "Refresh",
+  "pwa.title": "Install FlowPub on your home screen",
+  "pwa.install": "Install",
+  "pwa.dismiss": "Not now",
 
   "common.cancel": "Cancel",
   "common.back": "Back",
