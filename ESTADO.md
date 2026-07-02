@@ -1,7 +1,56 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 3, última tanda — 2026-07-01 (Notificaciones)**.
+> Última actualización: **sesión 3, cierre — 2026-07-01 (lectura inline + edición
+> + limpieza + OpenGraph)**.
+
+## Sesión 3, cierre — fluidez del Pub + pre-lanzamiento
+
+**Hecho** (typecheck/lint/build verdes; revisado con workflow multi-agente de
+4 dimensiones + verificación adversarial, 8 hallazgos netos corregidos):
+
+- **Lectura inline en el Pub:** el extracto de la FlowCard se expande al
+  artículo completo ahí mismo (`FlowProse` con `demoteHeadings` para no
+  invertir el outline h3→h2), con «Mostrar menos» + link al Flow completo.
+  El botón de comentarios abre el panel inline (leer + comentar texto/voz sin
+  salir del Pub): carga on-demand con `fetchCommentsClient`, merge por id si
+  el usuario publica mientras carga, error ≠ vacío (reintenta al reabrir).
+  Foco gestionado al alternar (el botón desmontado devolvía el foco a body) y
+  `aria-controls`/`aria-expanded` en los toggles.
+- **Capa de comentarios compartida:** el select + mapeo viven en
+  `data/comments.ts` (`COMMENT_SELECT`, `mapCommentRow`); `commentsApi` (server)
+  y `commentsClient` (browser) los reutilizan.
+- **Edición de Flows propios** (título + artículo; el transcript NUNCA se
+  edita): `data/flowsClient.ts` (`updateFlow`, RLS `flows_update` + privilegios
+  de columna de migration_03 ya lo acotaban — cero SQL nuevo) +
+  `FlowEditModal` reutilizado en 3 lugares: FlowCard (lápiz en la fila de
+  acciones), perfil (botón sobre los tiles propios, variante sticker sobre
+  portada / tokens sobre borrador) y FlowReader (botón «Editar Flow» donde iría
+  Seguir). Optimista: FlowCard/FlowReader pintan local + `router.refresh()`;
+  el perfil parchea los tiles con un mapa local mientras llega el refresh.
+- **`supabase/migration_06_limpieza_demo.sql`** (pendiente de correr): borra
+  TODOS los usuarios salvo `pentrexyl@gmail.com` (candado: aborta si esa
+  cuenta no existe), los 6 Flows demo, conversaciones huérfanas y archivos
+  de Storage de uids muertos. Las cascadas + triggers dejan contadores bien.
+- **OpenGraph:** title `FlowPub | Speak, Flow, Publish` + description nueva
+  (dictada por Julio), `twitter:summary_large_image`, `og:locale es_MX` +
+  alternate `en_US`, y **`src/app/opengraph-image.tsx`**: PNG 1200×630
+  generado en build con satori (vírgula + wordmark Flow itálica + «Speak ·
+  Flow · Publish» + chip flowpub.lat, paleta de marca). Fuentes TTF locales en
+  `src/app/_og/` (Fraunces 500 normal/itálica + Hanken 600). Verificada la
+  imagen renderizada. ⚠️ **Decisión pendiente de Julio:** la description dice
+  «hasta 9 minutos» (su copy) pero el tope real es 3 min (migration_03 bajó
+  9:00→3:00; el diseño original SÍ era 09:00) — o se ajusta el copy o se
+  regresa el tope a 9 min (Composer MAX + settings + filtro del Pub).
+
+**👉 Julio debe correr en el SQL Editor (en orden):** `migration_05`
+(notificaciones) y `migration_06` (limpieza — ANTES de invitar a los compas).
+
+**Pendiente de dashboard (Julio) — Resend y Google branding:** ver el mensaje
+de cierre de la sesión 3: SMTP de Resend en Supabase Auth + dominio verificado
+en Resend (DNS en Namecheap), y branding del consent de Google en Google Cloud
+(el «syesetjvlhfbniicdgeg.supabase.co» solo se quita con Custom Domain de
+Supabase, de paga).
 
 ## Sesión 3, última tanda — `/notificaciones` completo
 
