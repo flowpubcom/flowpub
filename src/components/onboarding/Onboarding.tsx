@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Camera, Check, ChevronLeft, Mail, Mic } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -17,6 +23,7 @@ import {
 import { tagName, type TagRow } from "@/data/tags";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
+import { Turnstile, captchaEnabled } from "./Turnstile";
 
 type Step = "auth" | "themes" | "profile" | "ready";
 type AuthMode = "choose" | "signup" | "login";
@@ -60,6 +67,8 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   const [checkEmail, setCheckEmail] = useState(false);
   const [shakeId, setShakeId] = useState<number | null>(null);
   const [avail, setAvail] = useState<AvailState>("idle");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const captchaReset = useRef<(() => void) | null>(null);
 
   const usernameNorm = normalizeUsername(username);
 
@@ -119,6 +128,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/entrar`,
+        captchaToken: captchaToken ?? undefined,
       },
     });
     setSubmitting(false);
@@ -128,6 +138,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           ? "onb.err.emailInUse"
           : "onb.err.generic",
       );
+      captchaReset.current?.(); // token de un solo uso
       play("soft");
       return;
     }
@@ -149,10 +160,12 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
     const { error: err } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: { captchaToken: captchaToken ?? undefined },
     });
     setSubmitting(false);
     if (err) {
       setError("onb.err.credentials");
+      captchaReset.current?.(); // token de un solo uso
       play("soft");
       return;
     }
@@ -283,8 +296,16 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         className="flex max-w-[380px] flex-col gap-3.5"
       >
         {emailPassFields()}
+        <Turnstile onToken={setCaptchaToken} resetRef={captchaReset} />
         {errText()}
-        <button type="submit" disabled={submitting} className={cn(granaBtn, submitting && "opacity-60")}>
+        <button
+          type="submit"
+          disabled={submitting || (captchaEnabled && !captchaToken)}
+          className={cn(
+            granaBtn,
+            (submitting || (captchaEnabled && !captchaToken)) && "opacity-60",
+          )}
+        >
           {t(isLogin ? "onb.login.submit" : "onb.signup.submit")}
         </button>
         <p className="mt-1 font-sans text-[13px] text-text-3">
