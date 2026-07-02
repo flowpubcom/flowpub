@@ -1,7 +1,46 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 4 — 2026-07-02 (Mensajería / milestone 7)**.
+> Última actualización: **sesión 4, cont. — 2026-07-02 (Explorar + Admin;
+> mensajería VERIFICADA E2E)**.
+
+## Sesión 4 (cont.) — Explorar + Admin + mensajería verificada
+
+- **Mensajería VERIFICADA E2E en vivo** (migration_07 ya corrida por Julio):
+  como demodos → botón «Enviar mensaje» en @julio → el RPC creó el DM →
+  mensaje de texto enviado → burbuja saliente grana → persiste tras reload →
+  la bandeja lista la conversación con preview y hora. Quedó un DM de prueba
+  demodos→julio («Hola Julio — primer DM de la historia de FlowPub…»); se
+  limpia solo con la migración 06 (cascada al borrar demodos). Falta solo
+  probar Realtime con DOS navegadores a la vez y la nota de voz con mic real.
+- **Copy del OG a 3 min** (decisión de Julio) + **fix**: la home sobreescribía
+  el metadata, así que compartir flowpub.lat mostraba el copy del feed; ahora
+  og:/twitter: de `/` usan la tarjeta de marca (title Speak/Flow/Publish +
+  copy + summary_large_image) y el `<title>` sigue siendo del feed (SEO).
+- **`/explorar` (nuevo, público):** buscador server-rendered (`?q=`) — Flows
+  por título/cuerpo (ilike saneado para el `or()` de PostgREST) y voces por
+  nombre/usuario con estado real de seguir; sin búsqueda: grid de los 12
+  temas con conteos → `/tema/[slug]` + voces nuevas. `data/exploreApi.ts`.
+  `FollowButton` extraído a `components/social/` (lo comparten riel y
+  Explorar). Verificado en vivo (conteos, singular/plural, «barro», «julio»).
+- **`/admin` (nuevo, milestone 8):** gate doble (middleware sesión + página
+  role=admin; la RLS re-exige is_admin() al escribir). Secciones: Resumen
+  (métricas reales + Flows/día 7d + temas activos %), Flows (tabla + buscar +
+  destacar/ocultar/republicar optimista), Usuarios (read-only; cambiar roles
+  NO se puede desde el cliente a propósito — solo SQL/servidor), Temas
+  (switch activo + añadir con slug saneado), Ajustes (registro abierto,
+  idioma/tema default, duración máx, temas por Flow → parches jsonb a
+  `settings`; estado de integraciones; switch beta de UI generativa).
+  **`migration_08_admin.sql`** (⚠️ pendiente): te da el rol admin. Verificado
+  en vivo el rebote de no-admin; **el panel en sí pruébalo tú tras la 08**.
+  Copy del admin en español fijo (fundador); entra al barrido i18n fase 9.
+- **Nota:** los Ajustes guardan en `settings`, pero el Composer aún lee su
+  `MAX=180` hardcodeado — cablear límites dinámicos desde `settings` es
+  pendiente chico para cuando muevas esos valores de verdad.
+
+**👉 Julio — SQL Editor (en orden):** `migration_05` (notificaciones, si no ha
+corrido), `migration_06` (limpieza pre-beta), `migration_08` (tu rol admin).
+La 07 ya corrió. Tras la 08: entra a `/admin` con tu cuenta y dale una vuelta.
 
 ## Sesión 4 — Mensajería (`/mensajes`, milestone 7)
 
