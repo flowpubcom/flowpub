@@ -38,9 +38,19 @@
   `MAX=180` hardcodeado — cablear límites dinámicos desde `settings` es
   pendiente chico para cuando muevas esos valores de verdad.
 
-**👉 Julio — SQL Editor (en orden):** `migration_05` (notificaciones, si no ha
-corrido), `migration_06` (limpieza pre-beta), `migration_08` (tu rol admin).
-La 07 ya corrió. Tras la 08: entra a `/admin` con tu cuenta y dale una vuelta.
+**👉 Julio — SQL Editor:** 05, 07 y 08 **ya corrieron** (julio = admin,
+verificado). La **06 falló y SE REVIRTIÓ COMPLETA** (los demos siguen): el
+`DELETE` directo a `storage.objects` ya no se permite (trigger
+`storage.protect_delete()` de Supabase — exige la Storage API) y el SQL Editor
+corre todo en una transacción. **Arreglada:** el paso 4 ahora solo LISTA los
+huérfanos. → **Re-corre `migration_06`** y luego, para borrar los archivos
+huérfanos de Storage: `node scripts/limpia-storage.mjs` (dry-run) y
+`node scripts/limpia-storage.mjs --borra` (usa la service role de .env.local).
+Tras la 06: entra a `/admin` y dale una vuelta con tu cuenta.
+
+**Gotcha nuevo (no re-romper):** en Supabase ya NO se puede `delete from
+storage.objects` por SQL — siempre Storage API (dashboard o service role).
+Y un error en CUALQUIER statement del SQL Editor revierte el script entero.
 
 ## Sesión 4 — Mensajería (`/mensajes`, milestone 7)
 

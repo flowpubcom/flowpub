@@ -36,14 +36,19 @@ where not exists (
   select 1 from public.conversation_members m where m.conversation_id = c.id
 );
 
--- ── 4) Archivos huérfanos en Storage (carpetas de uids que ya no existen) ────
--- Los buckets guardan por carpeta-uid (así lo exige la RLS de subida).
-delete from storage.objects
+-- ── 4) Archivos huérfanos en Storage: SOLO LISTAR (borrar por SQL ya no se
+-- puede: el trigger storage.protect_delete() lo bloquea y exige la Storage
+-- API). Para borrarlos de verdad: `node scripts/limpia-storage.mjs --borra`
+-- (usa la service role de .env.local), o bórralos a mano en el dashboard.
+-- Este SELECT es informativo; la migración funciona igual si regresa filas.
+select bucket_id, name, created_at
+from storage.objects
 where bucket_id in ('audio', 'avatars', 'covers')
   and (storage.foldername(name))[1] is not null
   and (storage.foldername(name))[1] not in (
     select id::text from public.profiles
-  );
+  )
+order by bucket_id, name;
 
 -- ── 5) Reporte: lo que queda vivo ────────────────────────────────────────────
 select
