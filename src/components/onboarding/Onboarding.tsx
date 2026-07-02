@@ -23,6 +23,7 @@ import {
 import { redeemInvite } from "@/data/invitesClient";
 import { tagName, type TagRow } from "@/data/tags";
 import type { DictKey } from "@/lib/i18n/dictionaries";
+import { FlowMark } from "@/components/brand";
 import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
 import { Turnstile, captchaEnabled } from "./Turnstile";
 
@@ -753,21 +754,26 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         ? profileBody()
         : readyBody();
 
-  // Encabezado del panel de auth (desktop) según el modo.
+  // Encabezado del panel de auth según el modo. Eyebrow grana (kicker) en los
+  // tres modos: da jerarquía y un toque de marca sin peso extra.
   const authHeader = () => {
     const login = authMode === "login";
     const forgot = authMode === "forgot";
+    const eyebrow = forgot
+      ? "onb.forgot.eyebrow"
+      : login
+        ? "onb.login.eyebrow"
+        : "onb.eyebrow";
     return (
       <>
-        {!login && !forgot && (
-          <p className="mb-3 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana">
-            {t("onb.eyebrow")}
-          </p>
-        )}
-        <h2 className="mb-2.5 font-serif text-[30px] font-medium leading-[1.12]">
+        <p className="mb-3 flex items-center gap-2 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana">
+          <span aria-hidden className="h-[2px] w-6 rounded-pill bg-grana" />
+          {t(eyebrow)}
+        </p>
+        <h2 className="mb-2.5 font-serif text-[32px] font-medium leading-[1.1] tracking-[-0.01em]">
           {t(forgot ? "onb.forgot.title" : login ? "onb.login.title" : "onb.auth.title")}
         </h2>
-        <p className="mb-7 max-w-[42ch] font-sans text-[14px] text-text-2">
+        <p className="mb-7 max-w-[42ch] font-sans text-[14px] leading-relaxed text-text-2">
           {t(forgot ? "onb.forgot.subtitle" : login ? "onb.login.subtitle" : "onb.auth.subtitle")}
         </p>
       </>
@@ -787,8 +793,11 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           <div className="relative flex-1 overflow-y-auto">
             {step === "auth" ? (
               <div className="flex min-h-full flex-col justify-center px-14 py-12">
-                {authHeader()}
-                {authMode === "choose" ? chooseLight() : authFormLight()}
+                {/* Bloque centrado en el panel: sin el vacío a la derecha. */}
+                <div className="mx-auto w-full max-w-[400px]">
+                  {authHeader()}
+                  {authMode === "choose" ? chooseLight() : authFormLight()}
+                </div>
               </div>
             ) : (
               stepBody()
@@ -867,8 +876,13 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 }}
                 label={t("common.back")}
               />
-              {authHeader()}
-              {authFormLight()}
+              {/* Bloque centrado + marca viva: el móvil no tiene el panel
+                  hipnótico, así que la vírgula le da presencia de marca. */}
+              <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center">
+                <FlowMark size={36} className="mb-6 text-ink" />
+                {authHeader()}
+                {authFormLight()}
+              </div>
             </div>
           )
         ) : (

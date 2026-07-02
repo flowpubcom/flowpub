@@ -160,6 +160,8 @@ const es = {
   "onb.login.subtitle": "Entra para seguir publicando tu voz.",
   "onb.login.submit": "Entrar",
 
+  "onb.login.eyebrow": "Entrar",
+  "onb.forgot.eyebrow": "Recuperar acceso",
   "onb.forgot": "¿Olvidaste tu contraseña?",
   "onb.forgot.title": "Recupera tu voz",
   "onb.forgot.subtitle":
@@ -396,6 +398,8 @@ const en: Record<DictKey, string> = {
   "onb.login.subtitle": "Sign in to keep publishing your voice.",
   "onb.login.submit": "Sign in",
 
+  "onb.login.eyebrow": "Sign in",
+  "onb.forgot.eyebrow": "Recover access",
   "onb.forgot": "Forgot your password?",
   "onb.forgot.title": "Recover your voice",
   "onb.forgot.subtitle":
