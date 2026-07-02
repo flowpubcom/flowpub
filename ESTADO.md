@@ -1,8 +1,50 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 4, cont. — 2026-07-02 (Explorar + Admin;
-> mensajería VERIFICADA E2E)**.
+> Última actualización: **sesión 4, cierre — 2026-07-02 (invitaciones + PWA +
+> a11y oscuro + PUSH A PRODUCCIÓN)**.
+
+## Sesión 4, cierre — la tanda del beta
+
+**BD:** Julio corrió 05, 06 (versión arreglada), 07 y 08. Producción quedó
+limpia: solo `julio` (admin) + un registro nuevo `pentroxyl_01ff`.
+
+**Hecho (typecheck/lint/build verdes):**
+- **Invitaciones** (`migration_10` ⚠️ pendiente de correr): 6 códigos por
+  usuario (trigger + backfill), landing `/i/[code]` de marca, canje en el
+  onboarding (localStorage `fp-invite`, sobrevive OAuth), auto-follow mutuo
+  (dispara la notificación de follow), tarjeta en el perfil propio con
+  Copiar enlace y Compartir por WhatsApp (`wa.me`). Sin migración: tarjeta
+  oculta y `/i/*` → 404 (verificado).
+- **PWA:** `manifest.webmanifest` + iconos 192/512 de la vírgula (verificado
+  el PNG) + favicon generado. `InstallPrompt`: ofrece instalar; descartado →
+  reaparece cada 3 visitas (visita = sesión de navegador). Solo se puede
+  probar de verdad en HTTPS (prod).
+- **Anti-caché de versiones:** `/api/version` (SHA del deploy de Vercel) +
+  `VersionWatcher` (chequeo al volver a la pestaña + cada 15 min) → chip
+  «Hay una versión nueva — Actualizar». En dev devuelve "dev" (inerte).
+- **A11y tema oscuro (audit + fix, medido en vivo):** token nuevo
+  `--grana-text` (#C0303A claro / #EC9DA2 oscuro) para grana COMO TEXTO —
+  el pleno daba 3.07:1 sobre superficies oscuras, el nuevo 8.16:1. Burbujas
+  salientes de DM ahora tinta (ink/ink-on, 15.5:1; en oscuro son claritas);
+  mic del composer neutral en idle. Grana queda para: Enviar (CTA) y el
+  pulso de grabación (roles reservados).
+- **CommentComposer internacionalizado** (tabs/placeholder/errores ES+EN).
+- **Ojo mostrar/ocultar** contraseña en onboarding.
+- **Bottom nav móvil compacto:** 53px (antes 63), botones al centro, FAB 54
+  intacto sobresaliendo (pedido de Julio; su imagen adjunta no llegó —
+  implementado per descripción).
+- **Temas nuevos** Filosofía y Chistes (`migration_09` ⚠️ pendiente).
+- **Deploy:** este cierre se PUSHEA a `main` → Vercel lo publica.
+
+**👉 Julio — SQL Editor:** correr `migration_09` (temas) y `migration_10`
+(invitaciones). Luego: entrar a su perfil para ver su tarjeta de
+invitaciones, y a `/admin` para el panel.
+
+**Pendiente de verificar en prod:** prompt de instalación PWA (Chrome
+Android/desktop), aviso de versión en el PRÓXIMO deploy, invitación E2E con
+un amigo real (landing → registro → auto-follow), Realtime de DMs con dos
+navegadores.
 
 ## Sesión 4 (cont.) — Explorar + Admin + mensajería verificada
 
