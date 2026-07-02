@@ -57,7 +57,7 @@ export function VersionWatcher() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-[76px] z-40 flex justify-center px-4 lg:bottom-6 [animation:fp-rise_.32s_var(--ease-flow)]"
+      className="fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 lg:bottom-6 [animation:fp-rise_.32s_var(--ease-flow)]"
     >
       <div className="glass flex items-center gap-3 rounded-pill border border-line px-4 py-2 shadow-[var(--shadow-hover)]">
         <span className="font-sans text-[13px] font-medium text-ink">

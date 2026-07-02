@@ -122,7 +122,7 @@ export function InstallPrompt() {
     <div
       role="dialog"
       aria-label={t("pwa.title")}
-      className="fixed inset-x-0 bottom-[76px] z-40 flex justify-center px-4 lg:bottom-6 [animation:fp-rise_.32s_var(--ease-flow)]"
+      className="fixed inset-x-0 bottom-[calc(96px+env(safe-area-inset-bottom))] z-40 flex justify-center px-4 lg:bottom-6 [animation:fp-rise_.32s_var(--ease-flow)]"
     >
       <div className="glass flex items-center gap-3 rounded-[16px] border border-line px-4 py-3 shadow-[var(--shadow-hover)]">
         <FlowMark size={26} intro={false} className="flex-none text-ink" />
