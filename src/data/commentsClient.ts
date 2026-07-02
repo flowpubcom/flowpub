@@ -1,7 +1,54 @@
 import { createClient } from "@/lib/supabase/client";
 import { uploadAudio } from "./storage";
+import {
+  COMMENT_SELECT,
+  COMMENT_SELECT_LEGACY,
+  mapCommentRow,
+  type Comment,
+} from "./comments";
 
-// Escritura de comentarios desde el cliente (como el usuario autenticado).
+// Lectura y escritura de comentarios desde el cliente (RLS manda).
+
+/** Comentarios de un Flow leídos desde el navegador (panel inline del Pub).
+ *  `null` = falló la carga (≠ lista vacía): el caller puede reintentar. */
+export async function fetchCommentsClient(
+  flowId: string,
+): Promise<Comment[] | null> {
+  const supabase = createClient();
+
+  let { data, error } = await supabase
+    .from("comments")
+    .select(COMMENT_SELECT)
+    .eq("flow_id", flowId)
+    .order("created_at", { ascending: false });
+  if (error?.code === "42703") {
+    ({ data, error } = await supabase
+      .from("comments")
+      .select(COMMENT_SELECT_LEGACY)
+      .eq("flow_id", flowId)
+      .order("created_at", { ascending: false }));
+  }
+  if (error || !data) return null;
+
+  const comments = data
+    .map(mapCommentRow)
+    .filter((c): c is Comment => c !== null);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (user && comments.length) {
+    const { data: myLikes } = await supabase
+      .from("likes")
+      .select("comment_id")
+      .eq("user_id", user.id)
+      .in("comment_id", comments.map((c) => c.id));
+    const likedSet = new Set((myLikes ?? []).map((l) => l.comment_id as string));
+    for (const c of comments) c.liked = likedSet.has(c.id);
+  }
+
+  return comments;
+}
 
 export type PostCommentResult =
   | { ok: true; id: string }

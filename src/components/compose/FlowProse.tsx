@@ -2,27 +2,34 @@ import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/cn";
 
 // Renderiza markdown (subconjunto de la marca) con tokens: cuerpo Fraunces,
-// blockquote con barra grana. Reusado por el composer y la página del Flow.
+// blockquote con barra grana. Reusado por el composer, la página del Flow y
+// la lectura inline del Pub.
 export function FlowProse({
   source,
   className,
+  demoteHeadings = false,
 }: {
   source: string;
   className?: string;
+  /** En contexto inline (dentro de una card cuyo título es h3), los ## del
+   *  markdown bajan a h4/h5 para no invertir el outline del documento. */
+  demoteHeadings?: boolean;
 }) {
+  const H2 = demoteHeadings ? "h4" : "h2";
+  const H3 = demoteHeadings ? "h5" : "h3";
   return (
     <div className={cn("font-serif text-ink", className)}>
       <ReactMarkdown
         components={{
           h2: ({ children }) => (
-            <h2 className="mb-3 mt-7 font-serif text-[24px] font-medium leading-snug text-ink first:mt-0">
+            <H2 className="mb-3 mt-7 font-serif text-[24px] font-medium leading-snug text-ink first:mt-0">
               {children}
-            </h2>
+            </H2>
           ),
           h3: ({ children }) => (
-            <h3 className="mb-2 mt-6 font-serif text-[20px] font-medium text-ink">
+            <H3 className="mb-2 mt-6 font-serif text-[20px] font-medium text-ink">
               {children}
-            </h3>
+            </H3>
           ),
           p: ({ children }) => (
             <p className="mb-4 text-[18px] leading-[1.7] text-ink">{children}</p>

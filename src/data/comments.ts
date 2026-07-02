@@ -16,6 +16,50 @@ export interface Comment {
   liked: boolean;
 }
 
+// ── Mapeo compartido fila→Comment (server y cliente leen igual) ─────────────
+
+// Hint !author_id: desambigua comments↔profiles (likes crea otro camino).
+export const COMMENT_SELECT =
+  "id,kind,body_text,audio_url,transcript_raw,duration_s,like_count,created_at," +
+  "author:profiles!author_id(id,username,display_name,avatar_url)";
+// Cascada tolerante: si el esquema aún no tiene duration_s (migración 04
+// pendiente), reintenta sin la columna.
+export const COMMENT_SELECT_LEGACY =
+  "id,kind,body_text,audio_url,transcript_raw,like_count,created_at," +
+  "author:profiles!author_id(id,username,display_name,avatar_url)";
+
+function ageMinutesFrom(createdAt: string | null): number {
+  if (!createdAt) return 0;
+  return Math.max(
+    0,
+    Math.round((Date.now() - new Date(createdAt).getTime()) / 60000),
+  );
+}
+
+export function mapCommentRow(r: any): Comment | null {
+  const a = r.author;
+  if (!a) return null;
+  const author: Profile = {
+    id: a.id,
+    username: a.username,
+    displayName: a.display_name || a.username,
+    avatarUrl: a.avatar_url ?? null,
+  };
+  const kind = r.kind === "voice" ? "voice" : "text";
+  return {
+    id: r.id,
+    author,
+    kind,
+    text: kind === "text" ? (r.body_text ?? "") : undefined,
+    audioUrl: kind === "voice" ? (r.audio_url ?? null) : undefined,
+    audioDurationSeconds: kind === "voice" ? (r.duration_s ?? 0) : undefined,
+    transcript: kind === "voice" ? (r.transcript_raw ?? undefined) : undefined,
+    ageMinutes: ageMinutesFrom(r.created_at),
+    likeCount: r.like_count ?? 0,
+    liked: false,
+  };
+}
+
 // Persona de la sesión front-first (al comentar). Auth real la reemplaza.
 export const GUEST: Profile = {
   id: "me",

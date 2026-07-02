@@ -9,6 +9,7 @@ import {
   Heart,
   Languages,
   MessageCircle,
+  PenLine,
   Share2,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -29,6 +30,7 @@ import type { Flow } from "@/data/types";
 import type { Comment } from "@/data/comments";
 import { CommentComposer } from "./CommentComposer";
 import { CommentItem } from "./CommentItem";
+import { FlowEditModal } from "./FlowEditModal";
 
 export function FlowReader({
   flow,
@@ -49,6 +51,7 @@ export function FlowReader({
   const [following, setFollowing] = useState(flow.followingAuthor ?? false);
   const [comments, setComments] = useState(initialComments);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
+  const [editOpen, setEditOpen] = useState(false);
 
   // Traducción opt-in (Gemini): el contenido se queda en su idioma; el lector
   // pide la traducción cuando quiere. Se cachea en memoria por visita.
@@ -56,7 +59,12 @@ export function FlowReader({
   const [showTranslated, setShowTranslated] = useState(false);
   const [translating, setTranslating] = useState(false);
 
-  const body = flow.bodyMd ?? `## ${flow.title}\n\n${flow.excerpt}`;
+  // Título/cuerpo en estado local: la edición se pinta al instante y el modal
+  // reabre con lo recién guardado aunque router.refresh() siga en vuelo.
+  const [title, setTitle] = useState(flow.title);
+  const [body, setBody] = useState(
+    flow.bodyMd ?? `## ${flow.title}\n\n${flow.excerpt}`,
+  );
   const transcript = flow.transcriptRaw ?? flow.excerpt;
   const isOwn = user?.id === flow.author.id;
 
@@ -99,7 +107,7 @@ export function FlowReader({
   };
 
   const onShare = async () => {
-    const out = await shareFlow(flow.title, `/flow/${flow.id}`);
+    const out = await shareFlow(title, `/flow/${flow.id}`);
     play(out === "failed" ? "soft" : "pop");
   };
 
@@ -183,7 +191,7 @@ export function FlowReader({
         </div>
 
         <h1 className="font-serif text-[clamp(30px,5vw,46px)] font-normal leading-[1.08] tracking-[-0.02em] text-ink">
-          {flow.title}
+          {title}
         </h1>
 
         {/* byline */}
@@ -203,7 +211,19 @@ export function FlowReader({
               </span>
             </span>
           </Link>
-          {!isOwn && (
+          {isOwn ? (
+            <button
+              type="button"
+              onClick={() => {
+                play("click");
+                setEditOpen(true);
+              }}
+              className="flex flex-none items-center gap-2 rounded-pill border border-ink px-5 py-2 font-sans text-[13px] font-semibold text-ink transition-colors duration-150 ease-flow hover:bg-ink hover:text-ink-on"
+            >
+              <PenLine size={14} strokeWidth={2} />
+              {t("flow.edit")}
+            </button>
+          ) : (
             <button
               type="button"
               aria-pressed={following}
@@ -222,7 +242,7 @@ export function FlowReader({
 
         {/* portada */}
         <div className="mt-6 overflow-hidden rounded-card border border-line">
-          <Cover kind={flow.coverKind} seed={flow.id} title={flow.title} />
+          <Cover kind={flow.coverKind} seed={flow.id} title={title} />
         </div>
 
         {/* audio */}
@@ -374,6 +394,25 @@ export function FlowReader({
           </div>
         </section>
       </article>
+
+      {isOwn && (
+        <FlowEditModal
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          flowId={flow.id}
+          initialTitle={title}
+          initialBody={body}
+          onSaved={(newTitle, newBody) => {
+            setTitle(newTitle);
+            setBody(newBody);
+            setEditOpen(false);
+            // La traducción cacheada quedó vieja: se pide de nuevo si hace falta.
+            setTranslated(null);
+            setShowTranslated(false);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }

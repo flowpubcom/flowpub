@@ -39,6 +39,16 @@ const es = {
   "original_content": "Contenido en su idioma original",
   "share.copied": "Enlace copiado",
   "comment.reply": "Responder",
+  "pub.readHere": "Leer aquí",
+  "pub.showLess": "Mostrar menos",
+  "pub.openFlow": "Abrir el Flow completo",
+  "comments.empty": "Sé la primera voz en responder.",
+  "comments.loading": "Cargando comentarios…",
+  "flow.edit": "Editar Flow",
+  "flow.editTitle": "Título",
+  "flow.editBody": "Publicación",
+  "flow.editHint": "El transcript original no se toca: es la voz.",
+  "flow.editError": "No se pudo guardar. Intenta de nuevo.",
 
   "notif.title": "Notificaciones — quién te escucha",
   "notif.subtitle":
@@ -184,6 +194,16 @@ const en: Record<DictKey, string> = {
   "original_content": "Content in its original language",
   "share.copied": "Link copied",
   "comment.reply": "Reply",
+  "pub.readHere": "Read here",
+  "pub.showLess": "Show less",
+  "pub.openFlow": "Open the full Flow",
+  "comments.empty": "Be the first voice to reply.",
+  "comments.loading": "Loading comments…",
+  "flow.edit": "Edit Flow",
+  "flow.editTitle": "Title",
+  "flow.editBody": "Article",
+  "flow.editHint": "The original transcript stays untouched: it's the voice.",
+  "flow.editError": "Couldn't save. Try again.",
 
   "notif.title": "Notifications — who's listening",
   "notif.subtitle":

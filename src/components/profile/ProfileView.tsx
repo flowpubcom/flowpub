@@ -3,10 +3,11 @@
 import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, MapPin, Mic, Pencil, Share2 } from "lucide-react";
+import { Camera, MapPin, Mic, PenLine, Pencil, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
 import { Cover } from "@/components/cover";
+import { FlowEditModal } from "@/components/flow/FlowEditModal";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -48,6 +49,13 @@ export function ProfileView({
   const [tab, setTab] = useState<Tab>("flows");
   const [following, setFollowing] = useState(initialFollowing);
   const [editOpen, setEditOpen] = useState(false);
+  const [editFlow, setEditFlow] = useState<Flow | null>(null);
+  // Ediciones recién guardadas: se pintan al instante (tiles + modal) mientras
+  // router.refresh() trae la verdad del servidor. Sin esto, reabrir el lápiz
+  // antes del refresh mostraría el texto viejo y podría pisar el guardado.
+  const [patches, setPatches] = useState<
+    Record<string, { title: string; bodyMd: string }>
+  >({});
 
   const toggleFollow = async () => {
     if (!user) {
@@ -199,14 +207,44 @@ export function ProfileView({
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3.5 md:grid-cols-3">
-          {grid.map((flow) =>
-            tab === "drafts" ? (
-              <DraftTile key={flow.id} flow={flow} label={t("profile.unpublished")} />
+          {grid.map((raw) => {
+            const flow = patches[raw.id] ? { ...raw, ...patches[raw.id] } : raw;
+            return tab === "drafts" ? (
+              <DraftTile
+                key={flow.id}
+                flow={flow}
+                label={t("profile.unpublished")}
+                onEdit={isOwn ? () => setEditFlow(flow) : undefined}
+              />
             ) : (
-              <FlowTile key={flow.id} flow={flow} />
-            ),
-          )}
+              <FlowTile
+                key={flow.id}
+                flow={flow}
+                onEdit={
+                  isOwn && tab === "flows" ? () => setEditFlow(flow) : undefined
+                }
+              />
+            );
+          })}
         </div>
+      )}
+
+      {editFlow && (
+        <FlowEditModal
+          open
+          onClose={() => setEditFlow(null)}
+          flowId={editFlow.id}
+          initialTitle={editFlow.title}
+          initialBody={editFlow.bodyMd ?? editFlow.excerpt}
+          onSaved={(newTitle, newBody) => {
+            setPatches((prev) => ({
+              ...prev,
+              [editFlow.id]: { title: newTitle, bodyMd: newBody },
+            }));
+            setEditFlow(null);
+            router.refresh();
+          }}
+        />
       )}
 
       {isOwn && (
@@ -240,51 +278,100 @@ function Stat({ n, label }: { n: number; label: string }) {
   );
 }
 
-/** Mini-portada del grid del perfil (tile 16:11 con gradiente y datos). */
-function FlowTile({ flow }: { flow: Flow }) {
+/** Botón de edición sobre un tile (hermano del Link, nunca anidado).
+ *  `overCover`: receta sticker (hex fijo, la MISMA excepción del BADGE de
+ *  FlowCard — legible sobre ambas variantes de portada); si no, tokens. */
+function TileEditButton({
+  onEdit,
+  label,
+  overCover = false,
+}: {
+  onEdit: () => void;
+  label: string;
+  overCover?: boolean;
+}) {
   return (
-    <Link
-      href={`/flow/${flow.id}`}
-      className="group relative block aspect-[16/11] overflow-hidden rounded-[14px] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:-translate-y-[3px]"
+    <button
+      type="button"
+      onClick={onEdit}
+      aria-label={label}
+      title={label}
+      className={cn(
+        "absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-pill shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-105 active:scale-[.95]",
+        overCover
+          ? "bg-[rgba(251,250,246,0.92)] text-[#1A1714]"
+          : "border border-line-2 bg-surface text-ink",
+      )}
     >
-      <Cover
-        kind={flow.coverKind}
-        seed={flow.id}
-        title={flow.title}
-        className="aspect-[16/11] h-full"
-      />
-      <span
-        aria-hidden
-        className="absolute inset-0 bg-[linear-gradient(to_top,rgba(14,11,9,.86),transparent_55%)]"
-      />
-      <span className="absolute inset-x-3 bottom-2.5 text-left">
-        <span className="block font-serif text-[15px] font-medium leading-[1.2] text-amate">
-          {flow.title}
+      <PenLine size={14} strokeWidth={2} />
+    </button>
+  );
+}
+
+/** Mini-portada del grid del perfil (tile 16:11 con gradiente y datos). */
+function FlowTile({ flow, onEdit }: { flow: Flow; onEdit?: () => void }) {
+  const { t } = useI18n();
+  return (
+    <div className="group relative aspect-[16/11] overflow-hidden rounded-[14px] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:-translate-y-[3px]">
+      <Link
+        href={`/flow/${flow.id}`}
+        className="absolute inset-0 block"
+        aria-label={flow.title}
+      >
+        <Cover
+          kind={flow.coverKind}
+          seed={flow.id}
+          title={flow.title}
+          className="aspect-[16/11] h-full"
+        />
+        <span
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(14,11,9,.86),transparent_55%)]"
+        />
+        <span className="absolute inset-x-3 bottom-2.5 text-left">
+          <span className="block font-serif text-[15px] font-medium leading-[1.2] text-amate">
+            {flow.title}
+          </span>
+          <span className="mt-0.5 block font-mono text-[11px] text-[rgba(242,239,232,.7)]">
+            {durationLabel(flow.durationSeconds)} · {compactNumber(flow.likeCount)}{" "}
+            <span aria-hidden>♥</span>
+          </span>
         </span>
-        <span className="mt-0.5 block font-mono text-[11px] text-[rgba(242,239,232,.7)]">
-          {durationLabel(flow.durationSeconds)} · {compactNumber(flow.likeCount)}{" "}
-          <span aria-hidden>♥</span>
-        </span>
-      </span>
-    </Link>
+      </Link>
+      {onEdit && (
+        <TileEditButton onEdit={onEdit} label={t("flow.edit")} overCover />
+      )}
+    </div>
   );
 }
 
 /** Borrador: tile punteado con mic (solo el dueño lo ve). */
-function DraftTile({ flow, label }: { flow: Flow; label: string }) {
+function DraftTile({
+  flow,
+  label,
+  onEdit,
+}: {
+  flow: Flow;
+  label: string;
+  onEdit?: () => void;
+}) {
+  const { t } = useI18n();
   return (
-    <Link
-      href={`/flow/${flow.id}`}
-      className="relative flex aspect-[16/11] flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-2 bg-surface-2 text-text-3 transition-colors hover-tint"
-    >
-      <Mic size={26} strokeWidth={1.6} />
-      <span className="font-serif text-[14px] text-text-2">
-        {flow.title || "Borrador"}
-      </span>
-      <span className="font-mono text-[11px]">
-        {durationLabel(flow.durationSeconds)} · {label}
-      </span>
-    </Link>
+    <div className="relative aspect-[16/11]">
+      <Link
+        href={`/flow/${flow.id}`}
+        className="flex h-full flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-2 bg-surface-2 text-text-3 transition-colors hover-tint"
+      >
+        <Mic size={26} strokeWidth={1.6} />
+        <span className="font-serif text-[14px] text-text-2">
+          {flow.title || "Borrador"}
+        </span>
+        <span className="font-mono text-[11px]">
+          {durationLabel(flow.durationSeconds)} · {label}
+        </span>
+      </Link>
+      {onEdit && <TileEditButton onEdit={onEdit} label={t("flow.edit")} />}
+    </div>
   );
 }
 

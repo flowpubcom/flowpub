@@ -25,6 +25,18 @@ export function relativeTime(ageMinutes: number, lang: "es" | "en" = "es"): stri
   return lang === "es" ? `hace ${d} d` : `${d}d ago`;
 }
 
+/** Primeras ~180 letras del markdown, sin marcas (extracto de tarjeta). */
+export function excerptOf(md: string, max = 180): string {
+  const plain = md
+    .replace(/[#>*_`~]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (plain.length <= max) return plain;
+  const cut = plain.slice(0, max);
+  const sp = cut.lastIndexOf(" ");
+  return `${(sp > 80 ? cut.slice(0, sp) : cut).trim()}…`;
+}
+
 /** 1200 → «1.2k». */
 export function compactNumber(n: number): string {
   if (n < 1000) return String(n);

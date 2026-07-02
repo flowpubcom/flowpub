@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { excerptOf } from "@/lib/format";
 import type { Flow, Profile } from "./types";
 import type { CoverKind } from "@/lib/covers";
 
@@ -14,17 +15,6 @@ const SELECT =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
-
-function excerptOf(md: string, max = 180): string {
-  const plain = md
-    .replace(/[#>*_`~]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (plain.length <= max) return plain;
-  const cut = plain.slice(0, max);
-  const sp = cut.lastIndexOf(" ");
-  return `${(sp > 80 ? cut.slice(0, sp) : cut).trim()}…`;
-}
 
 function ageMinutesFrom(createdAt: string | null): number {
   if (!createdAt) return 0;
