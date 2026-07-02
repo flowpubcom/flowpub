@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, MapPin, Mic, PenLine, Pencil, Share2 } from "lucide-react";
+import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
 import { Cover } from "@/components/cover";
@@ -12,6 +12,7 @@ import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { setFollow, shareFlow } from "@/data/engagement";
+import { getOrCreateDm } from "@/data/messagesClient";
 import {
   isValidUsername,
   normalizeUsername,
@@ -75,6 +76,28 @@ export function ProfileView({
     play(out === "failed" ? "soft" : "pop");
   };
 
+  const [starting, setStarting] = useState(false);
+  const [dmError, setDmError] = useState<string | null>(null);
+  const startDm = async () => {
+    if (!user) {
+      play("soft");
+      router.push("/entrar");
+      return;
+    }
+    if (starting) return;
+    setStarting(true);
+    setDmError(null);
+    play("click");
+    const res = await getOrCreateDm(profile.id);
+    if (!res.ok) {
+      setStarting(false);
+      setDmError(t("msg.startError"));
+      play("soft");
+      return;
+    }
+    router.push(`/mensajes/${res.id}`);
+  };
+
   const tabs: [Tab, string][] = [
     ["flows", t("profile.flows")],
     ["liked", t("profile.liked")],
@@ -103,6 +126,18 @@ export function ProfileView({
           >
             <Share2 size={17} strokeWidth={1.8} />
           </button>
+          {!isOwn && (
+            <button
+              type="button"
+              onClick={() => void startDm()}
+              disabled={starting}
+              aria-label={t("profile.message")}
+              title={t("profile.message")}
+              className="grid h-[42px] w-[42px] place-items-center rounded-pill border border-line-2 text-ink transition-colors hover-tint disabled:opacity-50"
+            >
+              <MessageCircle size={17} strokeWidth={1.8} />
+            </button>
+          )}
           {isOwn ? (
             <button
               type="button"
@@ -132,6 +167,12 @@ export function ProfileView({
           )}
         </div>
       </div>
+
+      {dmError && (
+        <p role="status" className="mb-3 font-sans text-[13px] text-grana">
+          {dmError}
+        </p>
+      )}
 
       {/* identidad */}
       <h1 className="font-serif text-[32px] font-medium leading-[1.1] text-ink">

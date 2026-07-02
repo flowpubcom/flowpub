@@ -1,8 +1,61 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 3, cierre — 2026-07-01 (lectura inline + edición
-> + limpieza + OpenGraph)**.
+> Última actualización: **sesión 4 — 2026-07-02 (Mensajería / milestone 7)**.
+
+## Sesión 4 — Mensajería (`/mensajes`, milestone 7)
+
+**Hecho** (typecheck/lint/build verdes; UI verificada en vivo hasta donde
+permite la BD sin la migración nueva):
+
+- **Decisión de Julio aplicada:** el copy del OG bajó a «Graba hasta 3 minutos»
+  (coincide con el tope real). El tope sigue en 3:00.
+- **`supabase/migration_07_mensajeria.sql`** (⚠️ **pendiente de correr**):
+  - RPC `get_or_create_dm(other uuid)` security-definer: halla o crea el DM 1:1
+    atómicamente (evita conversaciones duplicadas por carreras).
+  - Columnas `conversations.last_message_at` (orden de bandeja),
+    `conversation_members.last_read_at` (no leídos), `messages.duration_s` (voz).
+  - Trigger `bump_conversation` (last_message_at al insertar mensaje).
+  - Policy `members_update` + grant de columna `last_read_at` (marcar leído).
+  - Habilita Realtime en `public.messages` (el thread abierto recibe en vivo;
+    la RLS `is_member` sigue mandando).
+- **Capa de datos:** `data/messages.ts` (tipos puros + mapeo), `messagesApi.ts`
+  (server: bandeja con último mensaje + no leídos, meta del thread, mensajes —
+  todo con cascada tolerante a que la migración no haya corrido),
+  `messagesClient.ts` (`getOrCreateDm`, enviar texto/voz reusando
+  storage+`/api/transcribe`, marcar leído), hook `useConversationMessages`
+  (suscripción Realtime + dedup por id del eco de los propios).
+- **UI (`components/messages/`):** `MessagesShell` (desktop dos-paneles lista
+  340px + thread; móvil lista o thread a pantalla completa como overlay fixed
+  con botón «Volver»), `ConversationList` (buscador + items con avatar/último/
+  hora/badge de no leídos), `MessageThread` (header + scroll + autoscroll +
+  marcar leído), `MessageBubble` (texto in/out + voz con reproductor compacto
+  temado grana/superficie + «Ver transcript»), `MessageComposer` (texto + nota
+  de voz ≤90s, mismo pipeline que los comentarios de voz).
+- **Rutas:** `/mensajes` (bandeja) y `/mensajes/[id]` (thread; si no soy
+  integrante → redirige a la bandeja por RLS). Gateadas en el middleware.
+- **`/@usuario`:** botón «Enviar mensaje» (no propio) → `get_or_create_dm` →
+  navega al thread; degrada con aviso si la migración no ha corrido.
+- **`AppShell`:** prop `flush` (mensajería maneja su altura, sin top bar/padding
+  móvil); se quitó el punto grana **hardcodeado** de «Mensajes» en el nav (era
+  placeholder; hoy no hay conteo real de DMs sin leer aún — pendiente menor).
+- i18n `msg.*` + `profile.message` ES/EN.
+
+**Verificado en vivo (sin migración):** `/mensajes` carga con estado vacío
+correcto y **sin 500** (las lecturas toleran las columnas faltantes); layout
+desktop de dos-paneles exacto (rail 236 + lista 340 + thread, altura completa);
+botón «Enviar mensaje» aparece en perfiles ajenos y **degrada con gracia**
+(muestra aviso) mientras el RPC no exista. **Pendiente de verificar tras la
+migración:** enviar/recibir texto y voz, Realtime en vivo entre dos cuentas,
+badges de no leídos, y el thread a pantalla completa en móvil. (No pude sembrar
+una conversación de prueba: el guardrail de auto-mode bloquea escrituras con
+service_role a producción — bien.)
+
+**👉 Julio debe correr en el SQL Editor (en orden):** `migration_05`
+(notificaciones), `migration_06` (limpieza — antes del beta), `migration_07`
+(mensajería). Sin la 07, `/mensajes` vive pero vacío y «Enviar mensaje» avisa.
+
+## Sesión 3, cierre — fluidez del Pub + pre-lanzamiento
 
 ## Sesión 3, cierre — fluidez del Pub + pre-lanzamiento
 

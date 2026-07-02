@@ -20,10 +20,12 @@ export interface AppShellProps {
   active?: string;
   /** Contenido del riel derecho (desktop xl). */
   rightRail?: ReactNode;
+  /** El contenido maneja su propia altura (sin padding inferior móvil). */
+  flush?: boolean;
 }
 
 /** Chrome persistente: rieles en desktop; top bar + bottom nav + FAB en móvil. */
-export function AppShell({ children, active = "pub", rightRail }: AppShellProps) {
+export function AppShell({ children, active = "pub", rightRail, flush = false }: AppShellProps) {
   const { t } = useI18n();
   const { play } = useSound();
   const { user } = useAuth();
@@ -66,8 +68,13 @@ export function AppShell({ children, active = "pub", rightRail }: AppShellProps)
       </aside>
 
       {/* Columna central */}
-      <main className="min-w-0 flex-1 pb-24 lg:border-r lg:border-line lg:pb-0">
-        <MobileTopBar user={user} unreadCount={unreadCount} />
+      <main
+        className={cn(
+          "min-w-0 flex-1 lg:border-r lg:border-line lg:pb-0",
+          flush ? "pb-0" : "pb-24",
+        )}
+      >
+        {!flush && <MobileTopBar user={user} unreadCount={unreadCount} />}
         {children}
       </main>
 
@@ -120,7 +127,7 @@ function NavLink({
     >
       <Icon size={20} strokeWidth={active ? 2.4 : 2} />
       {label}
-      {(item.key === "messages" || (item.key === "notifications" && unread > 0)) && (
+      {item.key === "notifications" && unread > 0 && (
         <span className="ml-auto h-2 w-2 rounded-pill bg-grana" aria-hidden />
       )}
     </Link>
