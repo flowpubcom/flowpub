@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useI18n } from "@/providers/I18nProvider";
 
 // Grabador REAL (MediaRecorder). La transcripción es post-grabación (Gemini STT
 // en /api/transcribe); no hay transcript en vivo por ahora. Respeta permisos.
@@ -36,6 +37,12 @@ export function useRecorder(maxSeconds = 540): Recorder {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // `t` se re-crea al cambiar de idioma; lo leemos por ref para no re-armar los
+  // callbacks (start/stop) en cada render ni ensuciar sus dependencias.
+  const { t } = useI18n();
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const mediaRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -58,7 +65,7 @@ export function useRecorder(maxSeconds = 540): Recorder {
   const start = useCallback(async () => {
     setError(null);
     if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-      setError("Tu navegador no permite grabar audio.");
+      setError(tRef.current("rec.noSupport"));
       return false;
     }
     try {
@@ -82,7 +89,7 @@ export function useRecorder(maxSeconds = 540): Recorder {
       }, 200);
       return true;
     } catch {
-      setError("No pudimos usar el micrófono. Revisa los permisos del navegador.");
+      setError(tRef.current("rec.micError"));
       cleanup();
       return false;
     }

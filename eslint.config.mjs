@@ -8,6 +8,7 @@ const eslintConfig = [
   {
     ignores: [
       ".next/**",
+      ".claude/**",
       "node_modules/**",
       "design_handoff_flowpub/**",
       "next-env.d.ts",
