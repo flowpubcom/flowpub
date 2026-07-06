@@ -103,6 +103,8 @@
   /* sombras (las de marca; window se oscurece en dark) */
   --shadow-card: 0 1px 2px rgba(26, 23, 20, 0.05);
   --shadow-hover: 0 18px 36px -18px rgba(26, 23, 20, 0.3);
+  /* glow de hover (halo alrededor, sin desplazar): anillo + resplandor suave */
+  --shadow-glow: 0 0 0 1px rgba(26, 23, 20, 0.13), 0 0 28px -4px rgba(26, 23, 20, 0.25);
   --shadow-window: 0 30px 70px -28px rgba(26, 23, 20, 0.42);
   --shadow-grana: 0 8px 20px -8px rgba(192, 48, 58, 0.6);
 
@@ -126,6 +128,7 @@
   --grana-wash: rgba(192, 48, 58, 0.18);
   --grana-text: #ec9da2;
   --wave: rgba(242, 239, 232, 0.18);
+  --shadow-glow: 0 0 0 1px rgba(242, 239, 232, 0.16), 0 0 30px -4px rgba(242, 239, 232, 0.1);
 
   --cover-canvas: #262019;
   --cover-shadow: #0e0c0a;
@@ -162,6 +165,7 @@
     --grana-wash: rgba(192, 48, 58, 0.18);
     --grana-text: #ec9da2;
     --wave: rgba(242, 239, 232, 0.18);
+    --shadow-glow: 0 0 0 1px rgba(242, 239, 232, 0.16), 0 0 30px -4px rgba(242, 239, 232, 0.1);
     --cover-canvas: #262019;
     --cover-shadow: #0e0c0a;
     --cover-line: #f2efe8;

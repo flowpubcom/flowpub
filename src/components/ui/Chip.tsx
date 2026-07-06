@@ -39,7 +39,9 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
         "inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-pill border px-[15px] font-sans text-[13px] transition-colors duration-150 ease-flow active:scale-[.97]",
         active
           ? "border-ink bg-ink font-semibold text-ink-on"
-          : "border-line-2 bg-transparent font-medium text-text-2 hover:border-ink hover:text-ink",
+          : // Fondo sólido (papel): sobre la barra glass del Pub, los chips
+            // transparentes se perdían con los Flows pasando por atrás.
+            "border-line-2 bg-surface font-medium text-text-2 hover:border-ink hover:text-ink",
         className,
       )}
       onClick={(e) => {

@@ -207,6 +207,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
           <AudioPlayer
             src={flow.audioUrl ?? undefined}
             durationSeconds={flow.durationSeconds}
+            variant="full"
             radioId={flow.audioUrl ? flow.id : undefined}
           />
         </div>

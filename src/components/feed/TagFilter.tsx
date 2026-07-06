@@ -109,7 +109,7 @@ function DurationMenu({
           "flex h-[34px] items-center gap-1.5 rounded-pill border px-3.5 font-sans text-[13px] transition-colors duration-150 ease-flow",
           value !== null
             ? "border-ink bg-ink font-semibold text-ink-on"
-            : "border-line-2 font-medium text-text-2 hover:border-ink hover:text-ink",
+            : "border-line-2 bg-surface font-medium text-text-2 hover:border-ink hover:text-ink",
         )}
       >
         <Clock size={14} />
