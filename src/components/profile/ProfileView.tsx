@@ -440,6 +440,9 @@ function EditProfileModal({
   const [bio, setBio] = useState(profile.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [bannerUrl, setBannerUrl] = useState(profile.bannerUrl);
+  // La fecha viene del AuthProvider (RPC privada), no del perfil público.
+  const { user: me } = useAuth();
+  const [birthdate, setBirthdate] = useState(me?.birthdate ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -484,7 +487,12 @@ function EditProfileModal({
     }
     setSaving(true);
     setError(null);
-    const res = await updateProfile({ displayName: name, username: uname, bio });
+    const res = await updateProfile({
+      displayName: name,
+      username: uname,
+      bio,
+      birthdate: birthdate ? birthdate : me?.birthdate ? null : undefined,
+    });
     setSaving(false);
     if (!res.ok) {
       setError(
@@ -596,6 +604,19 @@ function EditProfileModal({
             aria-label={t("onb.profile.bio")}
             className={cn(inputCls, "resize-none font-serif text-[16px]")}
           />
+        </Field>
+        <Field label={t("profile.birthdate")}>
+          <input
+            type="date"
+            value={birthdate}
+            max={new Date().toISOString().slice(0, 10)}
+            onChange={(e) => setBirthdate(e.target.value)}
+            aria-label={t("profile.birthdate")}
+            className={inputCls}
+          />
+          <span className="mt-1 block font-sans text-[12px] text-text-3">
+            {t("profile.birthdateHint")}
+          </span>
         </Field>
         {error && (
           <p role="status" className="font-sans text-[13px] text-grana">

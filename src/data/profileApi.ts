@@ -35,6 +35,8 @@ export async function updateProfile(input: {
   displayName: string;
   username: string;
   bio?: string;
+  /** "YYYY-MM-DD" | null para borrarla | undefined = no tocarla. */
+  birthdate?: string | null;
 }): Promise<OnboardingResult> {
   const supabase = createClient();
   const {
@@ -42,14 +44,23 @@ export async function updateProfile(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "no-session" };
 
-  const { error } = await supabase
+  const base: Record<string, unknown> = {
+    display_name: input.displayName.trim(),
+    username: input.username,
+    bio: input.bio?.trim() || null,
+  };
+  let { error } = await supabase
     .from("profiles")
-    .update({
-      display_name: input.displayName.trim(),
-      username: input.username,
-      bio: input.bio?.trim() || null,
-    })
+    .update(
+      input.birthdate === undefined
+        ? base
+        : { ...base, birthdate: input.birthdate },
+    )
     .eq("id", user.id);
+  // Cascada tolerante: sin migración 15, guarda lo demás sin la fecha.
+  if (error?.code === "PGRST204" || error?.code === "42703" || error?.code === "42501") {
+    ({ error } = await supabase.from("profiles").update(base).eq("id", user.id));
+  }
   if (error) {
     if (error.code === "23505") return { ok: false, error: "username-taken" };
     return { ok: false, error: "generic" };

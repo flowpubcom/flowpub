@@ -16,6 +16,9 @@ export async function publishFlow(input: {
   coverKind: CoverKind;
   /** Foto subida por el autor; null/undefined = portada generativa. */
   coverUrl?: string | null;
+  /** Flags de contenido sensible (casillas del composer). */
+  explicitLang?: boolean;
+  adult?: boolean;
   durationSeconds: number;
   tagNames: string[];
   audioUrl?: string | null;
@@ -28,22 +31,35 @@ export async function publishFlow(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "no-session" };
 
-  const { data: flow, error } = await supabase
+  const base = {
+    author_id: user.id,
+    title: input.title.trim() || "Sin título",
+    body_md: input.bodyMd,
+    transcript_raw: input.transcriptRaw ?? null,
+    cover_kind: input.coverKind,
+    cover_url: input.coverUrl ?? null,
+    audio_url: input.audioUrl ?? null,
+    lang: "es",
+    status: input.status ?? "published",
+    duration_s: Math.round(input.durationSeconds),
+  };
+  // Cascada tolerante: sin migración 15, reintenta sin los flags.
+  let { data: flow, error } = await supabase
     .from("flows")
     .insert({
-      author_id: user.id,
-      title: input.title.trim() || "Sin título",
-      body_md: input.bodyMd,
-      transcript_raw: input.transcriptRaw ?? null,
-      cover_kind: input.coverKind,
-      cover_url: input.coverUrl ?? null,
-      audio_url: input.audioUrl ?? null,
-      lang: "es",
-      status: input.status ?? "published",
-      duration_s: Math.round(input.durationSeconds),
+      ...base,
+      explicit_lang: input.explicitLang ?? false,
+      adult: input.adult ?? false,
     })
     .select("id")
     .single();
+  if (error?.code === "PGRST204" || error?.code === "42703") {
+    ({ data: flow, error } = await supabase
+      .from("flows")
+      .insert(base)
+      .select("id")
+      .single());
+  }
 
   if (error || !flow) return { ok: false, error: "generic" };
 

@@ -61,6 +61,11 @@ const es = {
   "flow.editBody": "Publicación",
   "flow.editHint": "El transcript original no se toca: es la voz.",
   "flow.editError": "No se pudo guardar. Intenta de nuevo.",
+  "flow.explicit": "Lenguaje explícito",
+  "flow.adultOnly": "Para mayores de 18.",
+  "flow.adultHintGuest": "Entra a FlowPub y agrega tu fecha de nacimiento para escucharlo.",
+  "flow.adultHintNoBirthdate": "Agrega tu fecha de nacimiento en tu perfil para escucharlo.",
+  "flow.adultHintMinor": "Este Flow no está disponible para tu edad.",
 
   "notif.title": "Notificaciones — quién te escucha",
   "notif.subtitle":
@@ -121,6 +126,8 @@ const es = {
   "profile.saveChanges": "Guardar cambios",
   "profile.changePhoto": "Cambiar foto",
   "profile.changeBanner": "Cambiar portada",
+  "profile.birthdate": "Fecha de nacimiento",
+  "profile.birthdateHint": "Privada. Solo abre la puerta del contenido 18+.",
   "profile.unpublished": "sin publicar",
   "profile.empty": "Aún no hay Flows aquí.",
 
@@ -302,6 +309,11 @@ const en: Record<DictKey, string> = {
   "flow.editBody": "Article",
   "flow.editHint": "The original transcript stays untouched: it's the voice.",
   "flow.editError": "Couldn't save. Try again.",
+  "flow.explicit": "Explicit language",
+  "flow.adultOnly": "18+ only.",
+  "flow.adultHintGuest": "Sign in to FlowPub and add your birthdate to listen.",
+  "flow.adultHintNoBirthdate": "Add your birthdate in your profile to listen.",
+  "flow.adultHintMinor": "This Flow isn't available for your age.",
 
   "notif.title": "Notifications — who's listening",
   "notif.subtitle":
@@ -362,6 +374,8 @@ const en: Record<DictKey, string> = {
   "profile.saveChanges": "Save changes",
   "profile.changePhoto": "Change photo",
   "profile.changeBanner": "Change banner",
+  "profile.birthdate": "Birthdate",
+  "profile.birthdateHint": "Private. It only unlocks 18+ content.",
   "profile.unpublished": "unpublished",
   "profile.empty": "No Flows here yet.",
 

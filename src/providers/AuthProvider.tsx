@@ -20,6 +20,10 @@ export interface SessionUser {
   avatarUrl?: string | null;
   /** ¿Ya completó el onboarding (3 temas + perfil)? */
   onboarded: boolean;
+  /** Fecha de nacimiento (privada; via RPC my_birthdate). null = sin declarar. */
+  birthdate: string | null;
+  /** ≥18 años según la fecha declarada. false si no la ha dado. */
+  isAdult: boolean;
 }
 
 interface AuthCtx {
@@ -36,6 +40,16 @@ const Ctx = createContext<AuthCtx>({
   refresh: async () => {},
   signOut: async () => {},
 });
+
+/** ≥18 años cumplidos a hoy. */
+function isAdultFrom(birthdate: string | null): boolean {
+  if (!birthdate) return false;
+  const b = new Date(birthdate + "T00:00:00");
+  if (Number.isNaN(b.getTime())) return false;
+  const now = new Date();
+  const cumple18 = new Date(b.getFullYear() + 18, b.getMonth(), b.getDate());
+  return now >= cumple18;
+}
 
 // Sin env (build/CI sin backend) el provider queda inerte: usuario null, sin crash.
 const hasEnv =
@@ -59,11 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       // Cascada tolerante: si el esquema aún no tiene `onboarded`, cae a false.
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("username, display_name, avatar_url, onboarded")
-        .eq("id", authUser.id)
-        .maybeSingle();
+      const [{ data: profile }, bd] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("username, display_name, avatar_url, onboarded")
+          .eq("id", authUser.id)
+          .maybeSingle(),
+        // La fecha de nacimiento es privada: viaja solo por RPC (migración 15).
+        (async () => {
+          try {
+            const r = await supabase.rpc("my_birthdate");
+            return r.error ? null : ((r.data as string | null) ?? null);
+          } catch {
+            return null;
+          }
+        })(),
+      ]);
 
       const fallbackName = authUser.email?.split("@")[0] ?? "voz";
       setUser({
@@ -73,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profile?.display_name || profile?.username || fallbackName,
         avatarUrl: profile?.avatar_url ?? null,
         onboarded: profile?.onboarded ?? false,
+        birthdate: bd,
+        isAdult: isAdultFrom(bd),
       });
       setLoading(false);
     },

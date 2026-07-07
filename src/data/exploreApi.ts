@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { mapFlowRow } from "./flowsApi";
+import { FLOW_SELECT_V1, FLOW_SELECT_V2, mapFlowRow } from "./flowsApi";
 import type { SuggestedVoice } from "./railApi";
 import type { Flow, TrendingTag } from "./types";
 
@@ -28,24 +28,22 @@ function sanitize(q: string): string {
   return q.replace(/[,%()*\\]/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Mismo shape del feed (autor + tags); el hint !author_id es obligatorio.
-const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
-  "author:profiles!author_id(id,username,display_name,avatar_url)," +
-  "flow_tags(tags(slug,name_es,name_en,sort))";
 
 /** Busca Flows publicados por título o cuerpo. */
 export const searchFlows = cache(async (q: string): Promise<Flow[]> => {
   const clean = sanitize(q);
   if (clean.length < 2) return [];
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("flows")
-    .select(SELECT)
-    .in("status", ["published", "featured"])
-    .or(`title.ilike.%${clean}%,body_md.ilike.%${clean}%`)
-    .order("created_at", { ascending: false })
-    .limit(30);
+  const run = (sel: string) =>
+    supabase
+      .from("flows")
+      .select(sel)
+      .in("status", ["published", "featured"])
+      .or(`title.ilike.%${clean}%,body_md.ilike.%${clean}%`)
+      .order("created_at", { ascending: false })
+      .limit(30);
+  let { data, error } = await run(FLOW_SELECT_V2);
+  if (error?.code === "42703") ({ data, error } = await run(FLOW_SELECT_V1));
   if (error || !data) return [];
   return data.map(mapFlowRow).filter((f): f is Flow => f !== null);
 });

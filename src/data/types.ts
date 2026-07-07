@@ -25,6 +25,10 @@ export interface Flow {
   coverKind: CoverKind;
   /** Foto subida por el autor; null = portada generativa (coverKind). */
   coverUrl?: string | null;
+  /** El autor marcó lenguaje altisonante. */
+  explicitLang?: boolean;
+  /** Contenido para mayores de 18 (Hot siempre lo es). */
+  adult?: boolean;
   likeCount: number;
   commentCount: number;
   liked: boolean;

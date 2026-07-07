@@ -15,6 +15,10 @@ const SELECT =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
+// V2 = V1 + flags de contenido sensible. Cascada tolerante: si la migración 15
+// no ha corrido (42703), se reintenta con V1 y los flags caen a false.
+export const FLOW_SELECT_V2 = SELECT.replace(",lang,status,", ",lang,status,explicit_lang,adult,");
+export const FLOW_SELECT_V1 = SELECT;
 
 function ageMinutesFrom(createdAt: string | null): number {
   if (!createdAt) return 0;
@@ -52,6 +56,8 @@ function mapRow(r: any): Flow | null {
     tagSlug: primary?.slug ?? undefined,
     coverKind: (r.cover_kind ?? "collage") as CoverKind,
     coverUrl: r.cover_url ?? null,
+    explicitLang: r.explicit_lang ?? false,
+    adult: r.adult ?? false,
     likeCount: r.like_count ?? 0,
     commentCount: r.comment_count ?? 0,
     liked: false,
@@ -93,12 +99,15 @@ async function enrichLiked(
  *  Tope defensivo; la paginación real llega con el scroll infinito. */
 export const fetchFlows = cache(async (): Promise<Flow[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("flows")
-    .select(SELECT)
-    .in("status", ["published", "featured"])
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const q = (sel: string) =>
+    supabase
+      .from("flows")
+      .select(sel)
+      .in("status", ["published", "featured"])
+      .order("created_at", { ascending: false })
+      .limit(60);
+  let { data, error } = await q(FLOW_SELECT_V2);
+  if (error?.code === "42703") ({ data, error } = await q(FLOW_SELECT_V1));
 
   if (error) {
     console.error("[fetchFlows]", error.message);
@@ -114,17 +123,21 @@ const SELECT_BY_TAG =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags!inner(tags!inner(slug,name_es,name_en,sort))";
+const SELECT_BY_TAG_V2 = SELECT_BY_TAG.replace(",lang,status,", ",lang,status,explicit_lang,adult,");
 
 /** Flows de un tema (páginas /tema/[slug]); el embed !inner filtra por slug. */
 export const fetchFlowsByTag = cache(async (slug: string): Promise<Flow[]> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("flows")
-    .select(SELECT_BY_TAG)
-    .eq("flow_tags.tags.slug", slug)
-    .in("status", ["published", "featured"])
-    .order("created_at", { ascending: false })
-    .limit(60);
+  const q = (sel: string) =>
+    supabase
+      .from("flows")
+      .select(sel)
+      .eq("flow_tags.tags.slug", slug)
+      .in("status", ["published", "featured"])
+      .order("created_at", { ascending: false })
+      .limit(60);
+  let { data, error } = await q(SELECT_BY_TAG_V2);
+  if (error?.code === "42703") ({ data, error } = await q(SELECT_BY_TAG));
 
   if (error) {
     console.error("[fetchFlowsByTag]", error.message);
@@ -137,11 +150,10 @@ export const fetchFlowsByTag = cache(async (slug: string): Promise<Flow[]> => {
  *  cache(): generateMetadata + página comparten UNA sola consulta por request. */
 export const fetchFlow = cache(async (id: string): Promise<Flow | null> => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("flows")
-    .select(SELECT)
-    .eq("id", id)
-    .maybeSingle();
+  const q = (sel: string) =>
+    supabase.from("flows").select(sel).eq("id", id).maybeSingle();
+  let { data, error } = await q(FLOW_SELECT_V2);
+  if (error?.code === "42703") ({ data, error } = await q(FLOW_SELECT_V1));
 
   if (error) {
     console.error("[fetchFlow]", error.message);

@@ -9,11 +9,12 @@ import { formatDuration } from "@/lib/format";
 import { useRecorder, type Recorder } from "@/lib/useRecorder";
 import { COVER_KINDS } from "@/lib/covers";
 import { Logo, FlowMark } from "@/components/brand";
-import { AudioPlayer, Button } from "@/components/ui";
+import { AudioPlayer, Button, Switch } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
 import { publishFlow } from "@/data/publishApi";
 import { uploadAudio, uploadCover } from "@/data/storage";
+import { hasProfanity } from "@/lib/profanity";
 import { StepIndicator } from "./StepIndicator";
 import { MarkdownToolbar } from "./MarkdownToolbar";
 import { TagPicker } from "./TagPicker";
@@ -36,6 +37,10 @@ export function Composer() {
   // Portada con foto propia (opcional): null = portada generativa.
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
+  // Contenido sensible: altisonantes se pre-marca al transcribir; 18+ queda
+  // fijo si el Flow lleva el tema Hot.
+  const [explicitLang, setExplicitLang] = useState(false);
+  const [adult, setAdult] = useState(false);
   const [duration, setDuration] = useState(0);
   const [transcript, setTranscript] = useState("");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -118,6 +123,7 @@ export function Composer() {
         );
       }
       setTranscript(transcriptText);
+      setExplicitLang(hasProfanity(transcriptText));
       await runPolish(transcriptText);
     },
     [runPolish, play],
@@ -139,6 +145,9 @@ export function Composer() {
     play("soft");
   }, [recorder, play]);
 
+  const hotSelected = tags.includes("Hot");
+  const effectiveAdult = adult || hotSelected;
+
   const publish = async () => {
     play("click");
     setPubError(null);
@@ -152,6 +161,8 @@ export function Composer() {
         transcriptRaw: transcript,
         coverKind: COVER_KINDS[coverIndex],
         coverUrl,
+        explicitLang,
+        adult: effectiveAdult,
         durationSeconds: duration,
         tagNames: tags,
         audioUrl,
@@ -179,6 +190,8 @@ export function Composer() {
       transcriptRaw: transcript,
       coverKind: COVER_KINDS[coverIndex],
       coverUrl,
+      explicitLang,
+      adult: effectiveAdult,
       durationSeconds: duration,
       tagNames: tags,
       audioUrl,
@@ -200,6 +213,8 @@ export function Composer() {
     setTags([]);
     setCoverIndex(0);
     setCoverUrl(null);
+    setExplicitLang(false);
+    setAdult(false);
     setDuration(0);
     setTranscript("");
     setAudioUrl(null);
@@ -300,6 +315,11 @@ export function Composer() {
             coverUploading={coverUploading}
             onPickCover={pickCoverPhoto}
             onClearCover={clearCoverPhoto}
+            explicitLang={explicitLang}
+            setExplicitLang={setExplicitLang}
+            adult={effectiveAdult}
+            setAdult={setAdult}
+            hotLocked={hotSelected}
             duration={duration}
             audioUrl={audioUrl}
             audioWarn={audioWarn}
@@ -553,6 +573,12 @@ interface EditStepProps {
   coverUploading: boolean;
   onPickCover: (file: File | null) => void;
   onClearCover: () => void;
+  explicitLang: boolean;
+  setExplicitLang: (v: boolean) => void;
+  adult: boolean;
+  setAdult: (v: boolean) => void;
+  /** El tema Hot fija 18+ (no se puede desmarcar). */
+  hotLocked: boolean;
   duration: number;
   audioUrl: string | null;
   audioWarn?: string | null;
@@ -575,6 +601,11 @@ function EditStep({
   coverUploading,
   onPickCover,
   onClearCover,
+  explicitLang,
+  setExplicitLang,
+  adult,
+  setAdult,
+  hotLocked,
   duration,
   audioUrl,
   audioWarn,
@@ -718,6 +749,48 @@ function EditStep({
 
         <div className="mt-6">
           <TagPicker selected={tags} onChange={setTags} />
+        </div>
+
+        {/* contenido sensible: el autor declara; Hot fija 18+ */}
+        <div className="mt-6 flex flex-col gap-1 rounded-[14px] border border-line bg-surface p-4">
+          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+            Contenido sensible
+          </p>
+          <div className="flex items-center justify-between gap-4 py-1.5">
+            <div>
+              <p className="font-sans text-[14px] font-semibold text-ink">
+                Palabras altisonantes
+              </p>
+              <p className="font-sans text-[12.5px] text-text-3">
+                {explicitLang
+                  ? "Se detectaron en tu transcript — puedes corregir la marca."
+                  : "Márcalo si tu Flow trae groserías."}
+              </p>
+            </div>
+            <Switch
+              checked={explicitLang}
+              onCheckedChange={setExplicitLang}
+              label="Palabras altisonantes"
+            />
+          </div>
+          <div className="flex items-center justify-between gap-4 py-1.5">
+            <div>
+              <p className="font-sans text-[14px] font-semibold text-ink">
+                Para mayores de 18
+              </p>
+              <p className="font-sans text-[12.5px] text-text-3">
+                {hotLocked
+                  ? "El tema Hot siempre es para mayores de 18."
+                  : "Solo quien confirme su edad podrá escucharlo."}
+              </p>
+            </div>
+            <Switch
+              checked={adult}
+              onCheckedChange={setAdult}
+              disabled={hotLocked}
+              label="Para mayores de 18"
+            />
+          </div>
         </div>
 
         {error && (

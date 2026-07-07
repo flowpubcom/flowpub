@@ -8,6 +8,7 @@ import {
   Bookmark,
   Heart,
   Languages,
+  Lock,
   MessageCircle,
   PenLine,
   Share2,
@@ -67,6 +68,7 @@ export function FlowReader({
   );
   const transcript = flow.transcriptRaw ?? flow.excerpt;
   const isOwn = user?.id === flow.author.id;
+  const canListen = !flow.adult || isOwn || (user?.isAdult ?? false);
 
   const requireUser = () => {
     if (user) return true;
@@ -188,6 +190,16 @@ export function FlowReader({
               {flow.tag}
             </span>
           )}
+          {flow.adult && (
+            <span className="rounded-pill border border-line-2 px-3 py-1 font-mono text-[12px] font-bold text-ink">
+              18+
+            </span>
+          )}
+          {flow.explicitLang && (
+            <span className="rounded-pill border border-line-2 px-3 py-1 font-sans text-[11px] font-semibold uppercase tracking-[0.06em] text-text-2">
+              {t("flow.explicit")}
+            </span>
+          )}
         </div>
 
         <h1 className="font-serif text-[clamp(30px,5vw,46px)] font-normal leading-[1.08] tracking-[-0.02em] text-ink">
@@ -245,13 +257,30 @@ export function FlowReader({
           <FlowCover coverUrl={flow.coverUrl} kind={flow.coverKind} seed={flow.id} title={title} />
         </div>
 
-        {/* audio */}
+        {/* audio (con compuerta de edad para 18+) */}
         <div className="mt-5">
-          <AudioPlayer
-            src={flow.audioUrl ?? undefined}
-            durationSeconds={flow.durationSeconds}
-            variant="full"
-          />
+          {canListen ? (
+            <AudioPlayer
+              src={flow.audioUrl ?? undefined}
+              durationSeconds={flow.durationSeconds}
+              variant="full"
+            />
+          ) : (
+            <Link
+              href={user ? (user.birthdate ? "#" : "/perfil") : "/entrar"}
+              className="flex items-center gap-3 rounded-[14px] border border-line bg-surface-2 px-4 py-3.5 transition-opacity hover:opacity-85"
+            >
+              <Lock size={16} className="flex-none text-text-3" aria-hidden />
+              <p className="font-sans text-[13px] leading-snug text-text-2">
+                <span className="font-semibold text-ink">{t("flow.adultOnly")}</span>{" "}
+                {!user
+                  ? t("flow.adultHintGuest")
+                  : user.birthdate
+                    ? t("flow.adultHintMinor")
+                    : t("flow.adultHintNoBirthdate")}
+              </p>
+            </Link>
+          )}
         </div>
 
         {/* toggle publicación / transcript + traducir */}

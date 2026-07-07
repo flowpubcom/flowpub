@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronUp, Heart, MessageCircle, PenLine, Share2 } from "lucide-react";
+import { ChevronUp, Heart, Lock, MessageCircle, PenLine, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, AudioPlayer, Card } from "@/components/ui";
 import { FlowCover } from "@/components/cover";
@@ -62,6 +62,9 @@ export function FlowCard({ flow }: { flow: Flow }) {
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
   const isOwn = user?.id === flow.author.id;
+  // Compuerta de edad: los Flows 18+ solo se escuchan con fecha de nacimiento
+  // declarada y mayoría de edad. El autor siempre puede oír lo suyo.
+  const canListen = !flow.adult || isOwn || (user?.isAdult ?? false);
 
   // Optimista con revert: pinta ya, persiste atrás, revierte si falla.
   const toggleLike = async () => {
@@ -134,7 +137,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
       padded={false}
       className="overflow-hidden"
       ref={(el: HTMLDivElement | null) => {
-        if (flow.audioUrl) radio?.registerCard(flow.id, el);
+        if (flow.audioUrl && canListen) radio?.registerCard(flow.id, el);
       }}
     >
       <Link
@@ -151,6 +154,14 @@ export function FlowCard({ flow }: { flow: Flow }) {
           <span className={cn(BADGE, "font-mono text-[12px]")}>
             {durationLabel(flow.durationSeconds)}
           </span>
+          {flow.adult && (
+            <span className={cn(BADGE, "font-mono text-[12px] font-bold")}>18+</span>
+          )}
+          {flow.explicitLang && (
+            <span className={cn(BADGE, "font-sans text-[11px] font-semibold uppercase tracking-[0.04em]")}>
+              {t("flow.explicit")}
+            </span>
+          )}
         </div>
       </Link>
 
@@ -204,12 +215,16 @@ export function FlowCard({ flow }: { flow: Flow }) {
         )}
 
         <div className="mt-4">
-          <AudioPlayer
-            src={flow.audioUrl ?? undefined}
-            durationSeconds={flow.durationSeconds}
-            variant="full"
-            radioId={flow.audioUrl ? flow.id : undefined}
-          />
+          {canListen ? (
+            <AudioPlayer
+              src={flow.audioUrl ?? undefined}
+              durationSeconds={flow.durationSeconds}
+              variant="full"
+              radioId={flow.audioUrl ? flow.id : undefined}
+            />
+          ) : (
+            <AdultGateNotice hasUser={!!user} hasBirthdate={!!user?.birthdate} />
+          )}
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
@@ -338,5 +353,38 @@ export function FlowCard({ flow }: { flow: Flow }) {
         />
       )}
     </Card>
+  );
+}
+
+/** Aviso de la compuerta 18+: quién eres decide el siguiente paso. */
+function AdultGateNotice({
+  hasUser,
+  hasBirthdate,
+}: {
+  hasUser: boolean;
+  hasBirthdate: boolean;
+}) {
+  const { t } = useI18n();
+  const hint = !hasUser
+    ? t("flow.adultHintGuest")
+    : hasBirthdate
+      ? t("flow.adultHintMinor")
+      : t("flow.adultHintNoBirthdate");
+  const href = !hasUser ? "/entrar" : hasBirthdate ? null : "/perfil";
+  const body = (
+    <div className="flex items-center gap-3 rounded-[14px] border border-line bg-surface-2 px-4 py-3">
+      <Lock size={16} className="flex-none text-text-3" aria-hidden />
+      <p className="font-sans text-[13px] leading-snug text-text-2">
+        <span className="font-semibold text-ink">{t("flow.adultOnly")}</span>{" "}
+        {hint}
+      </p>
+    </div>
+  );
+  return href ? (
+    <Link href={href} className="block transition-opacity hover:opacity-85">
+      {body}
+    </Link>
+  ) : (
+    body
   );
 }

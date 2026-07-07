@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
-import { mapFlowRow } from "./flowsApi";
+import { FLOW_SELECT_V1, FLOW_SELECT_V2, mapFlowRow } from "./flowsApi";
 import type { Flow } from "./types";
 
 // Lecturas server-side de perfiles públicos (/@usuario) y sus Flows.
@@ -93,23 +93,21 @@ export const fetchProfileStats = cache(
   },
 );
 
-// Hint !author_id: desambigua flows↔profiles (hay caminos vía likes/saves).
-const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
-  "author:profiles!author_id(id,username,display_name,avatar_url)," +
-  "flow_tags(tags(slug,name_es,name_en,sort))";
 
 /** Flows de un autor. La RLS ya decide: otros ven published/featured; el
  *  dueño también ve sus borradores (se separan por `status` en la UI). */
 export const fetchFlowsByAuthor = cache(
   async (profileId: string): Promise<Flow[]> => {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("flows")
-      .select(SELECT)
-      .eq("author_id", profileId)
-      .order("created_at", { ascending: false })
-      .limit(60);
+    const q = (sel: string) =>
+      supabase
+        .from("flows")
+        .select(sel)
+        .eq("author_id", profileId)
+        .order("created_at", { ascending: false })
+        .limit(60);
+    let { data, error } = await q(FLOW_SELECT_V2);
+    if (error?.code === "42703") ({ data, error } = await q(FLOW_SELECT_V1));
     if (error || !data) return [];
     return data.map(mapFlowRow).filter((f): f is Flow => f !== null);
   },
@@ -119,13 +117,16 @@ export const fetchFlowsByAuthor = cache(
 export const fetchLikedFlows = cache(
   async (profileId: string): Promise<Flow[]> => {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("likes")
-      .select(`created_at,flows(${SELECT})`)
-      .eq("user_id", profileId)
-      .not("flow_id", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(30);
+    const q = (sel: string) =>
+      supabase
+        .from("likes")
+        .select(`created_at,flows(${sel})`)
+        .eq("user_id", profileId)
+        .not("flow_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(30);
+    let { data, error } = await q(FLOW_SELECT_V2);
+    if (error?.code === "42703") ({ data, error } = await q(FLOW_SELECT_V1));
     if (error || !data) return [];
     return data
        
