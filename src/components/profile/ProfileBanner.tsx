@@ -7,7 +7,35 @@ import { COVER_PALETTE as P, hashSeed, mulberry32 } from "@/lib/covers";
 const W = 1180;
 const H = 150;
 
-export function ProfileBanner({ seed }: { seed: string }) {
+export function ProfileBanner({
+  seed,
+  imageUrl,
+}: {
+  seed: string;
+  /** Banner subido por el usuario; si falta, el collage generativo. */
+  imageUrl?: string | null;
+}) {
+  if (imageUrl) {
+    return (
+      <div className="relative h-[150px] overflow-hidden bg-[var(--brand-abyss)]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={imageUrl}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        {/* velo inferior sutil: el avatar traslapado sigue legible */}
+        <span
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(14,11,9,.28),transparent_45%)]"
+        />
+      </div>
+    );
+  }
+  return <GenerativeBanner seed={seed} />;
+}
+
+function GenerativeBanner({ seed }: { seed: string }) {
   const r = mulberry32(hashSeed(`banner-${seed}`));
   const uid = seed.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 20) || "p";
   const glowId = `pb-glow-${uid}`;

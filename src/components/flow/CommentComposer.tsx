@@ -105,7 +105,7 @@ export function CommentComposer({
       <div className="rounded-[16px] border border-line bg-surface-2 p-5 text-center">
         <p className="font-sans text-[14px] text-text-2">
           {t("comment.gate.prefix")}{" "}
-          <Link href="/entrar" className="font-semibold text-grana">
+          <Link href="/entrar" className="font-semibold text-grana-text">
             {t("comment.gate.link")}
           </Link>
           .

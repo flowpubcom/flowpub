@@ -23,6 +23,7 @@ export interface NotificationItem {
   flowId?: string;
   flowTitle?: string;
   flowCoverKind?: string;
+  flowCoverUrl?: string | null;
   commentText?: string | null;
   commentAudioUrl?: string | null;
   commentDurationSeconds?: number;
@@ -37,7 +38,7 @@ function ageMinutesFrom(createdAt: string): number {
 const SELECT =
   "id,type,read,created_at," +
   "actor:profiles!actor_id(id,username,display_name,avatar_url)," +
-  "flow:flows!flow_id(id,title,cover_kind)," +
+  "flow:flows!flow_id(id,title,cover_kind,cover_url)," +
   "comment:comments!comment_id(kind,body_text,audio_url,duration_s,transcript_raw)";
 
 /** Notificaciones del usuario con sesión (RLS ya acota a `user_id = auth.uid()`). */
@@ -96,6 +97,7 @@ export const fetchNotifications = cache(
       flowId: r.flow?.id ?? undefined,
       flowTitle: r.flow?.title ?? undefined,
       flowCoverKind: r.flow?.cover_kind ?? undefined,
+      flowCoverUrl: r.flow?.cover_url ?? null,
       commentText: r.comment?.kind === "text" ? r.comment.body_text : undefined,
       commentAudioUrl: r.comment?.kind === "voice" ? r.comment.audio_url : undefined,
       commentDurationSeconds: r.comment?.kind === "voice" ? r.comment.duration_s : undefined,

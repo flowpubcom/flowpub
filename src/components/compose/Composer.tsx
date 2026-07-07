@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Mic, RefreshCw, Square, X } from "lucide-react";
+import { ChevronDown, ImagePlus, Mic, RefreshCw, Square, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/format";
 import { useRecorder, type Recorder } from "@/lib/useRecorder";
@@ -13,7 +13,7 @@ import { AudioPlayer, Button } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
 import { publishFlow } from "@/data/publishApi";
-import { uploadAudio } from "@/data/storage";
+import { uploadAudio, uploadCover } from "@/data/storage";
 import { StepIndicator } from "./StepIndicator";
 import { MarkdownToolbar } from "./MarkdownToolbar";
 import { TagPicker } from "./TagPicker";
@@ -33,6 +33,9 @@ export function Composer() {
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [coverIndex, setCoverIndex] = useState(0);
+  // Portada con foto propia (opcional): null = portada generativa.
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverUploading, setCoverUploading] = useState(false);
   const [duration, setDuration] = useState(0);
   const [transcript, setTranscript] = useState("");
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -148,6 +151,7 @@ export function Composer() {
         bodyMd: body,
         transcriptRaw: transcript,
         coverKind: COVER_KINDS[coverIndex],
+        coverUrl,
         durationSeconds: duration,
         tagNames: tags,
         audioUrl,
@@ -174,6 +178,7 @@ export function Composer() {
       bodyMd: body,
       transcriptRaw: transcript,
       coverKind: COVER_KINDS[coverIndex],
+      coverUrl,
       durationSeconds: duration,
       tagNames: tags,
       audioUrl,
@@ -194,6 +199,7 @@ export function Composer() {
     setBody("");
     setTags([]);
     setCoverIndex(0);
+    setCoverUrl(null);
     setDuration(0);
     setTranscript("");
     setAudioUrl(null);
@@ -205,6 +211,26 @@ export function Composer() {
   const cycleCover = () => {
     setCoverIndex((i) => (i + 1) % COVER_KINDS.length);
     play("pop");
+  };
+
+  const pickCoverPhoto = async (file: File | null) => {
+    if (!file || coverUploading) return;
+    play("click");
+    setCoverUploading(true);
+    const url = await uploadCover(file);
+    setCoverUploading(false);
+    if (url) {
+      setCoverUrl(url);
+      play("pop");
+    } else {
+      setPubError("No se pudo subir la foto. Intenta con otra imagen.");
+      play("soft");
+    }
+  };
+
+  const clearCoverPhoto = () => {
+    setCoverUrl(null);
+    play("soft");
   };
 
   const stepIndex =
@@ -270,6 +296,10 @@ export function Composer() {
             setTags={setTags}
             coverIndex={coverIndex}
             cycleCover={cycleCover}
+            coverUrl={coverUrl}
+            coverUploading={coverUploading}
+            onPickCover={pickCoverPhoto}
+            onClearCover={clearCoverPhoto}
             duration={duration}
             audioUrl={audioUrl}
             audioWarn={audioWarn}
@@ -519,6 +549,10 @@ interface EditStepProps {
   setTags: (v: string[]) => void;
   coverIndex: number;
   cycleCover: () => void;
+  coverUrl: string | null;
+  coverUploading: boolean;
+  onPickCover: (file: File | null) => void;
+  onClearCover: () => void;
   duration: number;
   audioUrl: string | null;
   audioWarn?: string | null;
@@ -537,6 +571,10 @@ function EditStep({
   setTags,
   coverIndex,
   cycleCover,
+  coverUrl,
+  coverUploading,
+  onPickCover,
+  onClearCover,
   duration,
   audioUrl,
   audioWarn,
@@ -555,19 +593,60 @@ function EditStep({
       <div className="flex flex-col gap-5">
         <div>
           <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
-            Portada generada
+            {coverUrl ? "Tu foto de portada" : "Portada generada"}
           </p>
           <div className="overflow-hidden rounded-[14px] border border-line">
-            <Cover kind={COVER_KINDS[coverIndex]} seed={`compose-${coverIndex}`} />
+            {coverUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={coverUrl}
+                alt="Foto de portada"
+                className="block aspect-[16/9] w-full object-cover"
+              />
+            ) : (
+              <Cover kind={COVER_KINDS[coverIndex]} seed={`compose-${coverIndex}`} />
+            )}
           </div>
-          <button
-            type="button"
-            onClick={cycleCover}
-            className="mt-2 inline-flex items-center gap-2 rounded-pill border border-line-2 px-3.5 py-1.5 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-[var(--hover)]"
-          >
-            <RefreshCw size={14} />
-            Regenerar portada
-          </button>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {!coverUrl && (
+              <button
+                type="button"
+                onClick={cycleCover}
+                className="inline-flex items-center gap-2 rounded-pill border border-line-2 px-3.5 py-1.5 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-[var(--hover)]"
+              >
+                <RefreshCw size={14} />
+                Regenerar portada
+              </button>
+            )}
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-pill border border-line-2 px-3.5 py-1.5 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-[var(--hover)]">
+              <ImagePlus size={14} />
+              {coverUploading
+                ? "Subiendo…"
+                : coverUrl
+                  ? "Cambiar foto"
+                  : "Subir mi foto"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={coverUploading}
+                onChange={(e) => {
+                  onPickCover(e.target.files?.[0] ?? null);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+            {coverUrl && (
+              <button
+                type="button"
+                onClick={onClearCover}
+                className="inline-flex items-center gap-2 rounded-pill px-3 py-1.5 font-sans text-[13px] font-medium text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+              >
+                <RefreshCw size={14} />
+                Usar la generada
+              </button>
+            )}
+          </div>
         </div>
 
         <div>

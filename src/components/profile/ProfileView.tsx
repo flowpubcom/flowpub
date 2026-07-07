@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
-import { Cover } from "@/components/cover";
+import { FlowCover } from "@/components/cover";
 import { FlowEditModal } from "@/components/flow/FlowEditModal";
 import { InvitesCard } from "./InvitesCard";
 import { useI18n } from "@/providers/I18nProvider";
@@ -19,6 +19,7 @@ import {
   normalizeUsername,
   updateProfile,
   uploadAvatar,
+  uploadBanner,
 } from "@/data/profileApi";
 import { compactNumber, durationLabel } from "@/lib/format";
 import type { Flow } from "@/data/types";
@@ -363,7 +364,8 @@ function FlowTile({ flow, onEdit }: { flow: Flow; onEdit?: () => void }) {
         className="absolute inset-0 block"
         aria-label={flow.title}
       >
-        <Cover
+        <FlowCover
+          coverUrl={flow.coverUrl}
           kind={flow.coverKind}
           seed={flow.id}
           title={flow.title}
@@ -437,9 +439,11 @@ function EditProfileModal({
   const [username, setUsername] = useState(profile.username);
   const [bio, setBio] = useState(profile.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+  const [bannerUrl, setBannerUrl] = useState(profile.bannerUrl);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bannerRef = useRef<HTMLInputElement>(null);
 
   const onPickPhoto = async (file: File | null) => {
     if (!file) return;
@@ -450,6 +454,23 @@ function EditProfileModal({
       play("pop");
     } else {
       setError("No se pudo subir la foto. Intenta con otra imagen.");
+      play("soft");
+    }
+  };
+
+  const onPickBanner = async (file: File | null) => {
+    if (!file) return;
+    play("click");
+    const res = await uploadBanner(file);
+    if (res.url) {
+      setBannerUrl(res.url);
+      play("pop");
+    } else {
+      setError(
+        res.pending
+          ? "El banner necesita la migración 14 en la base. Avísale a Claude."
+          : "No se pudo subir el banner. Intenta con otra imagen.",
+      );
       play("soft");
     }
   };
@@ -498,6 +519,33 @@ function EditProfileModal({
         </div>
       }
     >
+      {/* banner: preview 16:2 con botón encima (foto o generativo de fondo) */}
+      <div className="relative mb-4 h-[74px] overflow-hidden rounded-[12px] border border-line bg-[var(--brand-abyss)]">
+        {bannerUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={bannerUrl}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+        <input
+          ref={bannerRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => void onPickBanner(e.target.files?.[0] ?? null)}
+        />
+        <button
+          type="button"
+          onClick={() => bannerRef.current?.click()}
+          className="absolute bottom-2 right-2 flex items-center gap-2 rounded-pill bg-[rgba(251,250,246,0.92)] px-3 py-1.5 font-sans text-[12px] font-semibold text-[#1A1714] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-[1.03]"
+        >
+          <Camera size={13} strokeWidth={1.8} />
+          {t("profile.changeBanner")}
+        </button>
+      </div>
+
       <div className="mb-5 flex items-center gap-4">
         <Avatar name={name || profile.displayName} src={avatarUrl} size={74} />
         <input

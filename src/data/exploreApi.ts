@@ -30,7 +30,7 @@ function sanitize(q: string): string {
 
 // Mismo shape del feed (autor + tags); el hint !author_id es obligatorio.
 const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 

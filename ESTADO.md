@@ -4,6 +4,39 @@
 > Última actualización: **sesión 4, cierre — 2026-07-02 (invitaciones + PWA +
 > a11y oscuro + PUSH A PRODUCCIÓN)**.
 
+## Sesión 5 — 2026-07-03: portadas con alma, fotos propias y audit del registro
+
+- **Limpieza del SQL ajeno**: Julio corrió 2 migraciones de Gulu por accidente;
+  solo crearon 3 funciones huérfanas (cero datos tocados). `migration_13` las
+  dropea y censa las funciones (⚠️ correr).
+- **Ajustes visuales del Pub** (verificados): reproductor a lo ancho de la
+  card (variant full), chips del filtro sólidos (bg-surface sobre la barra
+  glass), hover de cards sin salto → token `--shadow-glow` (halo claro/oscuro).
+- **Portadas generativas con variedad**: Escher 3 composiciones (retícula/
+  monolito con sombra/escalera + banda de hatch), Turrell 4 aperturas (sala/
+  óvalo/arco/ranura + horizonte), Flavin 3 (vertical/horizontal/diagonal +
+  barra cruzada), Collage con anillos, parches Ben-Day, media luna ancla y
+  tiras de papel. Todo determinista por seed, paleta intacta. Verificado
+  estructuralmente en /styleguide (8 covers, 8 fingerprints distintos).
+- **Foto propia como portada del Flow**: en el composer, «Subir mi foto»
+  (bucket covers, carpeta uid) o la generada; persiste `flows.cover_url`;
+  `<FlowCover>` la pinta en FlowCard/FlowReader/tiles/notificaciones.
+  ⚠️ Falta probar con humano el flujo completo del composer con foto.
+- **Banner de perfil editable**: `migration_14` (⚠️ correr: profiles.banner_url
+  + grant de columna); subir desde Editar perfil (preview en el modal);
+  ProfileBanner pinta la foto (con velo inferior) o el generativo; lectura
+  tolerante mientras no corra la migración.
+- **Audit /design-critique del registro (medido en vivo, tema oscuro = peor
+  caso)**: links grana («Crea una»/«Inicia sesión») daban 3.07:1 ❌ → ahora
+  `--grana-text` 8.16:1 ✓ (igual el eyebrow y el link de la compuerta de
+  comentarios y la top bar móvil); legal 11px con text-3 daba 2.81:1 en CLARO
+  ❌ → text-2 5.29/7.6 ✓; ojo del password de 36px → 44×44 ✓ (también en
+  /restablecer). Copy vs design-map: fiel.
+- Recuperar contraseña YA existía (41593fc) — Julio no lo había visto.
+
+**👉 Julio — SQL Editor:** `migration_13` (limpieza SQL ajeno) y
+`migration_14` (banner). También pendientes de antes: 11 y 12 si no corrieron.
+
 ## Sesión 4, cierre — la tanda del beta
 
 **BD:** Julio corrió 05, 06 (versión arreglada), 07 y 08. Producción quedó

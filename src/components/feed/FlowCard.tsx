@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChevronUp, Heart, MessageCircle, PenLine, Share2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, AudioPlayer, Card } from "@/components/ui";
-import { Cover } from "@/components/cover";
+import { FlowCover } from "@/components/cover";
 import { FlowProse } from "@/components/compose/FlowProse";
 import { CommentComposer } from "@/components/flow/CommentComposer";
 import { CommentItem } from "@/components/flow/CommentItem";
@@ -142,7 +142,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
         className="relative block"
         aria-label={title}
       >
-        <Cover kind={flow.coverKind} seed={flow.id} title={title} />
+        <FlowCover coverUrl={flow.coverUrl} kind={flow.coverKind} seed={flow.id} title={title} />
         <div className="absolute bottom-3 left-3 flex items-center gap-2">
           <span className={cn(BADGE, "font-sans text-[12px] font-semibold")}>
             <span className="h-1.5 w-1.5 rounded-pill bg-grana" />

@@ -82,6 +82,41 @@ export async function uploadAvatar(file: File): Promise<string | null> {
   return pErr ? null : url;
 }
 
+/** Sube el banner al bucket `avatars` y lo fija en el perfil. Cascada
+ *  tolerante: si `banner_url` aún no existe (migración 14 pendiente), avisa. */
+export async function uploadBanner(
+  file: File,
+): Promise<{ url: string | null; pending?: boolean }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { url: null };
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${user.id}/banner-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("avatars").upload(path, file, {
+    contentType: file.type || "image/jpeg",
+    upsert: false,
+  });
+  if (error) return { url: null };
+
+  const { data } = supabase.storage.from("avatars").getPublicUrl(path);
+  const url = data.publicUrl;
+  const { error: pErr } = await supabase
+    .from("profiles")
+    .update({ banner_url: url })
+    .eq("id", user.id);
+  if (
+    pErr?.code === "PGRST204" ||
+    pErr?.code === "42703" ||
+    pErr?.code === "42501"
+  ) {
+    return { url: null, pending: true }; // columna/grant sin migrar (14)
+  }
+  return { url: pErr ? null : url };
+}
+
 export async function completeOnboarding(input: {
   displayName: string;
   username: string;

@@ -10,6 +10,8 @@ export interface PublicProfile {
   username: string;
   displayName: string;
   avatarUrl: string | null;
+  /** Banner subido por el usuario; null = banner generativo. */
+  bannerUrl: string | null;
   bio: string | null;
   location: string | null;
   /** Año de alta («En FlowPub desde YYYY»). */
@@ -27,26 +29,38 @@ export interface ProfileStats {
 export const fetchProfileByUsername = cache(
   async (username: string): Promise<PublicProfile | null> => {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const SEL =
+      "id,username,display_name,avatar_url,banner_url,bio,location,created_at,profile_tags(tags(name_es))";
+    // Cascada tolerante: sin banner_url (migración 14 pendiente) reintenta.
+    const SEL_LEGACY =
+      "id,username,display_name,avatar_url,bio,location,created_at,profile_tags(tags(name_es))";
+    let { data, error } = await supabase
       .from("profiles")
-      .select(
-        "id,username,display_name,avatar_url,bio,location,created_at,profile_tags(tags(name_es))",
-      )
+      .select(SEL)
       .eq("username", username)
       .maybeSingle();
+    if (error?.code === "42703") {
+      ({ data, error } = await supabase
+        .from("profiles")
+        .select(SEL_LEGACY)
+        .eq("username", username)
+        .maybeSingle());
+    }
     if (error || !data) return null;
+    const row = data as Record<string, any>;
     return {
-      id: data.id as string,
-      username: data.username as string,
-      displayName: (data.display_name || data.username) as string,
-      avatarUrl: (data.avatar_url as string | null) ?? null,
-      bio: (data.bio as string | null) ?? null,
-      location: (data.location as string | null) ?? null,
-      sinceYear: data.created_at
-        ? new Date(data.created_at as string).getFullYear()
+      id: row.id as string,
+      username: row.username as string,
+      displayName: (row.display_name || row.username) as string,
+      avatarUrl: (row.avatar_url as string | null) ?? null,
+      bannerUrl: (row.banner_url as string | null) ?? null,
+      bio: (row.bio as string | null) ?? null,
+      location: (row.location as string | null) ?? null,
+      sinceYear: row.created_at
+        ? new Date(row.created_at as string).getFullYear()
         : null,
-      topics: (data.profile_tags ?? [])
-         
+      topics: (row.profile_tags ?? [])
+
         .map((pt: any) => pt.tags?.name_es)
         .filter(Boolean),
     };
@@ -81,7 +95,7 @@ export const fetchProfileStats = cache(
 
 // Hint !author_id: desambigua flows↔profiles (hay caminos vía likes/saves).
 const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 

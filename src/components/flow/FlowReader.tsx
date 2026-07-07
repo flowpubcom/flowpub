@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { AudioPlayer, Avatar } from "@/components/ui";
-import { Cover } from "@/components/cover";
+import { FlowCover } from "@/components/cover";
 import { FlowProse } from "@/components/compose/FlowProse";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
@@ -242,7 +242,7 @@ export function FlowReader({
 
         {/* portada */}
         <div className="mt-6 overflow-hidden rounded-card border border-line">
-          <Cover kind={flow.coverKind} seed={flow.id} title={title} />
+          <FlowCover coverUrl={flow.coverUrl} kind={flow.coverKind} seed={flow.id} title={title} />
         </div>
 
         {/* audio */}

@@ -12,7 +12,7 @@ import type { CoverKind } from "@/lib/covers";
 // `likes` y `saves` hay VARIOS caminos flows↔profiles y PostgREST exige
 // desambiguar (PGRST201). Sin el hint, producción se cae con feed vacío.
 const SELECT =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags(tags(slug,name_es,name_en,sort))";
 
@@ -51,6 +51,7 @@ function mapRow(r: any): Flow | null {
     tag: primary?.name_es ?? "",
     tagSlug: primary?.slug ?? undefined,
     coverKind: (r.cover_kind ?? "collage") as CoverKind,
+    coverUrl: r.cover_url ?? null,
     likeCount: r.like_count ?? 0,
     commentCount: r.comment_count ?? 0,
     liked: false,
@@ -110,7 +111,7 @@ export const fetchFlows = cache(async (): Promise<Flow[]> => {
 
 // Variante con !inner: el filtro por slug del tag exige el join (tema/[slug]).
 const SELECT_BY_TAG =
-  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,like_count,comment_count,created_at,lang,status," +
+  "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags!inner(tags!inner(slug,name_es,name_en,sort))";
 

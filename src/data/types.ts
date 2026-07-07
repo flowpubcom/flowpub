@@ -23,6 +23,8 @@ export interface Flow {
   /** Slug del tag primario (filtros + páginas /tema/[slug]). */
   tagSlug?: string;
   coverKind: CoverKind;
+  /** Foto subida por el autor; null = portada generativa (coverKind). */
+  coverUrl?: string | null;
   likeCount: number;
   commentCount: number;
   liked: boolean;

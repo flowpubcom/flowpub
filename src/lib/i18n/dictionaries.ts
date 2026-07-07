@@ -120,6 +120,7 @@ const es = {
   "profile.since": "En FlowPub desde {y}",
   "profile.saveChanges": "Guardar cambios",
   "profile.changePhoto": "Cambiar foto",
+  "profile.changeBanner": "Cambiar portada",
   "profile.unpublished": "sin publicar",
   "profile.empty": "Aún no hay Flows aquí.",
 
@@ -360,6 +361,7 @@ const en: Record<DictKey, string> = {
   "profile.since": "On FlowPub since {y}",
   "profile.saveChanges": "Save changes",
   "profile.changePhoto": "Change photo",
+  "profile.changeBanner": "Change banner",
   "profile.unpublished": "unpublished",
   "profile.empty": "No Flows here yet.",
 

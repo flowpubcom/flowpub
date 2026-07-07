@@ -337,7 +337,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             }}
             aria-pressed={showPassword}
             aria-label={t(showPassword ? "onb.password.hide" : "onb.password.show")}
-            className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
+            className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -402,7 +402,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 setError(null);
                 setAuthMode("login");
               }}
-              className="font-semibold text-grana"
+              className="font-semibold text-grana-text"
             >
               {t("onb.login")}
             </button>
@@ -426,7 +426,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 setResetSent(false);
                 setAuthMode("forgot");
               }}
-              className="font-medium text-text-3 transition-colors hover:text-grana"
+              className="font-medium text-text-3 transition-colors hover:text-grana-text"
             >
               {t("onb.forgot")}
             </button>
@@ -452,7 +452,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
               setError(null);
               setAuthMode(isLogin ? "signup" : "login");
             }}
-            className="font-semibold text-grana"
+            className="font-semibold text-grana-text"
           >
             {isLogin ? t("onb.createOne") : t("onb.login")}
           </button>
@@ -501,12 +501,12 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             play("click");
             setAuthMode("login");
           }}
-          className="font-semibold text-grana"
+          className="font-semibold text-grana-text"
         >
           {t("onb.login")}
         </button>
       </p>
-      <p className="mt-4 max-w-[40ch] font-sans text-[11px] leading-relaxed text-text-3">
+      <p className="mt-4 max-w-[40ch] font-sans text-[11px] leading-relaxed text-text-2">
         {t("onb.legal")}
       </p>
     </>
@@ -646,7 +646,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 {t("onb.profile.usernameAvailable", { u: usernameNorm })}
               </span>
             ) : avail === "taken" ? (
-              <span className="font-semibold text-grana">
+              <span className="font-semibold text-grana-text">
                 {t("onb.err.usernameTaken")}
               </span>
             ) : usernameNorm.length > 0 && usernameNorm.length < 3 ? (
@@ -766,7 +766,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         : "onb.eyebrow";
     return (
       <>
-        <p className="mb-3 flex items-center gap-2 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana">
+        <p className="mb-3 flex items-center gap-2 font-sans text-[12px] font-semibold uppercase tracking-[.14em] text-grana-text">
           <span aria-hidden className="h-[2px] w-6 rounded-pill bg-grana" />
           {t(eyebrow)}
         </p>

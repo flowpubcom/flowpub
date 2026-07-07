@@ -175,7 +175,7 @@ function MobileTopBar({
         ) : (
           <Link
             href="/entrar"
-            className="rounded-pill px-3 py-1.5 font-sans text-[14px] font-semibold text-grana transition-colors hover:bg-[var(--hover)]"
+            className="rounded-pill px-3 py-1.5 font-sans text-[14px] font-semibold text-grana-text transition-colors hover:bg-[var(--hover)]"
           >
             {t("onb.login")}
           </Link>

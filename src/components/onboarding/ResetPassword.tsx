@@ -101,7 +101,7 @@ export function ResetPassword() {
                     }}
                     aria-pressed={show}
                     aria-label={t(show ? "onb.password.hide" : "onb.password.show")}
-                    className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
+                    className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
                   >
                     {show ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>

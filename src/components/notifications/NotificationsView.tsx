@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, AudioPlayer } from "@/components/ui";
-import { Cover } from "@/components/cover";
+import { FlowCover } from "@/components/cover";
 import type { CoverKind } from "@/lib/covers";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
@@ -299,11 +299,11 @@ function NotificationRow({
 
       {item.type === "flow" && item.flowId && (
         <span className="h-[46px] w-[46px] flex-none overflow-hidden rounded-[10px] border border-line">
-          <Cover
+          <FlowCover
+            coverUrl={item.flowCoverUrl}
             kind={(item.flowCoverKind as CoverKind | undefined) ?? "auto"}
             seed={item.flowId}
             title={item.flowTitle}
-            grain={false}
             className="h-full w-full"
           />
         </span>

@@ -14,6 +14,8 @@ export async function publishFlow(input: {
   bodyMd: string;
   transcriptRaw?: string;
   coverKind: CoverKind;
+  /** Foto subida por el autor; null/undefined = portada generativa. */
+  coverUrl?: string | null;
   durationSeconds: number;
   tagNames: string[];
   audioUrl?: string | null;
@@ -34,6 +36,7 @@ export async function publishFlow(input: {
       body_md: input.bodyMd,
       transcript_raw: input.transcriptRaw ?? null,
       cover_kind: input.coverKind,
+      cover_url: input.coverUrl ?? null,
       audio_url: input.audioUrl ?? null,
       lang: "es",
       status: input.status ?? "published",

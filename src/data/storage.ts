@@ -12,6 +12,26 @@ function extFromMime(mime: string): string {
   return "webm";
 }
 
+/** Sube una imagen de portada al bucket `covers` (carpeta uid, per RLS). */
+export async function uploadCover(file: File): Promise<string | null> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+  const path = `${user.id}/cover-${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage.from("covers").upload(path, file, {
+    contentType: file.type || "image/jpeg",
+    upsert: false,
+  });
+  if (error) return null;
+
+  const { data } = supabase.storage.from("covers").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function uploadAudio(blob: Blob): Promise<string | null> {
   const supabase = createClient();
   const {

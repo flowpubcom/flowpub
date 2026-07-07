@@ -81,7 +81,7 @@ export default async function ProfilePage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProfileBanner seed={profile.username} />
+      <ProfileBanner seed={profile.username} imageUrl={profile.bannerUrl} />
       <ProfileView
         profile={profile}
         stats={stats}
