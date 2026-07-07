@@ -24,6 +24,7 @@ import { redeemInvite } from "@/data/invitesClient";
 import { tagName, type TagRow } from "@/data/tags";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 import { FlowMark } from "@/components/brand";
+import { useLegal } from "@/providers/LegalProvider";
 import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
 import { Turnstile, captchaEnabled } from "./Turnstile";
 
@@ -52,6 +53,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   const { t, lang } = useI18n();
   const { play } = useSound();
   const { user, refresh } = useAuth();
+  const { openLegal } = useLegal();
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("auth");
@@ -507,7 +509,23 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         </button>
       </p>
       <p className="mt-4 max-w-[40ch] font-sans text-[11px] leading-relaxed text-text-2">
-        {t("onb.legal")}
+        {t("onb.legal.pre")}{" "}
+        <button
+          type="button"
+          onClick={() => openLegal("terminos")}
+          className="font-semibold underline underline-offset-2 hover:text-ink"
+        >
+          {t("legal.terms")}
+        </button>{" "}
+        {t("onb.legal.mid")}{" "}
+        <button
+          type="button"
+          onClick={() => openLegal("privacidad")}
+          className="font-semibold underline underline-offset-2 hover:text-ink"
+        >
+          {t("onb.legal.privacyLink")}
+        </button>
+        {t("onb.legal.post")}
       </p>
     </>
   );

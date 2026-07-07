@@ -4,6 +4,32 @@
 > Última actualización: **sesión 4, cierre — 2026-07-02 (invitaciones + PWA +
 > a11y oscuro + PUSH A PRODUCCIÓN)**.
 
+## Sesión 5 (cont.) — contenido sensible + legal
+
+- **Contenido sensible** (`migration_15` ⚠️ correr): casillas en el composer
+  («Palabras altisonantes» pre-marcada si el transcript trae groserías —
+  lib/profanity.ts ES-MX+EN; «Para mayores de 18» fija si lleva el tema Hot,
+  con trigger del servidor que lo garantiza). Stickers sutiles 18+/«Lenguaje
+  explícito» en cards y reader. Compuerta de edad: fecha de nacimiento
+  PRIVADA en Editar perfil (revoke select por columnas + RPC my_birthdate);
+  el reproductor de un 18+ solo aparece con mayoría declarada (invitado → a
+  entrar; sin fecha → a su perfil; el autor siempre se escucha); la radio
+  del Pub salta los 18+ para quien no puede. SELECTs v2 con retry 42703:
+  prod no se rompe si la migración corre después del deploy.
+- **Legal (estilo Gulu, a la FlowPub)**: `lib/legal.ts` (Términos/Privacidad/
+  Cookies, MX, responsable Julio, base para pulir con abogado) +
+  `LegalProvider` global: modal con tabs (verificado: tabs cambian, 12
+  secciones en Términos) + aviso de cookies primera visita («solo cookies
+  esenciales» + Entendido persistente en fp-consent — verificado) + fila
+  Términos·Privacidad·Cookies en el riel desktop (verificado abre el modal)
+  + **menú del avatar** en la top bar móvil (Ver perfil / Cerrar sesión /
+  legales — patrón DurationMenu; ⚠️ verificar con sesión) + línea legal del
+  onboarding ahora clickeable (keys onb.legal.* divididas).
+
+**👉 Julio — SQL Editor: `migration_15`** (flags + birthdate + Hot). Probar
+con sesión: menú del avatar, casillas al publicar, fecha de nacimiento y la
+compuerta 18+ (publica un Flow Hot y velo sin fecha declarada).
+
 ## Sesión 5 — 2026-07-03: portadas con alma, fotos propias y audit del registro
 
 - **Limpieza del SQL ajeno**: Julio corrió 2 migraciones de Gulu por accidente;

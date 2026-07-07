@@ -156,8 +156,10 @@ const es = {
   "onb.login": "Inicia sesión",
   "onb.noAccount": "¿No tienes cuenta?",
   "onb.createOne": "Crea una",
-  "onb.legal":
-    "Al continuar aceptas los Términos y el Aviso de privacidad. Protegido por Turnstile.",
+  "onb.legal.pre": "Al continuar aceptas los",
+  "onb.legal.mid": "y el",
+  "onb.legal.privacyLink": "Aviso de privacidad",
+  "onb.legal.post": ". Protegido por Turnstile.",
 
   "onb.email.label": "Correo",
   "onb.email.placeholder": "tu@correo.com",
@@ -238,6 +240,17 @@ const es = {
   "invite.landing.listen": "Primero quiero escuchar el Pub",
   "invite.landing.used": "Esta invitación ya fue usada.",
   "invite.landing.usedHint": "Pídele otra a quien te la mandó, o entra a escuchar.",
+
+  "legal.terms": "Términos",
+  "legal.privacy": "Privacidad",
+  "legal.cookies": "Cookies",
+  "consent.aria": "Aviso de cookies",
+  "consent.text":
+    "FlowPub usa solo cookies esenciales: tu sesión y tus preferencias. Nada de rastreadores.",
+  "consent.more": "Saber más",
+  "consent.ok": "Entendido",
+  "menu.viewProfile": "Ver perfil",
+  "menu.aria": "Menú de tu cuenta",
 
   "version.new": "Hay una versión nueva de FlowPub",
   "version.reload": "Actualizar",
@@ -404,8 +417,10 @@ const en: Record<DictKey, string> = {
   "onb.login": "Sign in",
   "onb.noAccount": "No account yet?",
   "onb.createOne": "Create one",
-  "onb.legal":
-    "By continuing you accept the Terms and Privacy Notice. Protected by Turnstile.",
+  "onb.legal.pre": "By continuing you accept the",
+  "onb.legal.mid": "and the",
+  "onb.legal.privacyLink": "Privacy Notice",
+  "onb.legal.post": ". Protected by Turnstile.",
 
   "onb.email.label": "Email",
   "onb.email.placeholder": "you@email.com",
@@ -486,6 +501,17 @@ const en: Record<DictKey, string> = {
   "invite.landing.listen": "I want to listen to the Pub first",
   "invite.landing.used": "This invitation has already been used.",
   "invite.landing.usedHint": "Ask for another one, or come in and listen.",
+
+  "legal.terms": "Terms",
+  "legal.privacy": "Privacy",
+  "legal.cookies": "Cookies",
+  "consent.aria": "Cookie notice",
+  "consent.text":
+    "FlowPub uses only essential cookies: your session and your preferences. No trackers.",
+  "consent.more": "Learn more",
+  "consent.ok": "Got it",
+  "menu.viewProfile": "View profile",
+  "menu.aria": "Your account menu",
 
   "version.new": "A new version of FlowPub is here",
   "version.reload": "Refresh",

@@ -5,6 +5,7 @@ import { ThemeProvider } from "./ThemeProvider";
 import { I18nProvider } from "./I18nProvider";
 import { SoundProvider } from "./SoundProvider";
 import { AuthProvider } from "./AuthProvider";
+import { LegalProvider } from "./LegalProvider";
 import { VersionWatcher } from "@/components/shell/VersionWatcher";
 import { InstallPrompt } from "@/components/shell/InstallPrompt";
 
@@ -18,9 +19,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <I18nProvider>
         <SoundProvider>
           <AuthProvider>
-            {children}
-            <VersionWatcher />
-            <InstallPrompt />
+            <LegalProvider>
+              {children}
+              <VersionWatcher />
+              <InstallPrompt />
+            </LegalProvider>
           </AuthProvider>
         </SoundProvider>
       </I18nProvider>
