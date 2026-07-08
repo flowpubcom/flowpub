@@ -22,6 +22,8 @@ export interface Flow {
   tag: string;
   /** Slug del tag primario (filtros + páginas /tema/[slug]). */
   tagSlug?: string;
+  /** Todos los temas del Flow (máx 3), para keywords/og:tags de SEO. */
+  tagNames?: string[];
   coverKind: CoverKind;
   /** Foto subida por el autor; null = portada generativa (coverKind). */
   coverUrl?: string | null;

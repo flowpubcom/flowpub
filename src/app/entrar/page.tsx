@@ -1,7 +1,15 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fetchTags } from "@/data/tagsApi";
 import { Onboarding } from "@/components/onboarding/Onboarding";
+
+// Pantalla de auth: sin valor de búsqueda (y es el destino del redirect de las
+// rutas gateadas, que un crawler sí alcanza) → fuera del índice.
+export const metadata: Metadata = {
+  title: "Entrar",
+  robots: { index: false, follow: true },
+};
 
 // Onboarding / auth. Ruta full-screen (fuera del chrome del Pub).
 export default async function EntrarPage({

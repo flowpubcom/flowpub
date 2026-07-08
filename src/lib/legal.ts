@@ -20,7 +20,7 @@ export interface LegalDoc {
 const RESPONSABLE =
   "Julio Sahagún Sánchez, radicado en Zoncuantla, Coatepec, Veracruz, México";
 const CONTACTO = "pentrexyl@gmail.com";
-const UPDATED = "Última actualización: julio de 2026";
+const UPDATED = "Última actualización: 8 de julio de 2026";
 
 export const LEGAL: Record<LegalId, LegalDoc> = {
   terminos: {
@@ -31,6 +31,7 @@ export const LEGAL: Record<LegalId, LegalDoc> = {
       {
         p: [
           "Bienvenida y bienvenido a FlowPub. Al usar esta plataforma aceptas estos Términos y Condiciones. Si no estás de acuerdo, por favor no la utilices.",
+          "FlowPub está en fase beta: es una versión temprana que seguimos afinando. Algunas funciones pueden cambiar, fallar o pausarse mientras la construimos. Te agradecemos la paciencia y cualquier comentario.",
         ],
       },
       {
@@ -125,9 +126,10 @@ export const LEGAL: Record<LegalId, LegalDoc> = {
         h: "2. Qué datos tratamos",
         p: [
           "De tu cuenta: correo electrónico y contraseña (cifrada por Supabase Auth), o tu identidad de Google si entras con Google.",
-          "De tu perfil: nombre para mostrar, usuario, bio, foto, banner y, si la das, tu fecha de nacimiento (privada: nunca se muestra ni se expone por la API pública; solo habilita el contenido 18+).",
+          "De tu perfil: nombre para mostrar, usuario, bio, foto y banner. Si los proporcionas, también tu lugar de origen (ciudad, estado, país), tu página web y tus redes sociales (Instagram, X, TikTok, YouTube). Tu fecha de nacimiento, si la das, es privada: nunca se muestra ni se expone por la API pública; solo sirve para habilitar el contenido para mayores de 18 años.",
           "De tu actividad: tus Flows (audio, transcript, texto pulido, portada), comentarios (texto o voz con transcript), me gusta, guardados, seguimientos, invitaciones y mensajes privados.",
-          "Técnicos mínimos: cookies de sesión y preferencias locales (tema, idioma). No usamos rastreadores publicitarios ni analítica de terceros.",
+          "Técnicos mínimos: cookies de sesión y preferencias locales (tema, idioma, sonido). No usamos rastreadores publicitarios ni analítica de terceros.",
+          "Qué es público y qué no: tu perfil es público. Tu nombre, usuario, bio, foto, banner, origen, web, redes y tus Flows publicados puede verlos y encontrarlos cualquier persona, incluidos los buscadores. Permanecen privados tu correo, tu contraseña, tu fecha de nacimiento, tus guardados y tus mensajes privados.",
         ],
       },
       {

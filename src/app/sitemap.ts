@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
+import { SITE } from "@/lib/seo";
 
-// Sitemap dinámico: home + hubs de tema + Flows publicados. Lee vía REST con
-// la anon key (valores públicos) y cachea 1 h — sin cookies, cacheable.
-
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.app";
+// Sitemap dinámico: home + hubs de tema + Flows publicados + perfiles públicos.
+// Lee vía REST con la anon key (valores públicos) y cachea 1 h — sin cookies,
+// cacheable.
 
 async function fetchRows<T>(path: string): Promise<T[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,15 +22,23 @@ async function fetchRows<T>(path: string): Promise<T[]> {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [tags, flows] = await Promise.all([
+  const [tags, flows, profiles] = await Promise.all([
     fetchRows<{ slug: string }>("tags?select=slug&active=eq.true&order=sort"),
-    fetchRows<{ id: string; created_at: string }>(
-      "flows?select=id,created_at&status=in.(published,featured)&order=created_at.desc&limit=1000",
+    fetchRows<{ id: string; created_at: string; author_id: string }>(
+      "flows?select=id,created_at,author_id&status=in.(published,featured)&order=created_at.desc&limit=1000",
+    ),
+    fetchRows<{ id: string; username: string; created_at: string }>(
+      "profiles?select=id,username,created_at&order=created_at.desc&limit=1000",
     ),
   ]);
 
+  // Solo perfiles con al menos un Flow publicado: un perfil vacío es contenido
+  // delgado (y el propio perfil ya se auto-noindexa en ese caso).
+  const authorsWithFlows = new Set(flows.map((f) => f.author_id));
+
   return [
     { url: SITE, changeFrequency: "hourly", priority: 1 },
+    { url: `${SITE}/design`, changeFrequency: "monthly", priority: 0.5 },
     ...tags.map((t) => ({
       url: `${SITE}/tema/${t.slug}`,
       changeFrequency: "daily" as const,
@@ -42,5 +50,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.6,
     })),
+    // Perfiles públicos con contenido: /@usuario es una entidad indexable (Person).
+    ...profiles
+      .filter((p) => authorsWithFlows.has(p.id))
+      .map((p) => ({
+        url: `${SITE}/@${p.username}`,
+        lastModified: new Date(p.created_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.5,
+      })),
   ];
 }

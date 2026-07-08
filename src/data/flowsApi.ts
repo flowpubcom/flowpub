@@ -54,6 +54,7 @@ function mapRow(r: any): Flow | null {
     ageMinutes: ageMinutesFrom(r.created_at),
     tag: primary?.name_es ?? "",
     tagSlug: primary?.slug ?? undefined,
+    tagNames: tags.map((t: any) => t.name_es as string).filter(Boolean),
     coverKind: (r.cover_kind ?? "collage") as CoverKind,
     coverUrl: r.cover_url ?? null,
     explicitLang: r.explicit_lang ?? false,

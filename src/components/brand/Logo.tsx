@@ -1,6 +1,7 @@
 import { cn } from "@/lib/cn";
 import { FlowMark } from "./FlowMark";
 import { Wordmark } from "./Wordmark";
+import { BetaBadge } from "./BetaBadge";
 
 export interface LogoProps {
   className?: string;
@@ -9,6 +10,8 @@ export interface LogoProps {
   breathe?: boolean;
   /** Solo la vírgula, sin wordmark. */
   markOnly?: boolean;
+  /** Muestra el letrero «beta» junto al wordmark. */
+  beta?: boolean;
 }
 
 /** Marca completa: vírgula + wordmark, en color tinta (ink). */
@@ -18,6 +21,7 @@ export function Logo({
   textSize = 24,
   breathe = true,
   markOnly = false,
+  beta = false,
 }: LogoProps) {
   return (
     <span
@@ -25,6 +29,7 @@ export function Logo({
     >
       <FlowMark size={markSize} breathe={breathe} />
       {!markOnly && <Wordmark size={textSize} />}
+      {beta && !markOnly && <BetaBadge className="self-center" />}
     </span>
   );
 }

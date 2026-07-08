@@ -85,8 +85,8 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
     <div className="mx-auto flex w-full max-w-[1280px]">
       {/* Riel izquierdo (desktop) */}
       <aside className="sticky top-0 hidden h-dvh w-[236px] flex-none flex-col border-r border-line px-4 py-6 lg:flex">
-        <Link href="/" className="mb-7 px-2">
-          <Logo markSize={28} textSize={22} />
+        <Link href="/" aria-label="FlowPub" className="mb-7 px-2">
+          <Logo markSize={28} textSize={22} beta />
         </Link>
         <nav className="flex flex-col gap-1">
           {NAV.filter((n) => n.desktop && n.key !== "profile").map((item) => (
@@ -216,7 +216,7 @@ function MobileTopBar({
   return (
     <header className="glass sticky top-0 z-20 flex items-center justify-between border-b border-line-soft px-4 py-3 lg:hidden">
       <Link href="/" aria-label="FlowPub">
-        <Logo markSize={24} textSize={19} />
+        <Logo markSize={24} textSize={19} beta />
       </Link>
       <div className="flex items-center gap-1">
         {user ? (

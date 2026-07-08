@@ -1,8 +1,126 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 7 — 2026-07-08 (perfil: origen/redes/web,
-> cropper 16:9, emojis, fix scroll de modales; review adversarial + 3 fixes)**.
+> Última actualización: **sesión 8 — 2026-07-08 (SEO a fondo, letrero beta,
+> legales; + `/design`: manual de marca bilingüe con descargas. 3 workflows;
+> build de producción VERDE)**.
+
+## Sesión 8 (cont.) — 2026-07-08: /design (manual de marca) + build
+
+**typecheck/lint/`next build` VERDES** (build corrido tras cerrar el dev server
+de la otra sesión, con permiso de Julio). `/design` prerenderiza estática.
+
+- **OG del sitio: ya dice `flowpub.app`** — Julio veía `.lat`; rendericé el PNG
+  real (`/opengraph-image`) y confirma `flowpub.app`. Cero `.lat` en `src`/`public`
+  (los `.lat` restantes son históricos: handoff, design-map, ESTADO, migration_01).
+  Lo que se ve con `.lat` es **caché social** de la época `flowpub.lat` → se
+  refresca con redeploy + re-escanear en el debugger de la plataforma.
+- **`/design` — identidad + manual de uso** (`app/design/page.tsx` + client
+  `components/design/BrandGuide.tsx`). Página pública independiente (fuera del
+  chrome del Pub), indexable (en sitemap). **Bilingüe con switch ES/EN real**
+  (usa `useI18n().setLang` global → persiste `fp-lang` + fija `<html lang>`),
+  toggle de tema, y copy colocado con `tr(es,en)`. Secciones: hero · la vírgula
+  (reglas/aire/mínimos) · wordmark+lockup · **color** (paleta base + roles
+  claro↔oscuro, swatches con copiar-hex y badge «reservado» = ícono Lock) ·
+  tipografía (3 voces, especímenes) · movimiento · **sonido** (5 blips
+  REPRODUCIBLES vía `useSound().play`) · **portadas** (4 `<Cover>` en vivo:
+  escher/turrell/flavin/collage) · voz y tono (do/don’t) · **descargas** (Blob
+  cliente: vírgula.svg, lockup.svg, tokens.css, tokens.json + ícono 512 + fuentes).
+  Todo por tokens; los hex «crudos» son la paleta que el manual DOCUMENTA.
+- **Verificado en vivo** (mi propio dev server, ya libre): renderiza claro/oscuro,
+  switch cambia copy + `<html lang>`, tema, 4 portadas, descargas (Blob JSON 910 B),
+  sonidos sin error, 0 errores de consola. **Contraste medido AA en ambos temas**
+  (claro 4.9–5.29:1, oscuro 7.6–8.26:1).
+
+**Review adversarial del /design (workflow #3) — arreglado:**
+- Bilingües: aria-label «Copiar→Copy {hex}», title «Reservado→Reserved», y los
+  3 especímenes tipográficos (tagline/chrome/timestamp) ahora con `tr()`.
+- A11y: `text-3`→`text-2` en 9 etiquetas meta (text-3 daba ~2.8:1 en claro);
+  nav de secciones `scroll-mt-28` (antes se metía bajo el header sticky de 108px);
+  `fp-hit-y` en el switch de idioma y el nav (targets ≥44px).
+- Aceptado sin cambio: `text-2` sobre el gradiente de fondo (mismo patrón ya
+  auditado como AA en toda la app). El review perdió algunos verifies al tope de
+  sesión, pero los hallazgos accionados se confirmaron a mano/en vivo.
+
+**👉 Julio:** todo front, cero SQL. Commit + push a `main` (= deploy). `/design`
+queda vivo en `flowpub.app/design`. Enlázalo donde gustes (aún no está en el
+chrome; se llega por URL / sitemap). Para el OG: tras deploy, re-escanea en el
+debugger de WhatsApp/redes para tirar el caché viejo de `.lat`.
+
+
+## Sesión 8 — 2026-07-08: SEO a fondo + letrero beta + legales
+
+**Todo FRONT (cero SQL, cero dashboard). typecheck/lint verdes; verificado EN
+VIVO** contra el dev server de otra sesión (mismo working tree, HMR) —
+robots/sitemap/feed/JSON-LD/OG-image/metadata de home, Flow, perfil, tema y
+explore. **`next build` NO se corrió**: otra sesión tiene el dev server tomando
+`.next` (Next bloquea un 2º proceso); Vercel lo compila al hacer push.
+Dos workflows multi-agente: (1) diseño SEO (4 especialistas + síntesis) para
+presionar el plan, (2) review adversarial (5 dimensiones → verificación).
+
+**SEO — la jugada: volver INDEXABLE y ESTRUCTURADO el texto de cada Flow**
+(audio + artículo pulido + transcript). Base compartida `lib/seo.ts` (`SITE` en
+un solo lugar —antes duplicado en 6 archivos—, `absoluteUrl`, `mdToPlainText`,
+`countWords`, `breadcrumbList`, `RSS_ALT`). Todo JSON-LD pasa por `safeJsonLd`.
+
+- **Datos estructurados del Flow** (`flow/[id]/page.tsx`): `Article` con `image`
+  (la OG por Flow), `inLanguage`=**`flow.lang`** (antes «es» hardcodeado = bug en
+  EN), `articleBody` (artículo pulido en texto), `wordCount`, `keywords`/
+  `articleSection`, `isAccessibleForFree`, `interactionStatistic` (likes+comentarios
+  como `InteractionCounter`, NO ratings falsos), autor con `@id` estable + `image`,
+  `publisher.logo`. `AudioObject` con **`transcript`=transcript crudo**, `name`,
+  `uploadDate`, `encodingFormat`, `inLanguage`. + `BreadcrumbList`.
+- **Transcript AHORA en el DOM** (`FlowReader`): las vistas pub/raw se alternan
+  por `hidden` (visibilidad), no por montaje → el transcript crudo vive en el HTML
+  del servidor (indexable + coherente con `AudioObject.transcript`, no cloaking).
+- **Imagen OG por Flow** (`flow/[id]/opengraph-image.tsx`): tarjeta de marca con
+  el título en Fraunces (satori). Lee sin cookies (REST, `id` con
+  `encodeURIComponent` anti-inyección PostgREST), clampa título Y autor antes de
+  satori (anti-DoS), cae a tarjeta genérica si el id no existe. Alimenta
+  `og:image`+`twitter:image`+`Article.image`. Verificado: PNG 200.
+- **Malla de enlaces internos** (`components/flow/RelatedFlows.tsx`, server):
+  «Más de {autor}» + «Más en {tema}» como `<a>` en SSR. Reusa fetchers `cache()`d.
+- **Home**: `@graph` WebSite + SearchAction (caja de sitelinks → `/explorar`) +
+  Organization con logo.
+- **Perfil**: `Person` con `image`, `sameAs` (web+redes por `safeHref`), `@id`
+  compartido con el autor de cada Flow, `address`. noindex si 0 Flows.
+- **Tema**: `CollectionPage` con `ItemList` + `BreadcrumbList`.
+- **`/explorar?q=`**: noindex (sin canonical cruzado); base indexable.
+- **`robots.ts`**: bloquea privadas/gateadas. **`sitemap.ts`**: + perfiles con ≥1
+  Flow. **`/entrar`** noindex. **RSS 2.0** (`app/feed.xml`) enlazado en el `<head>`
+  (`RSS_ALT` reesparcido en cada página porque Next fusiona `alternates` superficial).
+- **Metadata del Flow**: robots noindex si borrador, keywords, authors, og
+  article tags/locale, twitter; `lang={flow.lang}` en título+cuerpo del reader.
+
+**Letrero «beta»** (`components/brand/BetaBadge.tsx`): pill discreto (mono, tokens,
+sin emoji, **sin grana**), junto al wordmark en riel desktop + barra móvil (prop
+`beta` en `<Logo>`). Contraste medido: 5.07:1 claro / 7.99:1 oscuro (AA). i18n
+`beta.title` (tooltip). A11y: el link de home lleva `aria-label="FlowPub"` (el
+badge NO mete su frase en el nombre accesible).
+
+**Legales** (`lib/legal.ts`): Privacidad ahora lista origen/web/redes + un bloque
+público-vs-privado; Términos con nota de beta; fecha → 8 jul 2026. `docs/seo.md`
+reescrito (implementado + diferidos con el porqué).
+
+**Review adversarial — 6 hallazgos, TODOS arreglados** (0 rechazados):
+- [med] RSS: `xmlEscape` no quitaba caracteres de control ilegales en XML 1.0 →
+  un título con `U+000C` rompía el feed ENTERO para todos. Fix: strip del rango.
+- [low] `<link>` de autodescubrimiento RSS se caía en TODAS las páginas (Next
+  fusiona `alternates` superficial: el canonical de cada página reemplazaba el
+  `types` del layout). Fix: `RSS_ALT` reesparcido en las 6 páginas con canonical.
+- [med→low] `aria-label` del badge contaminaba el nombre del link de home. Fix:
+  quitar aria-label del badge (queda `title`) + `aria-label="FlowPub"` en el link.
+- [low] OG image: `display_name` del autor sin clampar (DoS). Fix: `.slice(0,60)`.
+- [low] `/explorar?q=` noindex + canonical a otra URL (señales en conflicto). Fix:
+  canonical solo en la base; el `?q=` se auto-canonicaliza.
+- [low] `AudioObject.transcript` marcaba texto ausente del DOM (cloaking-adjacent).
+  Fix: transcript ahora en el DOM (ver arriba) — resuelto de raíz.
+
+**👉 Julio:** es solo front — cuando gustes, commit + push a `main` (= deploy).
+Tras desplegar en `flowpub.app`: re-enviar el sitemap en Search Console (ya trae
+perfiles), y verás el letrero beta en el riel/barra. Nada de SQL esta vez.
+Pendientes SEO grandes (otra sesión, ver `docs/seo.md`): static/ISR sin envenenar
+el estado del lector, slugs legibles (migración+301), podcast RSS (arte 1400px).
 
 ## Sesión 7 — 2026-07-08: perfil enriquecido, cropper 16:9, emojis, modales
 

@@ -14,6 +14,7 @@ const es = {
   "record": "Grabar un Flow",
   "record.short": "Grabar",
   "tagline": "Habla. FlowPub lo vuelve publicación.",
+  "beta.title": "FlowPub está en beta — estamos afinando cosas.",
 
   "filter.all": "Todos",
   "filter.duration": "Duración",
@@ -366,6 +367,7 @@ const en: Record<DictKey, string> = {
   "record": "Record a Flow",
   "record.short": "Record",
   "tagline": "Speak. FlowPub turns it into a publication.",
+  "beta.title": "FlowPub is in beta — we're still polishing things.",
 
   "filter.all": "All",
   "filter.duration": "Duration",

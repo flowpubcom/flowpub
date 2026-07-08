@@ -202,7 +202,10 @@ export function FlowReader({
           )}
         </div>
 
-        <h1 className="font-serif text-[clamp(30px,5vw,46px)] font-normal leading-[1.08] tracking-[-0.02em] text-ink">
+        <h1
+          lang={flow.lang}
+          className="font-serif text-[clamp(30px,5vw,46px)] font-normal leading-[1.08] tracking-[-0.02em] text-ink"
+        >
           {title}
         </h1>
 
@@ -333,29 +336,29 @@ export function FlowReader({
         </button>
         </div>
 
-        {/* cuerpo */}
-        <div className="mt-6">
-          {view === "pub" ? (
-            <>
-              {showTranslated && translated && (
-                <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
-                  {t("translate.note")}
-                </p>
-              )}
-              <FlowProse
-                source={showTranslated && translated ? translated : body}
-              />
-            </>
-          ) : (
-            <div>
+        {/* cuerpo (en el idioma del Flow, no del chrome). Ambas vistas viven
+            en el DOM y se alternan por visibilidad (`hidden`), no por montaje:
+            así el transcript crudo está en el HTML del servidor —indexable y
+            coherente con AudioObject.transcript—, no solo cuando se togglea. */}
+        <div className="mt-6" lang={flow.lang}>
+          <div hidden={view !== "pub"}>
+            {showTranslated && translated && (
               <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
-                {t("flow.viewRawLabel")}
+                {t("translate.note")}
               </p>
-              <p className="whitespace-pre-wrap font-serif text-[17px] leading-[1.7] text-text-2">
-                {transcript}
-              </p>
-            </div>
-          )}
+            )}
+            <FlowProse
+              source={showTranslated && translated ? translated : body}
+            />
+          </div>
+          <div hidden={view !== "raw"}>
+            <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
+              {t("flow.viewRawLabel")}
+            </p>
+            <p className="whitespace-pre-wrap font-serif text-[17px] leading-[1.7] text-text-2">
+              {transcript}
+            </p>
+          </div>
         </div>
 
         {/* engagement */}

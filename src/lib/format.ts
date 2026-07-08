@@ -11,6 +11,27 @@ export function durationLabel(totalSeconds: number): string {
   return `${Math.max(1, Math.round(totalSeconds / 60))} min`;
 }
 
+/** MIME del audio a partir de su URL (para `AudioObject.encodingFormat`). El
+ *  audio de FlowPub se graba en webm/opus (MediaRecorder); infiere de la
+ *  extensión y cae a audio/webm. */
+export function audioMimeFromUrl(url: string | null | undefined): string {
+  const ext = (url ?? "").split("?")[0].split(".").pop()?.toLowerCase();
+  switch (ext) {
+    case "mp3":
+      return "audio/mpeg";
+    case "m4a":
+    case "mp4":
+      return "audio/mp4";
+    case "ogg":
+    case "oga":
+      return "audio/ogg";
+    case "wav":
+      return "audio/wav";
+    default:
+      return "audio/webm";
+  }
+}
+
 /** «hace 2 h» / «2h ago» — desde antigüedad en minutos (sin Date → sin desfase SSR). */
 export function relativeTime(ageMinutes: number, lang: "es" | "en" = "es"): string {
   if (ageMinutes < 60) {
