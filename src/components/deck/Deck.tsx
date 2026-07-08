@@ -94,7 +94,10 @@ function TextBlock({ slide, center }: { slide: Slide; center?: boolean }) {
 function FinanceSlide({ slide }: { slide: Slide }) {
   const max = Math.max(...BASE_BREAKDOWN.map((b) => b.usd));
   return (
-    <div className="mx-auto flex h-full w-full max-w-[1120px] flex-col gap-6 overflow-y-auto px-6 py-4">
+    <div
+      data-deck-scroll
+      className="mx-auto flex h-full w-full max-w-[1120px] flex-col gap-6 overflow-y-auto px-6 py-4"
+    >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Kicker>{slide.kicker}</Kicker>
@@ -201,6 +204,7 @@ export function Deck() {
   const [i, setI] = useState(0);
   const n = SLIDES.length;
   const touch = useRef<{ x: number; y: number } | null>(null);
+  const wheelLock = useRef(0);
   const iRef = useRef(0);
   useEffect(() => {
     iRef.current = i;
@@ -253,6 +257,26 @@ export function Deck() {
         const dy = e.changedTouches[0].clientY - touch.current.y;
         if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? i + 1 : i - 1);
         touch.current = null;
+      }}
+      onWheel={(e) => {
+        // Dentro de un panel con scroll propio (p. ej. finanzas), cede el paso al
+        // scroll nativo mientras le quede recorrido en esa dirección.
+        const scrollable = (e.target as HTMLElement).closest<HTMLElement>(
+          "[data-deck-scroll]",
+        );
+        if (scrollable) {
+          const goingDown = e.deltaY > 0;
+          const atBottom =
+            scrollable.scrollTop + scrollable.clientHeight >=
+            scrollable.scrollHeight - 2;
+          const atTop = scrollable.scrollTop <= 2;
+          if ((goingDown && !atBottom) || (!goingDown && !atTop)) return;
+        }
+        const now = Date.now();
+        if (now - wheelLock.current < 550) return;
+        if (Math.abs(e.deltaY) < 12) return; // ruido de trackpad
+        wheelLock.current = now;
+        go(iRef.current + (e.deltaY > 0 ? 1 : -1));
       }}
     >
       {/* progreso */}
