@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { geminiGenerate } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
+import { rateLimit, RATE_RULES } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -15,6 +16,15 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return NextResponse.json({ error: "auth-requerida" }, { status: 401 });
+  }
+
+  // Protege la cuota de Gemini: traducir es opt-in, no un grifo abierto.
+  const rate = rateLimit(`translate:${user.id}`, RATE_RULES.translate);
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: "rate-limited" },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+    );
   }
 
   let text: unknown;

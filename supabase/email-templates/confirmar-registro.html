@@ -1,0 +1,143 @@
+<!--
+  FlowPub · Correo de confirmación de registro
+  Pega TODO este HTML en: Supabase → Authentication → Emails → "Confirm signup".
+  Asunto sugerido:  Confirma tu correo y entra a FlowPub
+  Variable usada:   {{ .ConfirmationURL }}
+  Notas de correo:  tablas + estilos inline (Gmail/Outlook los respetan); la marca
+                    es un PNG hospedado (Gmail bloquea SVG). Funciona aunque el
+                    cliente bloquee imágenes: el wordmark "FlowPub" es texto.
+-->
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <meta name="supported-color-schemes" content="light only" />
+    <title>Confirma tu correo</title>
+    <!-- Fraunces = "la voz" de la marca. Apple Mail/iOS lo carga; el resto cae a Georgia. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* Progresivo: si el cliente respeta <style>, mejora; si no, los inline mandan. */
+      body { margin: 0; padding: 0; width: 100% !important; }
+      a { text-decoration: none; }
+      .fp-btn:hover { background-color: #9a2530 !important; }
+      @media (max-width: 520px) {
+        .fp-card { width: 100% !important; border-radius: 0 !important; }
+        .fp-pad { padding-left: 24px !important; padding-right: 24px !important; }
+      }
+    </style>
+  </head>
+  <body style="margin:0; padding:0; background-color:#f2efe8;">
+    <!-- Preheader (lo que se ve en la bandeja, oculto en el cuerpo) -->
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:#f2efe8; font-size:1px; line-height:1px;">
+      Solo falta un paso: confirma que este correo es tuyo y entra a FlowPub.
+    </div>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2efe8;">
+      <tr>
+        <td align="center" style="padding:40px 16px;">
+          <!-- Tarjeta -->
+          <table
+            role="presentation"
+            class="fp-card"
+            width="480"
+            cellpadding="0"
+            cellspacing="0"
+            border="0"
+            style="width:480px; max-width:480px; background-color:#fbfaf6; border:1px solid #e6dfd0; border-radius:16px; overflow:hidden;"
+          >
+            <!-- Marca -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:40px 48px 8px 48px;">
+                <img
+                  src="https://flowpub.app/icono-512"
+                  width="60"
+                  height="60"
+                  alt="FlowPub"
+                  style="display:block; width:60px; height:60px; border-radius:16px; border:1px solid #e6dfd0;"
+                />
+                <div style="margin-top:14px; font-family:'Fraunces', Georgia, 'Times New Roman', serif; font-size:22px; font-weight:600; color:#1a1714; letter-spacing:-0.01em;">
+                  <span style="font-style:italic;">Flow</span>Pub
+                </div>
+              </td>
+            </tr>
+
+            <!-- Encabezado -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:20px 48px 0 48px;">
+                <h1 style="margin:0; font-family:'Fraunces', Georgia, 'Times New Roman', serif; font-size:28px; line-height:1.2; font-weight:500; color:#1a1714;">
+                  Ya casi es tuya tu voz
+                </h1>
+              </td>
+            </tr>
+
+            <!-- Cuerpo -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:16px 48px 0 48px;">
+                <p style="margin:0; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; line-height:1.6; color:#6e685d;">
+                  Bienvenida a FlowPub, el lugar donde tu voz se vuelve publicación.
+                  Solo falta un paso: confirma que este correo es tuyo.
+                </p>
+              </td>
+            </tr>
+
+            <!-- Botón (grana = CTA de marca) -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:28px 48px 0 48px;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="center" bgcolor="#c0303a" class="fp-btn" style="background-color:#c0303a; border-radius:999px;">
+                      <a
+                        href="{{ .ConfirmationURL }}"
+                        target="_blank"
+                        class="fp-btn"
+                        style="display:inline-block; padding:14px 32px; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:15px; font-weight:600; color:#ffffff; background-color:#c0303a; border-radius:999px;"
+                      >
+                        Confirmar mi correo
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Enlace de respaldo -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:24px 48px 0 48px;">
+                <p style="margin:0; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:12px; line-height:1.6; color:#9c968a;">
+                  ¿El botón no abre? Copia y pega esta liga en tu navegador:
+                </p>
+                <p style="margin:6px 0 0 0; font-family:'Courier New', monospace; font-size:12px; line-height:1.5; color:#6e685d; word-break:break-all;">
+                  {{ .ConfirmationURL }}
+                </p>
+              </td>
+            </tr>
+
+            <!-- Separador -->
+            <tr>
+              <td class="fp-pad" style="padding:32px 48px 0 48px;">
+                <div style="height:1px; background-color:#e6dfd0; line-height:1px; font-size:0;">&nbsp;</div>
+              </td>
+            </tr>
+
+            <!-- Nota + firma -->
+            <tr>
+              <td class="fp-pad" align="center" style="padding:20px 48px 40px 48px;">
+                <p style="margin:0; font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; font-size:12px; line-height:1.6; color:#9c968a;">
+                  Si tú no creaste esta cuenta, puedes ignorar este correo sin problema.
+                </p>
+                <p style="margin:16px 0 0 0; font-family:'Fraunces', Georgia, serif; font-size:13px; color:#9c968a;">
+                  <a href="https://flowpub.app" target="_blank" style="color:#9c968a;">flowpub.app</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

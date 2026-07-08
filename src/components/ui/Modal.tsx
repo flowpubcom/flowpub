@@ -8,6 +8,8 @@ export interface ModalProps {
   open: boolean;
   onClose: () => void;
   title?: string;
+  /** Id de un heading propio del contenido (cuando no se usa `title`). */
+  labelledBy?: string;
   children: ReactNode;
   footer?: ReactNode;
   className?: string;
@@ -18,6 +20,7 @@ export function Modal({
   open,
   onClose,
   title,
+  labelledBy,
   children,
   footer,
   className,
@@ -51,7 +54,7 @@ export function Modal({
 
   if (!mounted || !open) return null;
 
-  const titleId = title ? "fp-modal-title" : undefined;
+  const titleId = title ? "fp-modal-title" : labelledBy;
 
   return createPortal(
     <div

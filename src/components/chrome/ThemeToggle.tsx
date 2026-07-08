@@ -37,8 +37,8 @@ export function ThemeToggle({ className }: { className?: string }) {
             play("tick");
           }}
           className={cn(
-            "grid h-[30px] w-9 place-items-center rounded-pill transition-colors duration-150 ease-flow",
-            theme === v ? "bg-ink text-ink-on" : "text-text-3 hover:text-ink",
+            "fp-hit-y grid h-[30px] w-9 place-items-center rounded-pill transition-colors duration-150 ease-flow",
+            theme === v ? "bg-ink text-ink-on" : "text-text-2 hover:text-ink",
           )}
         >
           <Icon size={15} strokeWidth={2} />

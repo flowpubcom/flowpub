@@ -18,7 +18,7 @@ export function SoundToggle({ className }: { className?: string }) {
       aria-label={muted ? t("sound.off") : t("sound.on")}
       onClick={toggleMuted}
       className={cn(
-        "grid h-9 w-9 place-items-center rounded-pill border border-line-2 bg-surface text-text-2 transition-colors duration-150 ease-flow hover:text-ink",
+        "fp-hit grid h-9 w-9 place-items-center rounded-pill border border-line-2 bg-surface text-text-2 transition-colors duration-150 ease-flow hover:text-ink",
         className,
       )}
     >

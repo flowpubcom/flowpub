@@ -62,7 +62,7 @@ export function CommentItem({
           <span className="font-sans text-[14px] font-semibold text-ink">
             {comment.author.displayName}
           </span>
-          <span className="font-sans text-[12px] text-text-3">
+          <span className="font-sans text-[12px] text-text-2">
             {relativeTime(comment.ageMinutes, lang)}
           </span>
         </div>
@@ -81,7 +81,7 @@ export function CommentItem({
               type="button"
               onClick={() => setShowT((v) => !v)}
               aria-expanded={showT}
-              className="mt-2 flex items-center gap-1.5 font-sans text-[12px] font-medium text-text-2 transition-colors hover:text-ink"
+              className="fp-hit-y mt-2 flex items-center gap-1.5 font-sans text-[12px] font-medium text-text-2 transition-colors hover:text-ink"
             >
               <ChevronDown
                 size={14}
@@ -104,8 +104,8 @@ export function CommentItem({
             aria-pressed={liked}
             aria-label={t("like")}
             className={cn(
-              "flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] transition-colors hover:bg-[var(--hover)]",
-              liked ? "text-grana" : "text-text-3 hover:text-ink",
+              "fp-hit-y flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] transition-colors hover:bg-[var(--hover)]",
+              liked ? "text-grana" : "text-text-2 hover:text-ink",
             )}
           >
             <Heart size={14} fill={liked ? "currentColor" : "none"} />
@@ -114,7 +114,7 @@ export function CommentItem({
           <button
             type="button"
             onClick={() => play("click")}
-            className="flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] text-text-3 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+            className="fp-hit-y flex items-center gap-1.5 rounded-pill px-2 py-1 font-sans text-[12px] text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
           >
             <Reply size={14} />
             {t("comment.reply")}

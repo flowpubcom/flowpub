@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AtSign,
@@ -133,7 +134,7 @@ export function NotificationsView({
               "-mb-px border-b-2 px-1 pb-2.5 font-sans text-[14px] transition-colors duration-150 ease-flow",
               filter === f
                 ? "border-grana font-semibold text-ink"
-                : "border-transparent font-medium text-text-3 hover:text-ink",
+                : "border-transparent font-medium text-text-2 hover:text-ink",
             )}
           >
             {t(f === "all" ? "notif.tab.all" : "notif.tab.unread")}
@@ -143,14 +144,14 @@ export function NotificationsView({
 
       <div className="px-[14px] pb-6 sm:px-[28px]">
         {visible.length === 0 ? (
-          <p className="py-10 text-center font-sans text-[14px] text-text-3">
+          <p className="py-10 text-center font-sans text-[14px] text-text-2">
             {t(filter === "unread" ? "notif.emptyUnread" : "notif.empty")}
           </p>
         ) : (
           GROUP_ORDER.map((g) =>
             grouped[g].length ? (
               <div key={g}>
-                <h3 className="px-[14px] pb-1.5 pt-[14px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-text-3">
+                <h3 className="px-[14px] pb-1.5 pt-[14px] font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-text-2">
                   {t(GROUP_KEY[g])}
                 </h3>
                 {grouped[g].map((item) => (
@@ -189,6 +190,15 @@ function NotificationRow({
 
   const { Icon, className: badgeClass } = BADGE[item.type];
   const actorName = item.actor?.displayName ?? "";
+  const actorHref = item.actor ? `/@${item.actor.username}` : null;
+
+  // Avatar y nombre llevan al perfil del actor (y marcan leído), sin disparar
+  // la navegación del resto del item (que va al Flow según el tipo).
+  const goActor = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!item.read) onRead();
+    play("click");
+  };
 
   const goTo = () => {
     if (!item.read) onRead();
@@ -223,24 +233,54 @@ function NotificationRow({
         !item.read && "bg-grana-wash",
       )}
     >
-      <span className="relative flex-none">
-        <Avatar name={actorName} src={item.actor?.avatarUrl} size={46} />
-        <span
-          className={cn(
-            "absolute -bottom-[3px] -right-[3px] grid h-[22px] w-[22px] place-items-center rounded-pill",
-            badgeClass,
-          )}
-          aria-hidden
+      {actorHref ? (
+        <Link
+          href={actorHref}
+          onClick={goActor}
+          aria-label={actorName}
+          className="relative flex-none rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grana"
         >
-          <Icon size={12} strokeWidth={2.5} />
+          <Avatar name={actorName} src={item.actor?.avatarUrl} size={46} />
+          <span
+            className={cn(
+              "absolute -bottom-[3px] -right-[3px] grid h-[22px] w-[22px] place-items-center rounded-pill",
+              badgeClass,
+            )}
+            aria-hidden
+          >
+            <Icon size={12} strokeWidth={2.5} />
+          </span>
+        </Link>
+      ) : (
+        <span className="relative flex-none">
+          <Avatar name={actorName} src={item.actor?.avatarUrl} size={46} />
+          <span
+            className={cn(
+              "absolute -bottom-[3px] -right-[3px] grid h-[22px] w-[22px] place-items-center rounded-pill",
+              badgeClass,
+            )}
+            aria-hidden
+          >
+            <Icon size={12} strokeWidth={2.5} />
+          </span>
         </span>
-      </span>
+      )}
 
       <div className="min-w-0 flex-1">
         <p className="font-sans text-[14px] leading-[1.4] text-ink">
-          <span className="font-semibold">{actorName}</span>{" "}
+          {actorHref ? (
+            <Link
+              href={actorHref}
+              onClick={goActor}
+              className="font-semibold hover:underline"
+            >
+              {actorName}
+            </Link>
+          ) : (
+            <span className="font-semibold">{actorName}</span>
+          )}{" "}
           <span className="text-text-2">{t(ACTION_KEY[item.type])}</span>{" "}
-          <span className="font-mono text-[12px] text-text-3">
+          <span className="font-mono text-[12px] text-text-2">
             {relativeTime(item.ageMinutes, lang)}
           </span>
         </p>

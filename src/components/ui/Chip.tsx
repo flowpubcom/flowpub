@@ -36,7 +36,7 @@ export const Chip = forwardRef<HTMLButtonElement, ChipProps>(function Chip(
       type={type}
       aria-pressed={active}
       className={cn(
-        "inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-pill border px-[15px] font-sans text-[13px] transition-colors duration-150 ease-flow active:scale-[.97]",
+        "fp-hit-y inline-flex h-[34px] items-center gap-2 whitespace-nowrap rounded-pill border px-[15px] font-sans text-[13px] transition-colors duration-150 ease-flow active:scale-[.97]",
         active
           ? "border-ink bg-ink font-semibold text-ink-on"
           : // Fondo sólido (papel): sobre la barra glass del Pub, los chips

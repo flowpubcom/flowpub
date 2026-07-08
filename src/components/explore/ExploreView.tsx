@@ -15,7 +15,7 @@ import type { SuggestedVoice } from "@/data/railApi";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+    <h2 className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
       {children}
     </h2>
   );
@@ -31,7 +31,7 @@ function VoiceRow({ voice }: { voice: SuggestedVoice }) {
           <span className="block truncate font-sans text-[15px] font-semibold text-ink">
             {profile.displayName}
           </span>
-          <span className="block truncate font-sans text-[13px] text-text-3">
+          <span className="block truncate font-sans text-[13px] text-text-2">
             @{profile.username}
             {topics ? ` · ${topics}` : ""}
           </span>
@@ -80,7 +80,7 @@ export function ExploreView({
       <form onSubmit={submit} role="search" className="relative mt-5">
         <Search
           size={17}
-          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-3"
+          className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-2"
         />
         <input
           type="search"
@@ -103,7 +103,7 @@ export function ExploreView({
               <p className="font-serif text-[18px] text-text-2">
                 {t("explore.empty", { q })}
               </p>
-              <p className="mt-1.5 font-sans text-[13px] text-text-3">
+              <p className="mt-1.5 font-sans text-[13px] text-text-2">
                 {t("explore.emptyHint")}
               </p>
             </div>
@@ -147,7 +147,7 @@ export function ExploreView({
                   <span className="block font-serif text-[18px] font-medium text-ink">
                     {tag.name}
                   </span>
-                  <span className="mt-0.5 block font-mono text-[11px] text-text-3">
+                  <span className="mt-0.5 block font-mono text-[11px] text-text-2">
                     {tag.flows === 1
                       ? t("explore.flowCountOne")
                       : t("explore.flowCount", { n: compactNumber(tag.flows) })}

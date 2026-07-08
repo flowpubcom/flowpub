@@ -40,12 +40,12 @@ export function FlowProse({
             </blockquote>
           ),
           ul: ({ children }) => (
-            <ul className="mb-4 list-disc space-y-1.5 pl-5 text-[18px] leading-[1.6] text-ink marker:text-text-3">
+            <ul className="mb-4 list-disc space-y-1.5 pl-5 text-[18px] leading-[1.6] text-ink marker:text-text-2">
               {children}
             </ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-4 list-decimal space-y-1.5 pl-5 text-[18px] leading-[1.6] text-ink marker:text-text-3">
+            <ol className="mb-4 list-decimal space-y-1.5 pl-5 text-[18px] leading-[1.6] text-ink marker:text-text-2">
               {children}
             </ol>
           ),
@@ -58,7 +58,7 @@ export function FlowProse({
             <a
               href={href}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="text-grana underline underline-offset-2 hover:text-grana-700"
             >
               {children}

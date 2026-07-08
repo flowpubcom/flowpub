@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 // Sitemap dinámico: home + hubs de tema + Flows publicados. Lee vía REST con
 // la anon key (valores públicos) y cachea 1 h — sin cookies, cacheable.
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.app";
 
 async function fetchRows<T>(path: string): Promise<T[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;

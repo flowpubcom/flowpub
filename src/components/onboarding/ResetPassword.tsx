@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -49,7 +50,13 @@ export function ResetPassword() {
     <main className="grid min-h-dvh place-items-center px-5 py-10">
       <div className="w-full max-w-[420px] rounded-[20px] border border-line bg-surface p-8 shadow-[var(--shadow-window)]">
         <div className="flex justify-center">
-          <Logo markSize={28} textSize={22} />
+          <Link
+            href="/"
+            aria-label="FlowPub"
+            className="rounded-[10px] outline-none focus-visible:ring-2 focus-visible:ring-grana"
+          >
+            <Logo markSize={28} textSize={22} />
+          </Link>
         </div>
 
         {done ? (
@@ -101,7 +108,7 @@ export function ResetPassword() {
                     }}
                     aria-pressed={show}
                     aria-label={t(show ? "onb.password.hide" : "onb.password.show")}
-                    className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
+                    className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-2 transition-colors hover:text-ink"
                   >
                     {show ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>

@@ -24,6 +24,8 @@ export interface SessionUser {
   birthdate: string | null;
   /** ≥18 años según la fecha declarada. false si no la ha dado. */
   isAdult: boolean;
+  /** ¿Rol admin? Solo para mostrar el atajo al panel; el gate real vive en el server + RLS. */
+  isAdmin: boolean;
 }
 
 interface AuthCtx {
@@ -76,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const [{ data: profile }, bd] = await Promise.all([
         supabase
           .from("profiles")
-          .select("username, display_name, avatar_url, onboarded")
+          .select("username, display_name, avatar_url, onboarded, role")
           .eq("id", authUser.id)
           .maybeSingle(),
         // La fecha de nacimiento es privada: viaja solo por RPC (migración 15).
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         onboarded: profile?.onboarded ?? false,
         birthdate: bd,
         isAdult: isAdultFrom(bd),
+        isAdmin: (profile as { role?: string } | null)?.role === "admin",
       });
       setLoading(false);
     },

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LogOut, Mic, User } from "lucide-react";
+import { Bell, LayoutDashboard, LogOut, Mic, User } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/brand";
 import { Avatar, Button } from "@/components/ui";
@@ -23,25 +23,35 @@ const LEGAL_LABEL: Record<LegalId, DictKey> = {
   cookies: "legal.cookies",
 };
 
-/** Fila de links legales (riel desktop y menú del avatar). */
+/** Fila de links legales + crédito del creador (riel desktop y menú del avatar). */
 function LegalLinks({ className }: { className?: string }) {
   const { t } = useI18n();
   const { openLegal } = useLegal();
   return (
-    <p className={cn("flex flex-wrap gap-x-2 gap-y-1", className)}>
-      {LEGAL_ORDER.map((id, i) => (
-        <span key={id} className="flex items-center gap-2">
-          {i > 0 && <span aria-hidden className="text-text-3">·</span>}
-          <button
-            type="button"
-            onClick={() => openLegal(id)}
-            className="font-sans text-[11.5px] font-medium text-text-3 transition-colors hover:text-ink"
-          >
-            {t(LEGAL_LABEL[id])}
-          </button>
-        </span>
-      ))}
-    </p>
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <p className="flex flex-wrap gap-x-2 gap-y-1">
+        {LEGAL_ORDER.map((id, i) => (
+          <span key={id} className="flex items-center gap-2">
+            {i > 0 && <span aria-hidden className="text-text-3">·</span>}
+            <button
+              type="button"
+              onClick={() => openLegal(id)}
+              className="font-sans text-[11.5px] font-medium text-text-2 transition-colors hover:text-ink"
+            >
+              {t(LEGAL_LABEL[id])}
+            </button>
+          </span>
+        ))}
+      </p>
+      <a
+        href="https://juliosahagunsanchez.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-sans text-[11px] text-text-2 transition-colors hover:text-ink"
+      >
+        {t("credit")}
+      </a>
+    </div>
   );
 }
 
@@ -79,7 +89,7 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
           <Logo markSize={28} textSize={22} />
         </Link>
         <nav className="flex flex-col gap-1">
-          {NAV.filter((n) => n.desktop).map((item) => (
+          {NAV.filter((n) => n.desktop && n.key !== "profile").map((item) => (
             <NavLink
               key={item.key}
               item={item}
@@ -89,13 +99,36 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
               unread={item.key === "notifications" ? unreadCount : 0}
             />
           ))}
+          {/* En lugar del item «Perfil»: cuenta (avatar + menú) o el par
+              Sign up | Login para invitados. */}
+          {user ? (
+            <RailAccountMenu user={user} active={active === "profile"} />
+          ) : (
+            <div className="flex items-center gap-1.5 px-3.5 py-2.5 font-sans text-[15px] font-medium">
+              <Link
+                href="/entrar?m=signup"
+                onClick={() => play("click")}
+                className="text-grana-text transition-colors hover:opacity-80"
+              >
+                {t("auth.signupCta")}
+              </Link>
+              <span aria-hidden className="text-text-3">|</span>
+              <Link
+                href="/entrar?m=login"
+                onClick={() => play("click")}
+                className="text-text-2 transition-colors hover:text-ink"
+              >
+                {t("auth.loginCta")}
+              </Link>
+            </div>
+          )}
         </nav>
         <div className="mt-auto pt-4">
           <Button fullWidth size="lg" sound={null} onClick={onRecord}>
             <Mic size={18} />
             {t("record")}
           </Button>
-          <LegalLinks className="mt-4 justify-center" />
+          <LegalLinks className="mt-4 items-center text-center" />
         </div>
       </aside>
 
@@ -185,7 +218,7 @@ function MobileTopBar({
             <Link
               href="/notificaciones"
               aria-label={t("nav.notifications")}
-              className="relative grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+              className="fp-hit-y relative grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
             >
               <Bell size={20} />
               {unreadCount > 0 && (
@@ -198,12 +231,21 @@ function MobileTopBar({
             <AvatarMenu user={user} />
           </>
         ) : (
-          <Link
-            href="/entrar"
-            className="rounded-pill px-3 py-1.5 font-sans text-[14px] font-semibold text-grana-text transition-colors hover:bg-[var(--hover)]"
-          >
-            {t("onb.login")}
-          </Link>
+          <div className="flex items-center gap-1 font-sans text-[14px] font-semibold">
+            <Link
+              href="/entrar?m=signup"
+              className="rounded-pill px-2.5 py-1.5 text-grana-text transition-colors hover:bg-[var(--hover)]"
+            >
+              {t("auth.signupCta")}
+            </Link>
+            <span aria-hidden className="text-text-3">|</span>
+            <Link
+              href="/entrar?m=login"
+              className="rounded-pill px-2.5 py-1.5 text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+            >
+              {t("auth.loginCta")}
+            </Link>
+          </div>
         )}
       </div>
     </header>
@@ -279,7 +321,7 @@ function BottomItem({
       aria-current={active ? "page" : undefined}
       className={cn(
         "grid h-11 w-12 place-items-center rounded-[12px] transition-colors",
-        active ? "text-grana" : "text-text-3 hover:text-ink",
+        active ? "text-grana" : "text-text-2 hover:text-ink",
       )}
     >
       <Icon size={22} strokeWidth={active ? 2.4 : 2} />
@@ -292,10 +334,9 @@ function BottomItem({
 function AvatarMenu({ user }: { user: SessionUser }) {
   const { t } = useI18n();
   const { play } = useSound();
-  const { signOut } = useAuth();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -305,7 +346,11 @@ function AvatarMenu({ user }: { user: SessionUser }) {
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        // El foco regresa al avatar (si no, cae a <body> al desmontar el menú).
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -321,6 +366,7 @@ function AvatarMenu({ user }: { user: SessionUser }) {
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
@@ -329,7 +375,7 @@ function AvatarMenu({ user }: { user: SessionUser }) {
           play("tick");
           setOpen((o) => !o);
         }}
-        className="grid h-9 w-9 place-items-center rounded-pill transition-transform duration-150 ease-flow active:scale-[.94]"
+        className="fp-hit-y grid h-9 w-9 place-items-center rounded-pill transition-transform duration-150 ease-flow active:scale-[.94]"
       >
         <Avatar
           name={user.displayName}
@@ -344,35 +390,155 @@ function AvatarMenu({ user }: { user: SessionUser }) {
           role="menu"
           className="absolute right-0 top-[calc(100%+8px)] z-30 w-[210px] rounded-[14px] border border-line bg-surface p-1.5 shadow-[var(--shadow-hover)] [animation:fp-rise_.18s_var(--ease-flow)]"
         >
-          <button
-            type="button"
-            role="menuitem"
-            className={item}
-            onClick={() => {
-              play("click");
-              setOpen(false);
-              router.push("/perfil");
-            }}
-          >
-            <User size={16} className="text-text-2" />
-            {t("menu.viewProfile")}
-          </button>
-          <button
-            type="button"
-            role="menuitem"
-            className={item}
-            onClick={async () => {
-              play("soft");
-              setOpen(false);
-              await signOut();
-              router.push("/");
-            }}
-          >
-            <LogOut size={16} className="text-text-2" />
-            {t("auth.signout")}
-          </button>
+          <AccountMenuItems
+            user={user}
+            itemClass={item}
+            onNavigate={() => setOpen(false)}
+          />
           <div className="mx-2 my-1.5 border-t border-line-soft" aria-hidden />
           <LegalLinks className="px-3 pb-2 pt-1" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Ítems compartidos del menú de cuenta: ver perfil, panel de admin (si aplica)
+ *  y cerrar sesión. Lo usan el menú móvil (top bar) y el del riel desktop. */
+function AccountMenuItems({
+  user,
+  itemClass,
+  onNavigate,
+}: {
+  user: SessionUser;
+  itemClass: string;
+  onNavigate: () => void;
+}) {
+  const { t } = useI18n();
+  const { play } = useSound();
+  const { signOut } = useAuth();
+  const router = useRouter();
+  return (
+    <>
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClass}
+        onClick={() => {
+          play("click");
+          onNavigate();
+          router.push("/perfil");
+        }}
+      >
+        <User size={16} className="text-text-2" />
+        {t("menu.viewProfile")}
+      </button>
+      {user.isAdmin && (
+        <button
+          type="button"
+          role="menuitem"
+          className={itemClass}
+          onClick={() => {
+            play("click");
+            onNavigate();
+            router.push("/admin");
+          }}
+        >
+          <LayoutDashboard size={16} className="text-text-2" />
+          {t("menu.admin")}
+        </button>
+      )}
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClass}
+        onClick={async () => {
+          play("soft");
+          onNavigate();
+          await signOut();
+          router.push("/");
+        }}
+      >
+        <LogOut size={16} className="text-text-2" />
+        {t("auth.signout")}
+      </button>
+    </>
+  );
+}
+
+/** Cuenta en el riel desktop (en lugar del item «Perfil»): avatar + nombre que
+ *  abre un menú con ver perfil / panel de admin / cerrar sesión. Cierra con
+ *  click fuera y con Esc (el foco vuelve al disparador). */
+function RailAccountMenu({ user, active }: { user: SessionUser; active: boolean }) {
+  const { t } = useI18n();
+  const { play } = useSound();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const item =
+    "flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left font-sans text-[14px] font-medium text-ink transition-colors hover:bg-[var(--hover)]";
+
+  return (
+    <div ref={rootRef} className="relative">
+      <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={t("menu.aria")}
+        aria-current={active ? "page" : undefined}
+        onClick={() => {
+          play("tick");
+          setOpen((o) => !o);
+        }}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-[12px] px-3.5 py-2.5 text-left text-[15px] transition-colors duration-150 ease-flow",
+          active
+            ? "bg-surface-3 font-semibold text-ink"
+            : "font-medium text-text-2 hover:bg-[var(--hover)] hover:text-ink",
+        )}
+      >
+        <Avatar
+          name={user.displayName}
+          src={user.avatarUrl}
+          color={user.avatarColor}
+          size={26}
+        />
+        <span className="min-w-0 flex-1 truncate">{user.displayName}</span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-0 top-[calc(100%+8px)] z-30 w-[210px] rounded-[14px] border border-line bg-surface p-1.5 shadow-[var(--shadow-hover)] [animation:fp-rise_.18s_var(--ease-flow)]"
+        >
+          <AccountMenuItems
+            user={user}
+            itemClass={item}
+            onNavigate={() => setOpen(false)}
+          />
         </div>
       )}
     </div>

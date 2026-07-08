@@ -166,7 +166,7 @@ export function CommentComposer({
               "rounded-pill px-3.5 py-1 font-sans text-[12px] font-semibold transition-colors duration-150",
               tab === v
                 ? "bg-surface text-ink shadow-[0_1px_2px_rgba(26,23,20,.08)]"
-                : "text-text-3 hover:text-ink",
+                : "text-text-2 hover:text-ink",
             )}
           >
             {t(v === "text" ? "comment.tab.text" : "comment.tab.voice")}
@@ -219,7 +219,7 @@ export function CommentComposer({
                 <Mic size={16} />
                 {t("comment.record")}
               </button>
-              <span className="font-mono text-[12px] text-text-3">
+              <span className="font-mono text-[12px] text-text-2">
                 {t("comment.max", { t: formatDuration(MAX_VOICE) })}
               </span>
             </div>

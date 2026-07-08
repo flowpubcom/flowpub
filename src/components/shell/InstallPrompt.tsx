@@ -33,6 +33,26 @@ function countVisit(): number {
   }
 }
 
+// El banner de instalar solo tiene sentido en móvil (agregar a pantalla de
+// inicio). En desktop el navegador ya ofrece instalar desde la barra, así que
+// no lo mostramos. Preferimos userAgentData.mobile (presente justo en Chromium,
+// donde dispara beforeinstallprompt) y caemos a puntero grueso + viewport
+// angosto. Ante la duda, false = tratar como desktop (no molestar).
+function isMobile(): boolean {
+  try {
+    const uaData = (
+      navigator as Navigator & { userAgentData?: { mobile?: boolean } }
+    ).userAgentData;
+    if (uaData && typeof uaData.mobile === "boolean") return uaData.mobile;
+    return (
+      window.matchMedia("(pointer: coarse)").matches &&
+      window.matchMedia("(max-width: 900px)").matches
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function InstallPrompt() {
   const { t } = useI18n();
   const { play } = useSound();
@@ -55,6 +75,8 @@ export function InstallPrompt() {
     const onPrompt = (e: Event) => {
       e.preventDefault();
       deferred.current = e as BeforeInstallPromptEvent;
+      // Desktop: capturamos el evento (por si acaso) pero sin banner.
+      if (!isMobile()) return;
       try {
         const dismissedAt = localStorage.getItem(K_DISMISSED_AT);
         // Primera vez: se ofrece. Tras descartar: cada 3 visitas.
@@ -141,7 +163,7 @@ export function InstallPrompt() {
           type="button"
           onClick={dismiss}
           aria-label={t("pwa.dismiss")}
-          className="grid h-8 w-8 flex-none place-items-center rounded-pill text-text-3 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+          className="fp-hit grid h-8 w-8 flex-none place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
           <X size={15} />
         </button>

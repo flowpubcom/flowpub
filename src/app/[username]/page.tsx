@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
 import { ProfileBanner } from "@/components/profile/ProfileBanner";
 import { ProfileView } from "@/components/profile/ProfileView";
+import { safeJsonLd } from "@/lib/jsonLd";
 import {
   fetchFlowsByAuthor,
   fetchLikedFlows,
@@ -14,7 +15,7 @@ import {
 // Perfil público: /@usuario. El segmento dinámico captura «@julio» (el prefijo
 // @ es obligatorio; cualquier otra ruta suelta cae a 404).
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.app";
 
 async function resolveUsername(param: string): Promise<string | null> {
   const raw = decodeURIComponent(param);
@@ -79,7 +80,7 @@ export default async function ProfilePage({
     <AppShell active="profile">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <ProfileBanner seed={profile.username} imageUrl={profile.bannerUrl} />
       <ProfileView

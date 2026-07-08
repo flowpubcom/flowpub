@@ -53,7 +53,7 @@ export function MessageThread({
             router.push("/mensajes");
           }}
           aria-label={t("msg.back")}
-          className="grid h-[34px] w-[34px] flex-none place-items-center rounded-pill bg-surface-2 text-ink transition-colors hover:bg-[var(--hover)] lg:hidden"
+          className="fp-hit grid h-[34px] w-[34px] flex-none place-items-center rounded-pill bg-surface-2 text-ink transition-colors hover:bg-[var(--hover)] lg:hidden"
         >
           <ArrowLeft size={18} />
         </button>
@@ -63,7 +63,7 @@ export function MessageThread({
             <span className="block truncate font-sans text-[15px] font-semibold text-ink">
               {other.displayName}
             </span>
-            <span className="block truncate font-sans text-[12px] text-text-3">
+            <span className="block truncate font-sans text-[12px] text-text-2">
               @{other.username}
             </span>
           </span>

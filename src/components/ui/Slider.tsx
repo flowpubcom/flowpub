@@ -33,7 +33,7 @@ export function Slider({
         {label ? (
           <label
             htmlFor={id}
-            className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3"
+            className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2"
           >
             {label}
           </label>

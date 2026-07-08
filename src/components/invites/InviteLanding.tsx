@@ -32,10 +32,16 @@ export function InviteLanding({
     <main className="grid min-h-dvh place-items-center px-5 py-10">
       <div className="w-full max-w-[440px] rounded-[20px] border border-line bg-surface p-8 text-center shadow-[var(--shadow-window)]">
         <div className="flex justify-center">
-          <Logo markSize={30} textSize={23} />
+          <Link
+            href="/"
+            aria-label="FlowPub"
+            className="rounded-[10px] outline-none focus-visible:ring-2 focus-visible:ring-grana"
+          >
+            <Logo markSize={30} textSize={23} />
+          </Link>
         </div>
 
-        <p className="mt-7 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+        <p className="mt-7 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
           {t("invite.landing.eyebrow")}
         </p>
 
@@ -60,7 +66,7 @@ export function InviteLanding({
             <p className="mt-4">
               <Link
                 href="/"
-                className="font-sans text-[13px] font-medium text-text-3 transition-colors hover:text-ink"
+                className="font-sans text-[13px] font-medium text-text-2 transition-colors hover:text-ink"
               >
                 {t("invite.landing.listen")}
               </Link>

@@ -43,3 +43,20 @@ export function compactNumber(n: number): string {
   const k = n / 1000;
   return `${k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)}k`;
 }
+
+/** Umbrales de invitaciones canjeadas para cada estrella de la badge OG. */
+export const OG_MILESTONES = [3, 6, 9] as const;
+
+/** Nivel de badge OG por invitaciones canjeadas: 0 (sin badge) .. 3 (máximo). */
+export function ogLevel(redemptions: number): 0 | 1 | 2 | 3 {
+  if (redemptions >= OG_MILESTONES[2]) return 3;
+  if (redemptions >= OG_MILESTONES[1]) return 2;
+  if (redemptions >= OG_MILESTONES[0]) return 1;
+  return 0;
+}
+
+/** Próximo umbral a alcanzar (null = ya tiene las 3 estrellas). */
+export function nextOgMilestone(redemptions: number): number | null {
+  const next = OG_MILESTONES.find((m) => redemptions < m);
+  return next ?? null;
+}

@@ -48,7 +48,7 @@
    se queda en su idioma (es la política del producto) con `inLanguage`.
 5. **Perfil como entidad** (`/@usuario` + JSON-LD `Person`/`ProfilePage`)
    cuando exista la pantalla de perfil (fase 6).
-6. **Métricas**: alta en Search Console al desplegar `flowpub.lat` y revisar
+6. **Métricas**: alta en Search Console al desplegar `flowpub.app` y revisar
    qué hubs jalan queries; el copy de cada hub se afina con eso.
 
 ## Reglas para contenido nuevo

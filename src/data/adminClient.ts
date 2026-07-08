@@ -46,11 +46,12 @@ export async function addTag(
   const { count } = await supabase
     .from("tags")
     .select("id", { count: "exact", head: true });
+  // OJO: el grant de columna (migration_17) solo deja escribir slug/name_es/
+  // name_en/sort; `active` cae al default true. Por eso no lo mandamos aquí.
   const { error } = await supabase.from("tags").insert({
     slug,
     name_es: nameEs.trim(),
     name_en: (nameEn.trim() || nameEs.trim()),
-    active: true,
     sort: (count ?? 12) + 1,
   });
   return { ok: !error };

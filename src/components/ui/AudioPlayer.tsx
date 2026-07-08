@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Pause, Play } from "lucide-react";
+import { Loader2, Pause, Play } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
@@ -50,6 +50,9 @@ export function AudioPlayer({
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [rate, setRate] = useState<(typeof RATES)[number]>(1);
+  // Estado de red del audio real: buffering muestra spinner; error avisa en
+  // lugar de quedarse en silencio (audio 404/lento ya no es un misterio).
+  const [netState, setNetState] = useState<"idle" | "loading" | "error">("idle");
 
   const total = durationSeconds || 1;
   const progress = Math.min(1, elapsed / total);
@@ -133,12 +136,25 @@ export function AudioPlayer({
         a.pause();
         setPlaying(false);
       } else {
+        // Tras un error, reintenta desde cero (el archivo pudo tardar/fallar).
+        if (netState === "error") {
+          a.load();
+        }
+        // Si aún no hay datos suficientes, el play va a esperar red: spinner.
+        if (a.readyState < 3) setNetState("loading");
         a.playbackRate = rateRef.current;
         if (onAir && radioId) radio?.claim(radioId);
         void a
           .play()
-          .then(() => setPlaying(true))
-          .catch(() => {});
+          .then(() => {
+            setPlaying(true);
+            setNetState("idle");
+          })
+          .catch(() => {
+            // Autoplay bloqueado o archivo roto: onError decide si es error
+            // de red; si no, simplemente queda en pausa.
+            setNetState((s) => (s === "loading" ? "error" : s));
+          });
       }
       return;
     }
@@ -167,45 +183,61 @@ export function AudioPlayer({
         type="button"
         onClick={toggle}
         aria-label={playing ? t("pause") : t("play")}
-        className="grid h-[38px] w-[38px] flex-none place-items-center rounded-pill bg-ink text-ink-on transition-transform duration-150 ease-flow active:scale-[.94]"
+        className="fp-hit grid h-[38px] w-[38px] flex-none place-items-center rounded-pill bg-ink text-ink-on transition-transform duration-150 ease-flow active:scale-[.94]"
       >
-        {playing ? (
+        {netState === "loading" ? (
+          <Loader2 size={16} className="animate-spin" />
+        ) : playing ? (
           <Pause size={16} fill="currentColor" />
         ) : (
           <Play size={16} fill="currentColor" className="ml-[1px]" />
         )}
       </button>
 
-      <svg
-        viewBox="0 0 300 26"
-        fill="none"
-        preserveAspectRatio="none"
-        className={cn("h-[26px]", isFull ? "w-full min-w-0 flex-1" : "w-[124px]")}
-        aria-hidden="true"
-      >
-        <path d={VIRGULA} stroke="var(--wave)" strokeWidth={2.4} strokeLinecap="round" />
-        <path
-          d={VIRGULA}
-          stroke="var(--grana)"
-          strokeWidth={2.4}
-          strokeLinecap="round"
-          pathLength={1}
-          strokeDasharray={1}
-          strokeDashoffset={1 - progress}
-        />
-      </svg>
+      {netState === "error" ? (
+        <span
+          role="status"
+          className={cn(
+            "min-w-0 truncate font-sans text-[13px] text-text-2",
+            isFull ? "flex-1" : "w-[176px]",
+          )}
+        >
+          {t("player.error")}
+        </span>
+      ) : (
+        <>
+          <svg
+            viewBox="0 0 300 26"
+            fill="none"
+            preserveAspectRatio="none"
+            className={cn("h-[26px]", isFull ? "w-full min-w-0 flex-1" : "w-[124px]")}
+            aria-hidden="true"
+          >
+            <path d={VIRGULA} stroke="var(--wave)" strokeWidth={2.4} strokeLinecap="round" />
+            <path
+              d={VIRGULA}
+              stroke="var(--grana)"
+              strokeWidth={2.4}
+              strokeLinecap="round"
+              pathLength={1}
+              strokeDasharray={1}
+              strokeDashoffset={1 - progress}
+            />
+          </svg>
 
-      <span className="flex-none font-mono text-[12px] tabular-nums text-text-2">
-        {isFull ? `${formatTime(elapsed)} / ${formatTime(total)}` : formatTime(total)}
-      </span>
+          <span className="flex-none font-mono text-[12px] tabular-nums text-text-2">
+            {isFull ? `${formatTime(elapsed)} / ${formatTime(total)}` : formatTime(total)}
+          </span>
+        </>
+      )}
 
       <button
         type="button"
         onClick={cycleRate}
         aria-label={t("player.speed")}
         className={cn(
-          "h-[30px] flex-none rounded-pill px-2 font-mono text-[11px] tabular-nums transition-colors duration-150 ease-flow hover:bg-[var(--hover)]",
-          rate === 1 ? "text-text-3 hover:text-ink" : "font-bold text-ink",
+          "fp-hit h-[30px] flex-none rounded-pill px-2 font-mono text-[11px] tabular-nums transition-colors duration-150 ease-flow hover:bg-[var(--hover)]",
+          rate === 1 ? "text-text-2 hover:text-ink" : "font-bold text-ink",
         )}
       >
         {rate}×
@@ -218,6 +250,13 @@ export function AudioPlayer({
           preload="metadata"
           className="hidden"
           onTimeUpdate={(e) => setElapsed(e.currentTarget.currentTime)}
+          onWaiting={() => setNetState("loading")}
+          onPlaying={() => setNetState("idle")}
+          onCanPlay={() => setNetState((s) => (s === "loading" ? "idle" : s))}
+          onError={() => {
+            setNetState("error");
+            setPlaying(false);
+          }}
           onEnded={() => {
             setPlaying(false);
             setElapsed(0);

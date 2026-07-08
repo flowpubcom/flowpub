@@ -24,7 +24,7 @@ export async function fetchMyInvites(): Promise<MyInvites | null> {
       .select("code,used_at")
       .is("used_at", null)
       .order("created_at")
-      .limit(6),
+      .limit(9),
     supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(),
   ]);
   // 42P01 = la tabla aún no existe (migración pendiente): la tarjeta se oculta.

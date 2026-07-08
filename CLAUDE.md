@@ -20,7 +20,7 @@ la versión pulida pero **siempre expone el transcript crudo**. Cualquiera naveg
 (**el Pub**); solo usuarios registrados publican. Los Flows se comentan (**texto o voz** — los
 de voz siempre ofrecen «Ver transcript»), se les da like y se comparten. Perfiles, seguir
 mutuo, **mensajería privada** (texto + voz), notificaciones, panel de control admin.
-Bilingüe **ES/EN** (auto del SO), tema **claro + oscuro**. Dominio: **flowpub.lat**.
+Bilingüe **ES/EN** (auto del SO), tema **claro + oscuro**. Dominio: **flowpub.app**.
 
 **Norte:** evolucionar hacia **UI generativa** — un LLM orquesta la presentación de cada Flow
 (ritmo, énfasis, escala tipográfica) desde su contenido, **con la marca constante**. Por eso:

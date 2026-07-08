@@ -36,7 +36,7 @@ export const LEGAL: Record<LegalId, LegalDoc> = {
       {
         h: "1. Responsable y contacto",
         p: [
-          `El responsable de FlowPub (flowpub.lat) es ${RESPONSABLE}.`,
+          `El responsable de FlowPub (flowpub.app) es ${RESPONSABLE}.`,
           `Para cualquier asunto relacionado con la plataforma escribe a ${CONTACTO}.`,
         ],
       },
@@ -118,7 +118,7 @@ export const LEGAL: Record<LegalId, LegalDoc> = {
       {
         h: "1. Responsable",
         p: [
-          `${RESPONSABLE} es el responsable del tratamiento de tus datos personales en FlowPub (flowpub.lat). Contacto: ${CONTACTO}.`,
+          `${RESPONSABLE} es el responsable del tratamiento de tus datos personales en FlowPub (flowpub.app). Contacto: ${CONTACTO}.`,
         ],
       },
       {

@@ -77,7 +77,7 @@ export function MarkdownToolbar({
           aria-label={label}
           title={label}
           onClick={() => apply(kind)}
-          className="grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+          className="fp-hit-y grid h-8 w-8 place-items-center rounded-md text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
           <Icon size={16} />
         </button>

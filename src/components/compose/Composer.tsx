@@ -12,6 +12,7 @@ import { Logo, FlowMark } from "@/components/brand";
 import { AudioPlayer, Button, Switch } from "@/components/ui";
 import { Cover } from "@/components/cover";
 import { useSound } from "@/providers/SoundProvider";
+import { useI18n } from "@/providers/I18nProvider";
 import { publishFlow } from "@/data/publishApi";
 import { uploadAudio, uploadCover } from "@/data/storage";
 import { hasProfanity } from "@/lib/profanity";
@@ -23,13 +24,17 @@ import { FlowProse } from "./FlowProse";
 type Step = "record" | "recording" | "processing" | "edit" | "published";
 const MAX = 180; // 3:00 — un Flow es una voz concentrada (configurable en admin)
 
-export function Composer() {
+export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
   const router = useRouter();
   const { play } = useSound();
+  const { t } = useI18n();
   const recorder = useRecorder(MAX);
 
   const [step, setStep] = useState<Step>("record");
-  const [proc, setProc] = useState<"polish" | "publish">("polish");
+  // Fase real del pipeline: la pantalla de proceso cuenta la verdad, no timers.
+  const [proc, setProc] = useState<"transcribe" | "polish" | "publish">(
+    "transcribe",
+  );
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -49,16 +54,40 @@ export function Composer() {
   const [pipeError, setPipeError] = useState<string | null>(null);
   const [audioWarn, setAudioWarn] = useState<string | null>(null);
 
+  // Hay una voz a medias: grabando, procesando o editando sin publicar aún.
+  const dirty =
+    step === "recording" || step === "processing" || step === "edit";
+
+  // No perder una grabación de 3 minutos por un reload/cierre accidental.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Los navegadores muestran su propio texto; returnValue activa el aviso.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  // Mismo cuidado al salir por los links del header (nav interna no dispara
+  // beforeunload): se confirma antes de tirar el Flow.
+  const confirmLeave = (e: React.MouseEvent) => {
+    if (dirty && !window.confirm(t("compose.leave"))) e.preventDefault();
+  };
+
   const startRecording = async () => {
     const ok = await recorder.start();
     if (ok) setStep("recording");
     // Si no, recorder.error se muestra en la pantalla de grabar.
   };
 
-  // Pule el transcript con Gemini (/api/polish). Si el pulido falla, somos
-  // honestos: el cuerpo queda como el transcript crudo y el usuario lo edita.
+  // Pule el transcript con Gemini (/api/polish). Si el pulido falla o tarda
+  // demasiado, somos honestos: el cuerpo queda como el transcript crudo y el
+  // usuario lo edita (nunca se pierde la voz por culpa del pulido).
   const runPolish = useCallback(
     async (transcriptText: string) => {
+      setProc("polish");
       let result: { title: string; bodyMd: string; tags: string[] } | null = null;
       try {
         const [res] = await Promise.all([
@@ -66,12 +95,13 @@ export function Composer() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ transcript: transcriptText }),
+            signal: AbortSignal.timeout(75_000),
           }).then((r) => (r.ok ? r.json() : null)),
           new Promise((r) => setTimeout(r, 1600)),
         ]);
         if (res && typeof res.bodyMd === "string" && res.bodyMd) result = res;
       } catch {
-        // sin red: caemos al transcript crudo
+        // sin red o timeout: caemos al transcript crudo
       }
       setTitle(result?.title ?? "");
       setBody(result?.bodyMd ?? transcriptText);
@@ -91,26 +121,41 @@ export function Composer() {
       setDuration(Math.max(1, Math.round(durationSeconds)));
       setPipeError(null);
       setAudioWarn(null);
-      setProc("polish");
+      setProc("transcribe");
       setStep("processing");
 
       const form = new FormData();
       form.append("audio", blob);
 
-      const [url, transcriptText] = await Promise.all([
+      // La transcripción distingue «saturado» (429 del rate-limit / Gemini)
+      // de un fallo normal, y no espera para siempre (timeout de 90s).
+      const [url, tr] = await Promise.all([
         uploadAudio(blob).catch(() => null),
-        fetch("/api/transcribe", { method: "POST", body: form })
-          .then((r) => (r.ok ? r.json() : null))
-          .then((j) =>
-            typeof j?.transcript === "string" ? j.transcript.trim() : "",
-          )
-          .catch(() => ""),
+        (async (): Promise<{ text: string; busy: boolean }> => {
+          try {
+            const r = await fetch("/api/transcribe", {
+              method: "POST",
+              body: form,
+              signal: AbortSignal.timeout(90_000),
+            });
+            if (r.status === 429) return { text: "", busy: true };
+            if (!r.ok) return { text: "", busy: false };
+            const j = await r.json();
+            return {
+              text:
+                typeof j?.transcript === "string" ? j.transcript.trim() : "",
+              busy: false,
+            };
+          } catch {
+            return { text: "", busy: false };
+          }
+        })(),
       ]);
 
-      if (!transcriptText) {
+      if (!tr.text) {
         play("soft");
         setPipeError(
-          "No pudimos transcribir tu voz. Revisa tu conexión e intenta de nuevo.",
+          t(tr.busy ? "compose.err.busy" : "compose.err.transcribe"),
         );
         setStep("record");
         return;
@@ -118,15 +163,13 @@ export function Composer() {
 
       setAudioUrl(url);
       if (!url) {
-        setAudioWarn(
-          "El audio no se pudo subir: el Flow se publicaría solo con el texto.",
-        );
+        setAudioWarn(t("compose.err.audioUpload"));
       }
-      setTranscript(transcriptText);
-      setExplicitLang(hasProfanity(transcriptText));
-      await runPolish(transcriptText);
+      setTranscript(tr.text);
+      setExplicitLang(hasProfanity(tr.text));
+      await runPolish(tr.text);
     },
-    [runPolish, play],
+    [runPolish, play, t],
   );
 
   const stopRecording = useCallback(async () => {
@@ -175,7 +218,14 @@ export function Composer() {
       setStep("published");
     } else {
       play("soft");
-      setPubError("No se pudo publicar. Intenta de nuevo.");
+      // Sesión vencida ≠ tropiezo del servidor: cada una con su salida.
+      setPubError(
+        t(
+          res.error === "no-session"
+            ? "compose.err.session"
+            : "compose.err.publish",
+        ),
+      );
       setStep("edit");
     }
   };
@@ -202,7 +252,13 @@ export function Composer() {
       router.push("/perfil");
     } else {
       play("soft");
-      setPubError("No se pudo guardar el borrador. Intenta de nuevo.");
+      setPubError(
+        t(
+          res.error === "no-session"
+            ? "compose.err.session"
+            : "compose.err.draft",
+        ),
+      );
     }
   };
 
@@ -238,7 +294,7 @@ export function Composer() {
       setCoverUrl(url);
       play("pop");
     } else {
-      setPubError("No se pudo subir la foto. Intenta con otra imagen.");
+      setPubError(t("compose.err.cover"));
       play("soft");
     }
   };
@@ -252,9 +308,9 @@ export function Composer() {
     step === "record" || step === "recording"
       ? 0
       : step === "processing"
-        ? proc === "polish"
-          ? 1
-          : 3
+        ? proc === "publish"
+          ? 3
+          : 1
         : step === "edit"
           ? 2
           : 3;
@@ -264,7 +320,7 @@ export function Composer() {
   return (
     <div className="min-h-dvh">
       <header className="flex items-center justify-between gap-4 px-4 py-4 lg:px-8">
-        <Link href="/" aria-label="FlowPub">
+        <Link href="/" aria-label="FlowPub" onClick={confirmLeave}>
           <Logo markSize={26} textSize={20} />
         </Link>
         <div className="hidden md:block">
@@ -273,7 +329,8 @@ export function Composer() {
         <Link
           href="/"
           aria-label="Cerrar"
-          className="grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+          onClick={confirmLeave}
+          className="fp-hit grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
           <X size={20} />
         </Link>
@@ -324,6 +381,7 @@ export function Composer() {
             audioUrl={audioUrl}
             audioWarn={audioWarn}
             transcript={transcript}
+            availableTags={availableTags}
             error={pubError}
             onPublish={publish}
             onSaveDraft={saveDraft}
@@ -371,7 +429,7 @@ function RecordStep({
       >
         <Mic size={40} className="text-grana" />
       </button>
-      <p className="mt-4 font-mono text-[13px] text-text-3">
+      <p className="mt-4 font-mono text-[13px] text-text-2">
         {formatDuration(maxSeconds)}
       </p>
       <p className="mt-6 max-w-xs font-sans text-[14px] leading-relaxed text-text-2">
@@ -459,8 +517,8 @@ function RecordingStep({
       <p className="mb-1 mt-7 font-serif text-[18px] text-text-2">
         Te escuchamos…
       </p>
-      <p className="max-w-xs font-sans text-[13px] leading-relaxed text-text-3">
-        Al terminar, Gemini transcribe y pule tu voz en un artículo.
+      <p className="max-w-xs font-sans text-[13px] leading-relaxed text-text-2">
+        Al terminar, Gemini transcribe y pule tu voz en un Flow.
       </p>
 
       <button
@@ -474,7 +532,7 @@ function RecordingStep({
       <button
         type="button"
         onClick={onCancel}
-        className="mt-4 font-sans text-[13px] text-text-3 underline underline-offset-2 hover:text-text-2"
+        className="mt-4 font-sans text-[13px] text-text-2 underline underline-offset-2 hover:text-ink"
       >
         Cancelar
       </button>
@@ -483,41 +541,47 @@ function RecordingStep({
 }
 
 // ── processing ───────────────────────────────────────────────────────────────
-function ProcessingStep({ mode }: { mode: "polish" | "publish" }) {
-  const phases =
-    mode === "polish"
-      ? [
-          {
-            t: "Transcribiendo tu voz…",
-            s: "Gemini está escuchando lo que grabaste.",
-          },
-          {
-            t: "Puliéndola en artículo…",
-            s: "Quitando muletillas y dándole forma.",
-          },
-        ]
-      : [{ t: "Publicando…", s: "Subiendo tu voz al Pub." }];
-  const [i, setI] = useState(0);
+// Cuenta la VERDAD: la fase la fija el pipeline real (transcribe → polish →
+// publish), no timers de utilería. Si Gemini tarda, se avisa que seguimos.
+const PHASE_KEYS = {
+  transcribe: ["compose.phase.transcribe.t", "compose.phase.transcribe.s"],
+  polish: ["compose.phase.polish.t", "compose.phase.polish.s"],
+  publish: ["compose.phase.publish.t", "compose.phase.publish.s"],
+} as const;
 
-  // Solo anima las fases; el avance de paso lo controla el flujo async real
-  // (runPolish / publish), así la pantalla dura lo que tarde Gemini.
+function ProcessingStep({
+  mode,
+}: {
+  mode: "transcribe" | "polish" | "publish";
+}) {
+  const { t } = useI18n();
+  const [slow, setSlow] = useState(false);
+
+  // Pasados ~12s en la misma fase, un guiño honesto de «seguimos en ello».
   useEffect(() => {
-    const dur = mode === "polish" ? [1200, 1100] : [1500];
-    setI(0);
-    const timers: number[] = [];
-    let acc = 0;
-    for (let k = 1; k < dur.length; k++) {
-      acc += dur[k - 1];
-      timers.push(window.setTimeout(() => setI(k), acc));
-    }
-    return () => timers.forEach((t) => window.clearTimeout(t));
+    setSlow(false);
+    const timer = window.setTimeout(() => setSlow(true), 12_000);
+    return () => window.clearTimeout(timer);
   }, [mode]);
 
   return (
     <div className="flex flex-col items-center py-16 text-center">
       <FlowMark size={64} draw className="text-grana" />
-      <p className="mt-8 font-serif text-[24px] text-ink">{phases[i].t}</p>
-      <p className="mt-1 font-sans text-[14px] text-text-2">{phases[i].s}</p>
+      <p className="mt-8 font-serif text-[24px] text-ink">
+        {t(PHASE_KEYS[mode][0])}
+      </p>
+      <p className="mt-1 font-sans text-[14px] text-text-2">
+        {t(PHASE_KEYS[mode][1])}
+      </p>
+      <p
+        role="status"
+        className={cn(
+          "mt-5 font-sans text-[13px] text-text-2 transition-opacity duration-300",
+          slow ? "opacity-100" : "opacity-0",
+        )}
+      >
+        {slow ? t("compose.slow") : ""}
+      </p>
     </div>
   );
 }
@@ -547,10 +611,10 @@ function ViewToggle({
             play("tick");
           }}
           className={cn(
-            "rounded-pill px-3 py-1 font-sans text-[12px] font-semibold transition-colors duration-150",
+            "fp-hit-y rounded-pill px-3 py-1 font-sans text-[12px] font-semibold transition-colors duration-150",
             view === v
               ? "bg-surface text-ink shadow-[0_1px_2px_rgba(26,23,20,.08)]"
-              : "text-text-3 hover:text-ink",
+              : "text-text-2 hover:text-ink",
           )}
         >
           {label}
@@ -583,6 +647,8 @@ interface EditStepProps {
   audioUrl: string | null;
   audioWarn?: string | null;
   transcript: string;
+  /** Temas reales de la BD (name_es); si falta, TagPicker cae a la estática. */
+  availableTags?: string[];
   error?: string | null;
   onPublish: () => void;
   onSaveDraft: () => void;
@@ -610,10 +676,12 @@ function EditStep({
   audioUrl,
   audioWarn,
   transcript,
+  availableTags,
   error,
   onPublish,
   onSaveDraft,
 }: EditStepProps) {
+  const { t } = useI18n();
   const [view, setView] = useState<"edit" | "preview">("edit");
   const [showT, setShowT] = useState(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -623,8 +691,8 @@ function EditStep({
       {/* izquierda: portada + audio + transcript */}
       <div className="flex flex-col gap-5">
         <div>
-          <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
-            {coverUrl ? "Tu foto de portada" : "Portada generada"}
+          <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
+            {coverUrl ? t("compose.coverPhoto") : t("compose.coverGenerated")}
           </p>
           <div className="overflow-hidden rounded-[14px] border border-line">
             {coverUrl ? (
@@ -681,8 +749,8 @@ function EditStep({
         </div>
 
         <div>
-          <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
-            Tu audio
+          <p className="mb-2 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
+            {t("compose.audio")}
           </p>
           <AudioPlayer
             src={audioUrl ?? undefined}
@@ -707,7 +775,7 @@ function EditStep({
               size={15}
               className={cn("transition-transform duration-150", showT && "rotate-180")}
             />
-            Ver transcript original
+            {t("compose.viewTranscript")}
           </button>
           {showT && (
             <div className="mt-2 whitespace-pre-wrap rounded-[12px] border border-line bg-surface-2 p-4 font-serif text-[14.5px] leading-[1.6] text-text-2">
@@ -738,7 +806,7 @@ function EditStep({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             spellCheck
-            aria-label="Cuerpo del artículo"
+            aria-label="Cuerpo del Flow"
             className="min-h-[260px] w-full resize-y rounded-[12px] border border-line bg-surface p-4 font-serif text-[17px] leading-[1.7] text-ink outline-none focus:border-grana"
           />
         ) : (
@@ -748,12 +816,17 @@ function EditStep({
         )}
 
         <div className="mt-6">
-          <TagPicker selected={tags} onChange={setTags} />
+          <TagPicker
+            selected={tags}
+            onChange={setTags}
+            options={availableTags}
+            allowCreate
+          />
         </div>
 
         {/* contenido sensible: el autor declara; Hot fija 18+ */}
         <div className="mt-6 flex flex-col gap-1 rounded-[14px] border border-line bg-surface p-4">
-          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
             Contenido sensible
           </p>
           <div className="flex items-center justify-between gap-4 py-1.5">
@@ -761,7 +834,7 @@ function EditStep({
               <p className="font-sans text-[14px] font-semibold text-ink">
                 Palabras altisonantes
               </p>
-              <p className="font-sans text-[12.5px] text-text-3">
+              <p className="font-sans text-[12.5px] text-text-2">
                 {explicitLang
                   ? "Se detectaron en tu transcript — puedes corregir la marca."
                   : "Márcalo si tu Flow trae groserías."}
@@ -778,7 +851,7 @@ function EditStep({
               <p className="font-sans text-[14px] font-semibold text-ink">
                 Para mayores de 18
               </p>
-              <p className="font-sans text-[12.5px] text-text-3">
+              <p className="font-sans text-[12.5px] text-text-2">
                 {hotLocked
                   ? "El tema Hot siempre es para mayores de 18."
                   : "Solo quien confirme su edad podrá escucharlo."}
@@ -841,7 +914,7 @@ function PublishedStep({
           <h3 className="font-serif text-[20px] font-medium text-ink">
             {title || "Tu Flow"}
           </h3>
-          <p className="mt-1 font-mono text-[12px] text-text-3">
+          <p className="mt-1 font-mono text-[12px] text-text-2">
             {formatDuration(duration)} de audio
           </p>
         </div>

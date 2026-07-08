@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2 } from "lucide-react";
+import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2, Star } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
 import { FlowCover } from "@/components/cover";
@@ -21,7 +21,7 @@ import {
   uploadAvatar,
   uploadBanner,
 } from "@/data/profileApi";
-import { compactNumber, durationLabel } from "@/lib/format";
+import { compactNumber, durationLabel, ogLevel } from "@/lib/format";
 import type { Flow } from "@/data/types";
 import type { ProfileStats, PublicProfile } from "@/data/profilesApi";
 
@@ -177,10 +177,13 @@ export function ProfileView({
       )}
 
       {/* identidad */}
-      <h1 className="font-serif text-[32px] font-medium leading-[1.1] text-ink">
-        {profile.displayName}
-      </h1>
-      <p className="mb-3.5 mt-1 font-sans text-[15px] text-text-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h1 className="font-serif text-[32px] font-medium leading-[1.1] text-ink">
+          {profile.displayName}
+        </h1>
+        <OgBadge redemptions={profile.inviteRedemptions} />
+      </div>
+      <p className="mb-3.5 mt-1 font-sans text-[15px] text-text-2">
         @{profile.username}
       </p>
       {profile.bio && (
@@ -191,7 +194,7 @@ export function ProfileView({
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {profile.location && (
           <>
-            <span className="inline-flex items-center gap-1.5 font-sans text-[13px] text-text-3">
+            <span className="inline-flex items-center gap-1.5 font-sans text-[13px] text-text-2">
               <MapPin size={14} strokeWidth={1.8} />
               {profile.location}
             </span>
@@ -199,7 +202,7 @@ export function ProfileView({
           </>
         )}
         {profile.sinceYear && (
-          <span className="font-sans text-[13px] text-text-3">
+          <span className="font-sans text-[13px] text-text-2">
             {t("profile.since", { y: profile.sinceYear })}
           </span>
         )}
@@ -220,8 +223,8 @@ export function ProfileView({
         <Stat n={stats.following} label={t("profile.followingCount")} />
       </div>
 
-      {/* invitaciones (solo el dueño): 6 enlaces para correr la voz */}
-      {isOwn && <InvitesCard />}
+      {/* invitaciones (solo el dueño): 9 enlaces para correr la voz */}
+      {isOwn && <InvitesCard redemptions={profile.inviteRedemptions} />}
 
       {/* tabs */}
       <div className="mb-5 mt-4 flex gap-1 border-b border-line">
@@ -238,7 +241,7 @@ export function ProfileView({
               "-mb-px border-b-2 px-4 py-2.5 font-sans text-[14px] transition-colors duration-150",
               tab === v
                 ? "border-grana font-semibold text-ink"
-                : "border-transparent font-medium text-text-3 hover:text-ink",
+                : "border-transparent font-medium text-text-2 hover:text-ink",
             )}
           >
             {label}
@@ -248,7 +251,7 @@ export function ProfileView({
 
       {/* grid */}
       {grid.length === 0 ? (
-        <p className="py-14 text-center font-sans text-[14px] text-text-3">
+        <p className="py-14 text-center font-sans text-[14px] text-text-2">
           {t("profile.empty")}
         </p>
       ) : (
@@ -282,6 +285,8 @@ export function ProfileView({
           flowId={editFlow.id}
           initialTitle={editFlow.title}
           initialBody={editFlow.bodyMd ?? editFlow.excerpt}
+          initialCoverUrl={editFlow.coverUrl}
+          initialCoverKind={editFlow.coverKind}
           onSaved={(newTitle, newBody) => {
             setPatches((prev) => ({
               ...prev,
@@ -313,11 +318,37 @@ export function ProfileView({
   );
 }
 
+/** Chip «OG» + N estrellas: aparece a partir de 3 invitaciones canjeadas
+ *  (3/6/9). Ocre —nunca grana, reservado para acentos primarios. */
+function OgBadge({ redemptions }: { redemptions: number }) {
+  const { t } = useI18n();
+  const level = ogLevel(redemptions);
+  if (level === 0) return null;
+  const label = t("badge.og.aria", { n: redemptions });
+  return (
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className="inline-flex items-center gap-1 rounded-pill border border-ocre/30 bg-ocre/10 px-2.5 py-1 text-ocre"
+    >
+      <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.1em]">
+        {t("badge.og.label")}
+      </span>
+      <span className="flex items-center gap-0.5" aria-hidden>
+        {Array.from({ length: level }).map((_, i) => (
+          <Star key={i} size={11} fill="currentColor" strokeWidth={0} />
+        ))}
+      </span>
+    </span>
+  );
+}
+
 function Stat({ n, label }: { n: number; label: string }) {
   return (
     <p className="font-serif text-[22px] font-medium text-ink">
       {compactNumber(n)}{" "}
-      <span className="font-sans text-[14px] font-normal text-text-3">
+      <span className="font-sans text-[14px] font-normal text-text-2">
         {label}
       </span>
     </p>
@@ -343,7 +374,7 @@ function TileEditButton({
       aria-label={label}
       title={label}
       className={cn(
-        "absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center rounded-pill shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-105 active:scale-[.95]",
+        "absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-pill shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-105 active:scale-[.95]",
         overCover
           ? "bg-[rgba(251,250,246,0.92)] text-[#1A1714]"
           : "border border-line-2 bg-surface text-ink",
@@ -407,7 +438,7 @@ function DraftTile({
     <div className="relative aspect-[16/11]">
       <Link
         href={`/flow/${flow.id}`}
-        className="flex h-full flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-2 bg-surface-2 text-text-3 transition-colors hover-tint"
+        className="flex h-full flex-col items-center justify-center gap-2 rounded-[14px] border border-dashed border-line-2 bg-surface-2 text-text-2 transition-colors hover-tint"
       >
         <Mic size={26} strokeWidth={1.6} />
         <span className="font-serif text-[14px] text-text-2">
@@ -584,7 +615,7 @@ function EditProfileModal({
         </Field>
         <Field label={t("onb.profile.username")}>
           <span className="flex items-center overflow-hidden rounded-md border border-line-2 bg-surface focus-within:border-grana">
-            <span className="py-2.5 pl-3.5 pr-1 font-sans text-[15px] text-text-3">
+            <span className="py-2.5 pl-3.5 pr-1 font-sans text-[15px] text-text-2">
               @
             </span>
             <input
@@ -614,7 +645,7 @@ function EditProfileModal({
             aria-label={t("profile.birthdate")}
             className={inputCls}
           />
-          <span className="mt-1 block font-sans text-[12px] text-text-3">
+          <span className="mt-1 block font-sans text-[12px] text-text-2">
             {t("profile.birthdateHint")}
           </span>
         </Field>

@@ -18,6 +18,8 @@ export interface PublicProfile {
   sinceYear: number | null;
   /** Nombres de sus temas elegidos. */
   topics: string[];
+  /** Invitaciones canjeadas (para la badge OG); 0 si aún no corre migration_18. */
+  inviteRedemptions: number;
 }
 
 export interface ProfileStats {
@@ -48,6 +50,14 @@ export const fetchProfileByUsername = cache(
     }
     if (error || !data) return null;
     const row = data as Record<string, any>;
+
+    // Invitaciones canjeadas (badge OG): RPC pública, tolerante a que la
+    // migración 18 aún no haya corrido (42883 = función inexistente).
+    const { data: redemptions, error: redErr } = await supabase.rpc(
+      "invite_redemptions",
+      { profile: row.id as string },
+    );
+
     return {
       id: row.id as string,
       username: row.username as string,
@@ -63,6 +73,7 @@ export const fetchProfileByUsername = cache(
 
         .map((pt: any) => pt.tags?.name_es)
         .filter(Boolean),
+      inviteRedemptions: redErr ? 0 : Number(redemptions ?? 0),
     };
   },
 );

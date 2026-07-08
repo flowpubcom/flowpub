@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { geminiGenerate } from "@/lib/gemini";
 import { createClient } from "@/lib/supabase/server";
+// Lista CURADA para la sugerencia automática de Gemini. A propósito NO usa los
+// temas creados por usuarios (tabla tags): Gemini sugiere solo de este set
+// estable/on-brand; los temas de usuario se eligen a mano en el TagPicker.
 import { CATEGORIES } from "@/data/mock";
+import { rateLimit, RATE_RULES } from "@/lib/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -28,8 +32,18 @@ const SCHEMA = {
 } as const;
 
 export async function POST(req: Request) {
-  if (!(await requireUser())) {
+  const user = await requireUser();
+  if (!user) {
     return NextResponse.json({ error: "auth-requerida" }, { status: 401 });
+  }
+
+  // Protege la cuota de Gemini: nadie pule en loop.
+  const rate = rateLimit(`polish:${user.id}`, RATE_RULES.polish);
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: "rate-limited" },
+      { status: 429, headers: { "Retry-After": String(rate.retryAfter) } },
+    );
   }
 
   let transcript: unknown;

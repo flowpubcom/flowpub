@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Pause, Play } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
+import { resolveMessageAudio } from "@/data/storage";
 import type { DirectMessage } from "@/data/messages";
 
 // Curva vírgula del reproductor de voz (compacta, viewBox 0 0 130 22).
@@ -35,6 +36,26 @@ function VoicePlayer({
   const total = durationSeconds || 1;
   const progress = Math.min(1, elapsed / total);
 
+  // El audio privado llega como PATH del bucket `messages`: se firma por 1h.
+  // Las URLs completas (legacy del bucket público) pasan directo.
+  const [resolvedSrc, setResolvedSrc] = useState<string | null>(
+    src && /^https?:\/\//.test(src) ? src : null,
+  );
+  useEffect(() => {
+    if (!src) return;
+    if (/^https?:\/\//.test(src)) {
+      setResolvedSrc(src);
+      return;
+    }
+    let alive = true;
+    void resolveMessageAudio(src).then((u) => {
+      if (alive) setResolvedSrc(u);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [src]);
+
   const toggle = () => {
     blip("click");
     const a = audioRef.current;
@@ -54,7 +75,7 @@ function VoicePlayer({
         onClick={toggle}
         aria-label={playing ? t("pause") : t("play")}
         className={cn(
-          "grid h-[34px] w-[34px] flex-none place-items-center rounded-pill transition-transform duration-150 ease-flow active:scale-[.94]",
+          "fp-hit grid h-[34px] w-[34px] flex-none place-items-center rounded-pill transition-transform duration-150 ease-flow active:scale-[.94]",
           out ? "bg-ink-on text-ink" : "bg-ink text-ink-on",
         )}
       >
@@ -93,10 +114,10 @@ function VoicePlayer({
       >
         {fmt(playing || elapsed ? elapsed : total)}
       </span>
-      {src && (
+      {resolvedSrc && (
         <audio
           ref={audioRef}
-          src={src}
+          src={resolvedSrc}
           preload="metadata"
           className="hidden"
           onTimeUpdate={(e) => setElapsed(e.currentTarget.currentTime)}

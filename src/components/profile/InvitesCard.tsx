@@ -5,11 +5,12 @@ import { Check, Copy, Send } from "lucide-react";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { fetchMyInvites, type MyInvites } from "@/data/invitesClient";
+import { nextOgMilestone } from "@/lib/format";
 
-// Tarjeta «Invitaciones» del perfil propio: 6 códigos para correr la voz.
+// Tarjeta «Invitaciones» del perfil propio: 9 códigos para correr la voz.
 // Cada enlace es de un solo uso; al gastarse, se ofrece el siguiente.
 
-export function InvitesCard() {
+export function InvitesCard({ redemptions }: { redemptions: number }) {
   const { t } = useI18n();
   const { play } = useSound();
   const [invites, setInvites] = useState<MyInvites | null>(null);
@@ -54,7 +55,7 @@ export function InvitesCard() {
   return (
     <section className="mt-6 rounded-[16px] border border-line bg-surface p-5 shadow-[var(--shadow-card)]">
       <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+        <h2 className="font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
           {t("invite.title")}
         </h2>
         <span className="font-mono text-[12px] text-text-2">
@@ -63,6 +64,15 @@ export function InvitesCard() {
             : t("invite.remaining", { n: invites.remaining })}
         </span>
       </div>
+
+      <p className="mt-1.5 font-sans text-[12.5px] text-text-3">
+        {(() => {
+          const next = nextOgMilestone(redemptions);
+          return next === null
+            ? t("invites.progress.max", { n: redemptions })
+            : t("invites.progress", { n: redemptions, remaining: next - redemptions });
+        })()}
+      </p>
 
       {url ? (
         <>

@@ -17,7 +17,7 @@ export function StepIndicator({ current }: { current: number }) {
                 "grid h-5 w-5 place-items-center rounded-pill font-mono text-[11px] transition-colors",
                 done && "bg-ink text-ink-on",
                 active && "bg-grana text-white",
-                !done && !active && "border border-line-2 text-text-3",
+                !done && !active && "border border-line-2 text-text-2",
               )}
             >
               {done ? <Check size={12} strokeWidth={3} /> : i + 1}
@@ -25,7 +25,7 @@ export function StepIndicator({ current }: { current: number }) {
             <span
               className={cn(
                 "font-sans text-[13px]",
-                active ? "font-semibold text-ink" : "text-text-3",
+                active ? "font-semibold text-ink" : "text-text-2",
               )}
             >
               {label}

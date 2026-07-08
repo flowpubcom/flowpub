@@ -23,7 +23,7 @@ const spaceMono = Space_Mono({
   display: "swap",
 });
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

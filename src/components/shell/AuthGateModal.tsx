@@ -61,7 +61,7 @@ export function AuthGateModal({
           <button
             type="button"
             onClick={onClose}
-            className="mt-1 font-sans text-[13px] text-text-3 underline underline-offset-2 transition-colors hover:text-text-2"
+            className="mt-1 font-sans text-[13px] text-text-2 underline underline-offset-2 transition-colors hover:text-ink"
           >
             {t("auth.dismiss")}
           </button>

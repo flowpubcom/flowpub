@@ -34,8 +34,8 @@ export function LangToggle({ className }: { className?: string }) {
             play("tick");
           }}
           className={cn(
-            "h-[30px] rounded-pill px-3 font-sans text-[12px] font-semibold transition-colors duration-150 ease-flow",
-            pref === o.v ? "bg-ink text-ink-on" : "text-text-3 hover:text-ink",
+            "fp-hit-y h-[30px] rounded-pill px-3 font-sans text-[12px] font-semibold transition-colors duration-150 ease-flow",
+            pref === o.v ? "bg-ink text-ink-on" : "text-text-2 hover:text-ink",
           )}
         >
           {o.label}

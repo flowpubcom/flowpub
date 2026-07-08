@@ -7,6 +7,7 @@ import {
   type FormEvent,
   type ReactNode,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Camera, Check, ChevronLeft, Eye, EyeOff, Mail, Mic } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -49,7 +50,13 @@ function GoogleIcon() {
   );
 }
 
-export function Onboarding({ tags }: { tags: TagRow[] }) {
+export function Onboarding({
+  tags,
+  initialMode,
+}: {
+  tags: TagRow[];
+  initialMode?: "signup" | "login";
+}) {
   const { t, lang } = useI18n();
   const { play } = useSound();
   const { user, refresh } = useAuth();
@@ -57,7 +64,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
   const router = useRouter();
 
   const [step, setStep] = useState<Step>("auth");
-  const [authMode, setAuthMode] = useState<AuthMode>("choose");
+  const [authMode, setAuthMode] = useState<AuthMode>(initialMode ?? "choose");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -285,9 +292,32 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
 
   // ── Piezas compartidas ────────────────────────────────────────────────────
 
+  // Crédito del creador — al pie del onboarding, para que los invitados (también
+  // en móvil) puedan llegar a él. `dark` = sobre el abismo de marca.
+  const creditFoot = (dark = false) => (
+    <a
+      href="https://juliosahagunsanchez.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      className={cn(
+        "font-sans text-[11px] underline-offset-2 transition-colors hover:underline",
+        !dark && "text-text-2 hover:text-ink",
+      )}
+      style={
+        dark
+          ? { color: "color-mix(in srgb, var(--amate) 60%, transparent)" }
+          : undefined
+      }
+    >
+      {t("credit")}
+    </a>
+  );
+
   const errText = (dark = false) =>
     error ? (
       <p
+        id="onb-error"
+        role="status"
         className={cn(
           "font-sans text-[13px]",
           dark ? "text-[#EC9DA2]" : "text-grana",
@@ -310,6 +340,8 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder={t("onb.email.placeholder")}
+          aria-invalid={!!error}
+          aria-describedby={error ? "onb-error" : undefined}
           className={inputCls}
         />
       </label>
@@ -325,6 +357,8 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={t("onb.password.placeholder")}
+            aria-invalid={!!error}
+            aria-describedby={error ? "onb-error" : undefined}
             className={cn(inputCls, "pr-11")}
           />
           <button
@@ -339,7 +373,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             }}
             aria-pressed={showPassword}
             aria-label={t(showPassword ? "onb.password.hide" : "onb.password.show")}
-            className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-3 transition-colors hover:text-ink"
+            className="absolute right-[3px] top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-pill text-text-2 transition-colors hover:text-ink"
           >
             {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
           </button>
@@ -382,6 +416,8 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("onb.email.placeholder")}
+              aria-invalid={!!error}
+              aria-describedby={error ? "onb-error" : undefined}
               className={inputCls}
             />
           </label>
@@ -397,7 +433,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           >
             {t("onb.forgot.submit")}
           </button>
-          <p className="mt-1 font-sans text-[13px] text-text-3">
+          <p className="mt-1 font-sans text-[13px] text-text-2">
             <button
               type="button"
               onClick={() => {
@@ -428,7 +464,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 setResetSent(false);
                 setAuthMode("forgot");
               }}
-              className="font-medium text-text-3 transition-colors hover:text-grana-text"
+              className="font-medium text-text-2 transition-colors hover:text-grana-text"
             >
               {t("onb.forgot")}
             </button>
@@ -446,7 +482,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         >
           {t(isLogin ? "onb.login.submit" : "onb.signup.submit")}
         </button>
-        <p className="mt-1 font-sans text-[13px] text-text-3">
+        <p className="mt-1 font-sans text-[13px] text-text-2">
           {isLogin ? t("onb.noAccount") : t("onb.haveAccount")}{" "}
           <button
             type="button"
@@ -495,7 +531,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           {t("auth.email")}
         </button>
       </div>
-      <p className="mt-5 font-sans text-[13px] text-text-3">
+      <p className="mt-5 font-sans text-[13px] text-text-2">
         {t("onb.haveAccount")}{" "}
         <button
           type="button"
@@ -624,7 +660,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             <Camera size={26} strokeWidth={1.7} />
           )}
         </div>
-        <div className="font-sans text-[13px] leading-snug text-text-3 max-lg:hidden">
+        <div className="font-sans text-[13px] leading-snug text-text-2 max-lg:hidden">
           {t("onb.profile.photo")}
           <br />({t("onb.profile.optional")})
         </div>
@@ -648,7 +684,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
             {t("onb.profile.username")}
           </span>
           <span className="flex items-center overflow-hidden rounded-md border border-line-2 bg-surface focus-within:border-grana">
-            <span className="py-3 pl-3.5 pr-1 font-sans text-[15px] text-text-3">@</span>
+            <span className="py-3 pl-3.5 pr-1 font-sans text-[15px] text-text-2">@</span>
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -668,9 +704,9 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 {t("onb.err.usernameTaken")}
               </span>
             ) : usernameNorm.length > 0 && usernameNorm.length < 3 ? (
-              <span className="text-text-3">{t("onb.profile.usernameMin")}</span>
+              <span className="text-text-2">{t("onb.profile.usernameMin")}</span>
             ) : (
-              <span className="text-text-3">{t("onb.profile.usernameHint")}</span>
+              <span className="text-text-2">{t("onb.profile.usernameHint")}</span>
             )}
           </span>
         </label>
@@ -678,7 +714,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
         <label className="block">
           <span className="mb-1.5 block font-sans text-[13px] font-semibold text-text-2">
             {t("onb.profile.bio")}{" "}
-            <span className="font-normal text-text-3">· {t("onb.profile.optional")}</span>
+            <span className="font-normal text-text-2">· {t("onb.profile.optional")}</span>
           </span>
           <textarea
             rows={2}
@@ -806,7 +842,13 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
       <div className="hidden min-h-dvh place-items-center p-8 lg:grid">
         <div className="flex h-[680px] w-[1080px] max-w-full overflow-hidden rounded-[18px] border border-line bg-surface shadow-[var(--shadow-window)]">
           <BrandHypnotic className="flex w-[460px] flex-none flex-col items-center justify-center gap-[26px] p-12">
-            <BrandLockup />
+            <Link
+              href="/"
+              aria-label="FlowPub"
+              className="rounded-[12px] outline-none focus-visible:ring-2 focus-visible:ring-grana"
+            >
+              <BrandLockup />
+            </Link>
           </BrandHypnotic>
           <div className="relative flex-1 overflow-y-auto">
             {step === "auth" ? (
@@ -815,6 +857,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                 <div className="mx-auto w-full max-w-[400px]">
                   {authHeader()}
                   {authMode === "choose" ? chooseLight() : authFormLight()}
+                  <p className="mt-8">{creditFoot()}</p>
                 </div>
               </div>
             ) : (
@@ -830,7 +873,13 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
           authMode === "choose" ? (
             <BrandHypnotic className="flex min-h-dvh flex-col justify-end">
               <div className="absolute inset-x-0 top-0 flex h-[54%] flex-col items-center justify-center gap-[18px] p-8 text-center">
-                <BrandLockup markSize={70} />
+                <Link
+                  href="/"
+                  aria-label="FlowPub"
+                  className="rounded-[12px] outline-none focus-visible:ring-2 focus-visible:ring-grana"
+                >
+                  <BrandLockup markSize={70} />
+                </Link>
               </div>
               <div
                 className="relative m-3.5 mb-6 rounded-[28px] border p-6"
@@ -881,6 +930,7 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
                     {t("onb.login")}
                   </button>
                 </p>
+                <p className="mt-4 text-center">{creditFoot(true)}</p>
               </div>
             </BrandHypnotic>
           ) : (
@@ -897,9 +947,16 @@ export function Onboarding({ tags }: { tags: TagRow[] }) {
               {/* Bloque centrado + marca viva: el móvil no tiene el panel
                   hipnótico, así que la vírgula le da presencia de marca. */}
               <div className="mx-auto flex w-full max-w-[400px] flex-1 flex-col justify-center">
-                <FlowMark size={36} className="mb-6 text-ink" />
+                <Link
+                  href="/"
+                  aria-label="FlowPub"
+                  className="mb-6 w-fit rounded-[10px] outline-none focus-visible:ring-2 focus-visible:ring-grana"
+                >
+                  <FlowMark size={36} className="text-ink" />
+                </Link>
                 {authHeader()}
                 {authFormLight()}
+                <p className="mt-8">{creditFoot()}</p>
               </div>
             </div>
           )

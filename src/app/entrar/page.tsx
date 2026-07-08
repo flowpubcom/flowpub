@@ -4,7 +4,15 @@ import { fetchTags } from "@/data/tagsApi";
 import { Onboarding } from "@/components/onboarding/Onboarding";
 
 // Onboarding / auth. Ruta full-screen (fuera del chrome del Pub).
-export default async function EntrarPage() {
+export default async function EntrarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ m?: string }>;
+}) {
+  const { m } = await searchParams;
+  const initialMode =
+    m === "login" ? "login" : m === "signup" ? "signup" : undefined;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,5 +29,5 @@ export default async function EntrarPage() {
   }
 
   const tags = await fetchTags();
-  return <Onboarding tags={tags} />;
+  return <Onboarding tags={tags} initialMode={initialMode} />;
 }

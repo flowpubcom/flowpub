@@ -9,7 +9,7 @@ import type { SuggestedVoice } from "@/data/railApi";
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-3.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+    <h2 className="mb-3.5 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
       {children}
     </h2>
   );
@@ -37,7 +37,7 @@ export function PubRightRail({
                   <span className="font-serif text-[17px] text-ink">
                     {tag.name}
                   </span>
-                  <span className="font-mono text-[12px] text-text-3">
+                  <span className="font-mono text-[12px] text-text-2">
                     {compactNumber(tag.flows)} flows
                   </span>
                 </Link>
@@ -70,7 +70,7 @@ export function PubRightRail({
                     <p className="truncate font-sans text-[14px] font-semibold text-ink">
                       {profile.displayName}
                     </p>
-                    <p className="truncate font-sans text-[12px] text-text-3">
+                    <p className="truncate font-sans text-[12px] text-text-2">
                       {topics || `@${profile.username}`}
                     </p>
                   </div>

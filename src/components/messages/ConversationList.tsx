@@ -48,7 +48,7 @@ export function ConversationList({
         <div className="relative">
           <Search
             size={16}
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-3"
+            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-2"
           />
           <input
             type="search"
@@ -65,7 +65,7 @@ export function ConversationList({
         {shown.length === 0 ? (
           <div className="px-3 py-10 text-center">
             <p className="font-sans text-[14px] text-text-2">{t("msg.empty")}</p>
-            <p className="mt-1 font-sans text-[13px] text-text-3">{t("msg.emptyHint")}</p>
+            <p className="mt-1 font-sans text-[13px] text-text-2">{t("msg.emptyHint")}</p>
           </div>
         ) : (
           shown.map((c) => (
@@ -87,7 +87,7 @@ export function ConversationList({
                   </span>
                   <span
                     suppressHydrationWarning
-                    className="flex-none font-mono text-[11px] text-text-3"
+                    className="flex-none font-mono text-[11px] text-text-2"
                   >
                     {shortTime(c.lastMessageAt, lang)}
                   </span>

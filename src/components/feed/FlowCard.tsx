@@ -58,6 +58,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
   // Comentarios inline: se cargan la primera vez que se abren.
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [comments, setComments] = useState<Comment[] | null>(null);
+  const [commentsError, setCommentsError] = useState(false);
   const [commentCount, setCommentCount] = useState(flow.commentCount);
   const [newIds, setNewIds] = useState<Set<string>>(new Set());
 
@@ -107,22 +108,29 @@ export function FlowCard({ flow }: { flow: Flow }) {
     }
   }, [expanded]);
 
-  const toggleComments = async () => {
+  const loadComments = async () => {
+    setCommentsError(false);
+    const loaded = await fetchCommentsClient(flow.id);
+    if (!loaded) {
+      // Falló la carga: se avisa con reintento (nada de «Cargando…» eterno).
+      setCommentsError(true);
+      return;
+    }
+    // Mergea con lo publicado mientras cargaba (dedup por id) — el SELECT
+    // pudo correr antes que el INSERT del propio usuario.
+    setComments((prev) => {
+      if (!prev) return loaded;
+      const seen = new Set(loaded.map((c) => c.id));
+      return [...prev.filter((c) => !seen.has(c.id)), ...loaded];
+    });
+    setCommentCount((n) => Math.max(n, loaded.length));
+  };
+
+  const toggleComments = () => {
     play("tick");
     const opening = !commentsOpen;
     setCommentsOpen(opening);
-    if (opening && comments === null) {
-      const loaded = await fetchCommentsClient(flow.id);
-      if (!loaded) return; // falló la carga: se reintenta al reabrir
-      // Mergea con lo publicado mientras cargaba (dedup por id) — el SELECT
-      // pudo correr antes que el INSERT del propio usuario.
-      setComments((prev) => {
-        if (!prev) return loaded;
-        const seen = new Set(loaded.map((c) => c.id));
-        return [...prev.filter((c) => !seen.has(c.id)), ...loaded];
-      });
-      setCommentCount((n) => Math.max(n, loaded.length));
-    }
+    if (opening && comments === null) void loadComments();
   };
 
   const postComment = (c: Comment) => {
@@ -190,7 +198,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
               </button>
               <Link
                 href={`/flow/${flow.id}`}
-                className="font-sans text-[13px] font-medium text-text-3 transition-colors hover:text-ink"
+                className="font-sans text-[13px] font-medium text-text-2 transition-colors hover:text-ink"
               >
                 {t("pub.openFlow")}
               </Link>
@@ -208,7 +216,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
             <span className="line-clamp-2 block font-serif text-[16px] leading-[1.5] text-text-2">
               {excerpt}
             </span>
-            <span className="mt-1 inline-block font-sans text-[12px] font-semibold text-text-3 transition-colors group-hover/read:text-ink">
+            <span className="mt-1 inline-block font-sans text-[12px] font-semibold text-text-2 transition-colors group-hover/read:text-ink">
               {t("pub.readHere")}
             </span>
           </button>
@@ -241,7 +249,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
               <span className="block truncate font-sans text-[14px] font-semibold text-ink">
                 {flow.author.displayName}
               </span>
-              <span className="block truncate font-sans text-[12px] text-text-3">
+              <span className="block truncate font-sans text-[12px] text-text-2">
                 {relativeTime(flow.ageMinutes, lang)} · {flow.tag}
               </span>
             </span>
@@ -257,7 +265,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
                 }}
                 aria-label={t("flow.edit")}
                 title={t("flow.edit")}
-                className="grid h-8 w-8 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+                className="fp-hit-y grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
               >
                 <PenLine size={17} />
               </button>
@@ -268,7 +276,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
               aria-pressed={liked}
               aria-label={t("like")}
               className={cn(
-                "flex items-center gap-1.5 rounded-pill px-2.5 py-1.5 font-sans text-[13px] transition-colors hover:bg-[var(--hover)]",
+                "fp-hit-y flex items-center gap-1.5 rounded-pill px-2.5 py-1.5 font-sans text-[13px] transition-colors hover:bg-[var(--hover)]",
                 liked ? "text-grana" : "text-text-2 hover:text-ink",
               )}
             >
@@ -286,7 +294,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
               aria-controls={commentsId}
               aria-label={t("comment")}
               className={cn(
-                "flex items-center gap-1.5 rounded-pill px-2.5 py-1.5 font-sans text-[13px] transition-colors hover:bg-[var(--hover)]",
+                "fp-hit-y flex items-center gap-1.5 rounded-pill px-2.5 py-1.5 font-sans text-[13px] transition-colors hover:bg-[var(--hover)]",
                 commentsOpen ? "text-ink" : "text-text-2 hover:text-ink",
               )}
             >
@@ -300,7 +308,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
               type="button"
               onClick={onShare}
               aria-label={t("share")}
-              className="grid h-8 w-8 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+              className="fp-hit-y grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
             >
               <Share2 size={18} />
             </button>
@@ -316,14 +324,29 @@ export function FlowCard({ flow }: { flow: Flow }) {
             <CommentComposer flowId={flow.id} onPost={postComment} />
             <div className="mt-5 flex flex-col gap-5">
               {comments === null ? (
-                <p
-                  role="status"
-                  className="py-4 text-center font-sans text-[13px] text-text-3"
-                >
-                  {t("comments.loading")}
-                </p>
+                commentsError ? (
+                  <div className="py-4 text-center">
+                    <p className="font-sans text-[13px] text-text-2">
+                      {t("comments.error")}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => void loadComments()}
+                      className="mt-2 rounded-pill border border-line-2 px-4 py-1.5 font-sans text-[13px] font-medium text-ink transition-colors hover:bg-[var(--hover)]"
+                    >
+                      {t("comments.retry")}
+                    </button>
+                  </div>
+                ) : (
+                  <p
+                    role="status"
+                    className="py-4 text-center font-sans text-[13px] text-text-2"
+                  >
+                    {t("comments.loading")}
+                  </p>
+                )
               ) : comments.length === 0 ? (
-                <p className="py-4 text-center font-sans text-[13px] text-text-3">
+                <p className="py-4 text-center font-sans text-[13px] text-text-2">
                   {t("comments.empty")}
                 </p>
               ) : (
@@ -343,6 +366,8 @@ export function FlowCard({ flow }: { flow: Flow }) {
           flowId={flow.id}
           initialTitle={title}
           initialBody={body}
+          initialCoverUrl={flow.coverUrl}
+          initialCoverKind={flow.coverKind}
           onSaved={(newTitle, newBody) => {
             setTitle(newTitle);
             setBody(newBody);

@@ -1,8 +1,229 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 4, cierre — 2026-07-02 (invitaciones + PWA +
-> a11y oscuro + PUSH A PRODUCCIÓN)**.
+> Última actualización: **sesión 6 — 2026-07-07 (auditoría pre-beta + correos +
+> features delegadas + audit de seguridad + MIGRACIÓN DE DOMINIO a flowpub.app)**.
+
+## Sesión 6 (cont. 4) — 2026-07-07: compra de flowpub.app + prompt de instalación
+
+> **NUEVO DOMINIO: flowpub.app** (Julio lo compró; .lat pasa a redirect 301).
+> Los cambios de CÓDIGO ya están hechos; la MIGRACIÓN EN VIVO es un runbook de
+> dashboard que corre Julio EN ORDEN (abajo). Verificado con workflow de 5
+> análisis + crítico adversarial.
+
+- **Prompt de instalación PWA suprimido en DESKTOP** (independiente de la
+  migración): `InstallPrompt.tsx` gate `isMobile()` (userAgentData.mobile →
+  fallback pointer:coarse + viewport ≤900px). En desktop se captura el evento
+  pero sin banner; el navegador ya ofrece instalar desde la barra. Móvil intacto.
+- **Dominio en código → flowpub.app** (36 reemplazos, 15 archivos, script
+  verificado por conteos): 6 fallbacks `?? "https://flowpub.app"` (layout/sitemap/
+  robots/flow[id]/[username]/tema — INERTES en prod hasta cambiar la env var),
+  chip del OG PNG (opengraph-image.tsx), hints i18n del onboarding ES/EN, texto
+  legal (legal.ts ×2), las 2 plantillas de correo + su README, docs/deploy.md,
+  docs/seo.md, CLAUDE.md. NO tocado (referencia histórica): design_handoff/**,
+  design-map.json, migration_01 (emails demo).
+
+### 🚦 RUNBOOK de migración flowpub.lat → flowpub.app (Julio, EN ESTE ORDEN)
+
+> Regla de oro: **agrega .app a TODAS las allowlists ANTES de mover tráfico, y
+> CONSERVA .lat** hasta que todo esté estable. El código no necesita más cambios
+> para que el login migre (los redirectTo son dinámicos por host); lo único que
+> rompe auth es una allowlist externa que no incluya .app.
+
+1. **Vercel → Domains**: Add `flowpub.app` y `www.flowpub.app`. No borres .lat. **(bloqueante)**
+2. **Namecheap → DNS de flowpub.app**: crea los A/CNAME EXACTOS que dé Vercel; TTL bajo. Deja vivo el A de .lat. **(bloqueante)**
+3. **Vercel**: espera «Valid Configuration» + **cert TLS emitido** para .app. `.app` está en HSTS-preload: sin cert queda 100% inaccesible. **(bloqueante)**
+4. **Supabase → Auth → URL Configuration**: AGREGA `https://flowpub.app/**` a Redirect URLs. CONSERVA `flowpub.lat/**` y `localhost:3000/**`. **No cambies Site URL aún.** **(bloqueante)**
+5. **Cloudflare Turnstile**: agrega hostnames `flowpub.app` y `www.flowpub.app` al widget (misma site key). Conserva .lat. Sin esto, el botón de registro se deshabilita SIN error visible. **(bloqueante)**
+6. **Google Cloud → OAuth**: agrega `https://flowpub.app` a Authorized JavaScript origins. NO toques las redirect URIs (apuntan a *.supabase.co). *(no bloqueante)*
+7. **Verifica EN VIVO** en `https://flowpub.app` (aún no primario): login con Google + un signup + un reset. **(bloqueante — antes de montar el 301)**
+8. **Vercel → Env**: cambia `NEXT_PUBLIC_SITE_URL` a `https://flowpub.app` (Production+Preview) y **REDEPLOY**. Verifica `/sitemap.xml` y `/robots.txt` con .app. *(este redeploy recoge todos los cambios de código de esta sesión)* **(bloqueante para SEO/OG)**
+9. **Vercel → Domains**: marca `flowpub.app` **primario**; `flowpub.lat` → **Redirect 308** a .app; `www` → apex. NO borres el DNS de .lat. *(hazlo solo con .app estable y auth OK)*
+10. **Supabase → Site URL**: cámbialo a `https://flowpub.app`. DEJA `flowpub.lat/**` en Redirect URLs unas semanas (enlaces de correo ya enviados apuntan a .lat, válidos ~24h).
+11. **Resend → Domains**: Add `flowpub.app` + crea SPF/DKIM/DMARC en el DNS. Espera **Verified** (24–48h). NO quites .lat de Resend.
+12. **Supabase → SMTP**: SOLO tras «Verified», cambia el remitente a `hola@flowpub.app` (host/user/password igual). Antes de verificar = correos rebotan EN SILENCIO.
+13. **Supabase → Email Templates**: re-pega el HTML actualizado de «Confirm signup» y «Reset Password» (ya apuntan a flowpub.app en el repo; los clientes de correo NO siguen el 301 en `<img>`). Yo puedo re-pegarlos por Chrome cuando digas.
+14. **Google Search Console**: propiedad `flowpub.app` + reenvía sitemap; en la propiedad .lat usa «Cambio de dirección» → .app.
+
+**Fricción inevitable a comunicar:** cookies/sesión son por-origen → **todos los
+beta-testers quedan deslogueados en .app** y deben re-entrar (no es bug).
+
+**Lo que dejaría a un usuario FUERA** (evitarlo respetando el orden): tráfico a
+.app antes de allowlistar Supabase/Turnstile; anunciar .app sin cert TLS; cambiar
+el remitente a @flowpub.app antes de «Verified» en Resend; quitar .lat de las
+allowlists antes de que caduquen los enlaces de correo viejos.
+
+
+
+## Sesión 6 — 2026-07-07: auditoría pre-beta + correos con la marca
+
+- **Julio corrió TODAS las migraciones hasta `migration_15`** y verificó el toggle
+  «Captcha protection» en Supabase. Los bloqueantes de BD del pre-beta quedan
+  cerrados.
+- **Correos de Auth con la marca** (`supabase/email-templates/`): plantillas HTML
+  on-brand (tinta/grana/amate, wordmark *Flow*Pub, botón grana pill, marca vía PNG
+  `flowpub.lat/icono-512` porque Gmail bloquea SVG). **Aplicadas en producción vía
+  Chrome**: «Confirm sign up» (asunto «Confirma tu correo y entra a FlowPub») y
+  «Reset password» (asunto «Restablece tu contraseña de FlowPub»). Verificadas en
+  el Preview de Supabase. Ver `email-templates/README.md` para el mapeo y cómo
+  re-aplicar. Faltan por marcar (siguen en inglés default): Invite, Magic link,
+  Change email, Reauthentication — no urgen hoy.
+- **Resend YA estaba conectado** (hallazgo): Custom SMTP activo en Supabase
+  (`smtp.resend.com:465`, user `resend`, remitente `hola@flowpub.lat`). La nota de
+  «Resend pendiente» de sesiones previas quedó obsoleta. **Pendiente de Julio:**
+  confirmar que el dominio `flowpub.lat` siga «Verified» en Resend y hacer una
+  prueba E2E real (disparar «¿Olvidaste tu contraseña?» y ver que llegue el correo
+  con la marca).
+- **service_role key:** para llenar `SUPABASE_SERVICE_ROLE_KEY` en `.env.local` →
+  Supabase → Settings → API Keys → pestaña **«Legacy anon, service_role API keys»**
+  → copiar `service_role`.
+- **Auditoría integral pre-beta (3 barridos + a11y en vivo)**: hallazgos
+  priorizados; la tanda P0 se ejecutó completa (ver sesión 6 cont.).
+  - _P1 (pendiente):_ feed vacío sin CTA; skeletons en perfil/notificaciones;
+    «Cargando comentarios…» sin timeout; targets `h-8` (32px) e iconos <44px;
+    DMs de voz viven en bucket `audio` público (fuga de privacidad → signed
+    URLs); a11y menor (aria-invalid, foco al cerrar dropdowns, `title` en modal
+    de legales); barrido i18n completo del Composer (fase 9).
+  - Lo que YA está fuerte: optimistas con revert, focus ring grana,
+    prefers-reduced-motion, Modal con focus-trap, i18n ~528 keys, RLS por columna.
+
+## Sesión 6 (cont. 3) — 2026-07-07: tanda de features (delegada a subagentes) + audit de seguridad
+
+**Ejecutada con 3 subagentes en paralelo (chrome/nav, edición de Flow, invites/badges)
++ 1 auditor de seguridad. typecheck/lint/build verdes; verificado en vivo.**
+
+- **Notificaciones → perfil**: avatar y nombre del actor ahora son Links a `/@usuario`
+  (stopPropagation dentro del div role=button; marca leído). NotificationsView.
+- **Auth CTA (desktop + móvil)**: riel desktop y top bar móvil muestran «Sign up | Login»
+  (inglés fijo en ambos idiomas, keys auth.signupCta/loginCta) → `/entrar?m=signup|login`.
+  `/entrar` lee `m` (enum acotado) y siembra el authMode. Con sesión, el riel muestra
+  Avatar+nombre con menú (Ver perfil / Panel de admin si isAdmin / Cerrar sesión; Escape
+  devuelve foco). `AuthProvider` expone `isAdmin` SOLO cosmético (gate real sigue server+RLS).
+- **«Artículo» → «Flow»** en toda la UI (dictionaries ES/EN + prosa hardcodeada de
+  Composer y /tema). Intactos: prompt de Gemini, legal.ts, SEO/JSON-LD (schema.org Article).
+- **Home alcanzable en TODA pantalla**: logo→"/" agregado en /entrar, /restablecer, /i/[code].
+- **Crédito**: «Creado por Julio Sahagún Sánchez» → https://juliosahagunsanchez.com/
+  (noopener) en el riel/menú (desktop+móvil) y pie del onboarding. Key `credit`.
+- **Edición completa del Flow** (`migration_17` ⚠️ correr): FlowEditModal ahora edita
+  portada (subir foto / usar generada / ciclar generativa) y temas (TagPicker). `updateFlow`
+  extendido (coverUrl/coverKind/tagNames, cascada tolerante). Tema **ASMR** sembrado.
+  **Crear tema propio** desde el TagPicker (slug saneado, degrada si no hay migración).
+  El composer trae los temas reales de la BD (server) con fallback a CATEGORIES.
+- **Invitaciones 6→9 + badges OG** (`migration_18` ⚠️ correr): acuñado 9 + backfill; RPC
+  público `invite_redemptions` (solo conteo). Badge «OG» + estrellas lucide en ocre junto
+  al nombre del perfil (≥3/6/9 canjes = 1/2/3 estrellas). InvitesCard muestra progreso.
+
+**Audit de seguridad (Sonnet, adversarial) — hallazgos accionados HOY:**
+- **[CRÍTICO — ARREGLADO en código] Stored XSS vía JSON-LD**: `flow/[id]`, `[username]`,
+  `tema/[slug]` insertaban campos editables por el usuario (bio, display_name, título) con
+  `JSON.stringify` que NO escapa `</script>` → robo de sesión a cualquier visitante. Fix:
+  `lib/jsonLd.ts` (`safeJsonLd` escapa `< > &` a \\u00xx) usado en las 3 páginas. Verificado
+  en vivo: carga hostil ya no rompe el script, dato intacto al parsear. Era PREEXISTENTE
+  (no de esta tanda), vivía en prod desde el commit de SEO.
+- **[ALTO — ARREGLADO en código] Faltaban headers de seguridad**: `next.config.ts` ahora
+  sirve X-Frame-Options DENY, nosniff, Referrer-Policy, HSTS, CSP `frame-ancestors 'none'`,
+  Permissions-Policy (mic=self). Verificados servidos. NO se puso `script-src` estricto a
+  propósito (rompería Turnstile/Supabase/Google OAuth sin prueba en vivo) — CSP completa
+  queda pendiente para probar en prod.
+- **[MEDIO/BAJO — SQL en `migration_19` ⚠️ correr]**: buckets sin tope → `file_size_limit`
+  + `allowed_mime_types` (imágenes 5MB, audio 25MB); `tags` sin CHECK → constraints de
+  slug/nombre/sort (la validación 3–24 era solo cliente, brincable por REST directo).
+- **[BAJO — ARREGLADO] FlowProse**: links de markdown ahora `rel="noopener noreferrer"`.
+- **Confirmado sano (no tocado)**: migration_16 (cast ::uuid no explotable), flow_tags_write
+  (no tagueas Flows ajenos), invite_redemptions (solo conteo), isAdmin cliente (cosmético),
+  rate-limit (key server-side no spoofeable; bypass solo por paralelismo — best-effort ok
+  para beta). react-markdown sin rehype-raw = sin XSS por contenido.
+- **Veredicto del auditor**: apto para beta chica UNA VEZ arreglado el XSS (hecho) y corrida
+  la migration_16 (Julio ya la corrió). El resto no bloquea beta familiar.
+
+**👉 Julio — SQL Editor (en orden): `migration_17` (edición Flow + ASMR + temas de
+usuario), `migration_18` (invites 9 + badges), `migration_19` (hardening: límites de
+bucket + CHECKs de tags).** La 16 ya la corriste. Tras la 17: prueba editar la portada y
+los temas de un Flow tuyo, crear un tema, y ver ASMR en el picker. Tras la 18: revisa tu
+perfil (badge OG si tienes ≥3 canjes) y la tarjeta de invitaciones (debe decir 9).
+
+**Pendiente de código (no urge beta):** CSP con script-src completa (probar hosts en prod);
+rate-limit global real (Upstash/tabla) si la cuota de Gemini aprieta.
+
+## Sesión 6 (cont. 2) — 2026-07-07: tanda P1 completa (typecheck/lint/build verdes)
+
+- **Feed vacío con CTA**: Pub sin Flows → botón «Grabar un Flow»; si el vacío es
+  por FILTRO, mensaje distinto (`pub.emptyFiltered`) sin empujar a grabar
+  (verificado en vivo con filtro ≤15s).
+- **`loading.tsx` de marca en 8 rutas** (/, flow, @usuario, notifs, mensajes ×2,
+  explorar, tema): vírgula respirando (`RouteLoading`) en vez de blanco en 3G.
+- **Comentarios inline con reintento**: si la carga falla ya no hay «Cargando…»
+  eterno — aviso + botón Reintentar (`comments.error/retry`).
+- **Targets táctiles**: clases `.fp-hit` (44×44) y `.fp-hit-y` (44 solo vertical,
+  para filas apretadas) en globals — ⚠️ como CSS plano, NO `@utility` (el
+  `&::after` anidado en @utility no genera regla; Tailwind lo tira en silencio).
+  Aplicadas a 25 controles (chips, play/velocidad, toolbar markdown, iconos de
+  cards, toggles, menús) + bump h-8→h-9 en iconos agrupados y el lápiz del
+  avatar (absoluto: sin fp-hit, chocaría el position). Verificado en vivo:
+  chip 34px con hit de 44 (tap 4px arriba SÍ pega), play 44×44.
+- **DMs de voz PRIVADOS** (`migration_16` ⚠️ correr): bucket `messages` privado,
+  políticas por membresía (`is_member` del path `<convId>/<uid>/…`).
+  `uploadVoiceMessage` guarda el PATH en `messages.audio_url`; `MessageBubble`
+  lo firma por 1h (`resolveMessageAudio`); URLs http legacy pasan tal cual.
+  Sin migración: fallback al bucket público con `console.warn` (nada se rompe).
+- **A11y menor**: `aria-invalid` + `aria-describedby` en inputs del onboarding
+  (email/password/forgot → `#onb-error` con role=status); Escape/selección en
+  AvatarMenu y DurationMenu devuelven el foco al trigger (verificado);
+  `labelledBy` nuevo en `<Modal>` + el modal de legales anuncia su título
+  (verificado: `aria-labelledby=fp-legal-title` → «Términos y Condiciones…»).
+
+**👉 Julio — SQL Editor: `migration_16`** (DMs de voz privados). Luego prueba
+una nota de voz en DM: debe subir a `messages/` (privado) y reproducirse; los
+audios viejos de DMs siguen sonando (eran públicos y quedan así).
+
+**Pendiente que sigue en la lista (post-P1):** paginación real del feed ·
+og:image por Flow · barrido i18n total del Composer (fase 9) · skeletons ricos
+por pantalla (hoy: vírgula centrada) · focus-trap completo en Modal · límites
+dinámicos desde `settings`.
+
+## Sesión 6 (cont.) — 2026-07-07: tanda P0 completa (typecheck/lint/build verdes)
+
+- **Composer no pierde voces**: `beforeunload` cuando hay Flow a medias
+  (grabando/procesando/editando) + `confirm` al salir por los links del header
+  (nav interna no dispara beforeunload).
+- **Procesamiento honesto**: `ProcessingStep` ya no usa timers falsos — la fase
+  la fija el pipeline real (`transcribe → polish → publish`); a los ~12s en la
+  misma fase aparece «seguimos en ello»; timeouts reales (`AbortSignal.timeout`:
+  transcribe 90s, polish 75s; si el pulido falla/tarda → cae al transcript crudo).
+- **Errores diferenciados al publicar**: sesión vencida (con instrucción de
+  re-entrar en otra pestaña — el Flow queda intacto en la actual) vs. servicio
+  saturado (429) vs. genérico; keys `compose.err.*` ES/EN.
+- **AudioPlayer robusto**: spinner al bufferear (`readyState`/`onWaiting`),
+  `onError` → «El audio no está disponible. Toca para reintentar.» (reintenta
+  con `load()`). **Verificado en vivo** forzando un src 404.
+- **`not-found.tsx` + `error.tsx` de marca** (vírgula, copy cálido, CTA al Pub;
+  error boundary loguea `digest` para cruzar con logs de Vercel). Verificado el
+  404 en vivo.
+- **Contraste AA (tarea grande)**: barrido `text-3 → text-2` en TODO texto
+  informativo chico de superficies de usuario (~50 reemplazos en 28 archivos via
+  script Node con verificación de conteos; quedaron fuera: placeholders, íconos
+  decorativos, admin y styleguide — `text-3` sigue existiendo como color mute
+  para eso). **Medido en vivo tras el cambio: claro 0 fallos, oscuro 0 fallos
+  reales** (los 2 reportados eran artefactos del fondo glass en mi script de
+  medición).
+- **i18n**: 6 strings marcados a catálogo (`compose.coverPhoto/coverGenerated/
+  audio/viewTranscript`, `flow.viewRawLabel/commentsTitle`) + toggle del reader
+  (`flow.viewPub/viewRaw`) + fases y errores del composer + `player.error` +
+  `nf.*`/`err.*` — todo ES+EN. `rec.micError` ahora guía al candadito del
+  navegador (mic denegado ya no es callejón sin salida).
+- **Rate-limit en `/api/{transcribe,polish,translate}`** (`lib/rateLimit.ts`):
+  ráfaga + tope por hora por usuario (transcribe/polish 5/min y 30/h; translate
+  10/min y 60/h), 429 con `Retry-After`; best-effort en memoria por instancia
+  (documentado; si algún día hace falta límite global duro → Upstash/tabla).
+- **Gotcha nuevo (medición)**: al medir contraste con eval sobre paneles glass
+  (`rgba` sin fondo opaco arriba), el fallback del script mezcla con blanco y da
+  falsos fallos en oscuro («Inicia sesión» 3.58, aviso de cookies 3.33) —
+  verificar el fondo real antes de creerle. Y las `transition` de color pueden
+  congelarse en el renderer del preview: inyectar `transition:none` al medir.
+
+**👉 Julio:** la tanda es solo front — no hay SQL ni dashboard nuevos. Cuando
+gustes: commit + push a `main` (= deploy) y prueba humana del composer con mic
+real (grabar → recargar a medias para ver el aviso → publicar).
 
 ## Sesión 5 (cont.) — contenido sensible + legal
 

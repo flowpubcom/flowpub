@@ -75,6 +75,7 @@ function DurationMenu({
   const { play } = useSound();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -84,7 +85,11 @@ function DurationMenu({
       }
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        // El foco regresa al trigger (si no, cae a <body> al desmontar).
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
@@ -97,6 +102,7 @@ function DurationMenu({
   return (
     <div ref={rootRef} className="relative flex-none">
       <button
+        ref={triggerRef}
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -106,7 +112,7 @@ function DurationMenu({
           play("tick");
         }}
         className={cn(
-          "flex h-[34px] items-center gap-1.5 rounded-pill border px-3.5 font-sans text-[13px] transition-colors duration-150 ease-flow",
+          "fp-hit-y flex h-[34px] items-center gap-1.5 rounded-pill border px-3.5 font-sans text-[13px] transition-colors duration-150 ease-flow",
           value !== null
             ? "border-ink bg-ink font-semibold text-ink-on"
             : "border-line-2 bg-surface font-medium text-text-2 hover:border-ink hover:text-ink",
@@ -133,6 +139,7 @@ function DurationMenu({
             onSelect={() => {
               onChange(null);
               setOpen(false);
+              triggerRef.current?.focus();
               play("soft");
             }}
           >
@@ -145,6 +152,7 @@ function DurationMenu({
               onSelect={() => {
                 onChange(s);
                 setOpen(false);
+                triggerRef.current?.focus();
                 play("pop");
               }}
             >

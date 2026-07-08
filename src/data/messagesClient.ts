@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
-import { uploadAudio } from "./storage";
+import { uploadVoiceMessage } from "./storage";
 import { mapMessageRow, type DirectMessage } from "./messages";
 
 // Escritura de mensajería desde el navegador (como el usuario autenticado).
@@ -73,8 +73,10 @@ export async function sendVoiceMessage(
   const form = new FormData();
   form.append("audio", blob);
 
+  // Privacidad: la nota de voz va al bucket privado `messages` (path firmable),
+  // no al público de los Flows. `audio_url` guarda el PATH (o URL legacy).
   const [audioUrl, transcript] = await Promise.all([
-    uploadAudio(blob).catch(() => null),
+    uploadVoiceMessage(blob, convId).catch(() => null),
     fetch("/api/transcribe", { method: "POST", body: form })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => (typeof j?.transcript === "string" ? j.transcript.trim() : ""))

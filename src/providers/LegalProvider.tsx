@@ -75,6 +75,7 @@ export function LegalProvider({ children }: { children: ReactNode }) {
       <Modal
         open={!!active}
         onClose={() => setDoc(null)}
+        labelledBy="fp-legal-title"
         className="flex max-h-[86vh] w-[640px] flex-col"
       >
         <div className="flex gap-1 border-b border-line">
@@ -90,7 +91,7 @@ export function LegalProvider({ children }: { children: ReactNode }) {
                 "-mb-px border-b-2 px-3 pb-2.5 font-sans text-[14px] transition-colors duration-150",
                 doc === id
                   ? "border-grana font-semibold text-ink"
-                  : "border-transparent font-medium text-text-3 hover:text-ink",
+                  : "border-transparent font-medium text-text-2 hover:text-ink",
               )}
             >
               {t(TAB_KEY[id])}
@@ -99,10 +100,13 @@ export function LegalProvider({ children }: { children: ReactNode }) {
         </div>
         {active && (
           <div className="min-h-0 flex-1 overflow-y-auto pr-1 pt-4">
-            <h2 className="font-serif text-[24px] font-medium leading-[1.15] text-ink">
+            <h2
+              id="fp-legal-title"
+              className="font-serif text-[24px] font-medium leading-[1.15] text-ink"
+            >
               {active.title}
             </h2>
-            <p className="mt-1 font-mono text-[11px] text-text-3">
+            <p className="mt-1 font-mono text-[11px] text-text-2">
               {active.updated}
             </p>
             {active.sections.map((sec, i) => (

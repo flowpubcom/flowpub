@@ -250,6 +250,32 @@
   }
 }
 
+/* Target táctil ≥44px sin engordar el control (DoD): un ::after invisible
+   extiende el área de toque. Solo en controles SIN vecinos interactivos
+   pegados — si la fila va apretada en horizontal, usa fp-hit-y. */
+.fp-hit,
+.fp-hit-y {
+  position: relative;
+}
+.fp-hit::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
+/* Variante solo vertical: chips, tabs y filas de iconos con gaps chicos. */
+.fp-hit-y::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: max(100%, 44px);
+  transform: translateY(-50%);
+}
+
 /* ── keyframes de la marca ──────────────────────────────────────────────────
    Movimiento calmo, sin bounce. Más (ripple/eq/aperture) llegan con el
    Reproductor (Fase 6). */

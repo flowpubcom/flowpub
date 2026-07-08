@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { fetchFlow } from "@/data/flowsApi";
 import { fetchComments } from "@/data/commentsApi";
 import { FlowReader } from "@/components/flow/FlowReader";
+import { safeJsonLd } from "@/lib/jsonLd";
 
-const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.lat";
+const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://flowpub.app";
 
 export async function generateMetadata({
   params,
@@ -69,7 +70,7 @@ export default async function FlowPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <FlowReader flow={flow} initialComments={comments} />
     </>

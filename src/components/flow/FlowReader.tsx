@@ -160,7 +160,7 @@ export function FlowReader({
         <Link
           href="/"
           aria-label="Volver al Pub"
-          className="grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+          className="fp-hit grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
           <ArrowLeft size={18} />
         </Link>
@@ -169,7 +169,7 @@ export function FlowReader({
           type="button"
           onClick={onShare}
           aria-label={t("share")}
-          className="grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+          className="fp-hit grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
         >
           <Share2 size={18} />
         </button>
@@ -218,7 +218,7 @@ export function FlowReader({
               <span className="block font-sans text-[15px] font-semibold text-ink">
                 {flow.author.displayName}
               </span>
-              <span className="block font-sans text-[12px] text-text-3">
+              <span className="block font-sans text-[12px] text-text-2">
                 {relativeTime(flow.ageMinutes, lang)} · {durationLabel(flow.durationSeconds)} de audio
               </span>
             </span>
@@ -288,8 +288,8 @@ export function FlowReader({
         <div className="inline-flex rounded-pill border border-line bg-surface-2 p-[3px]">
           {(
             [
-              ["pub", "Publicación"],
-              ["raw", "Transcript original"],
+              ["pub", t("flow.viewPub")],
+              ["raw", t("flow.viewRaw")],
             ] as const
           ).map(([v, label]) => (
             <button
@@ -301,10 +301,10 @@ export function FlowReader({
                 play("tick");
               }}
               className={cn(
-                "rounded-pill px-4 py-1.5 font-sans text-[13px] font-semibold transition-colors duration-150",
+                "fp-hit-y rounded-pill px-4 py-1.5 font-sans text-[13px] font-semibold transition-colors duration-150",
                 view === v
                   ? "bg-surface text-ink shadow-[0_1px_2px_rgba(26,23,20,.08)]"
-                  : "text-text-3 hover:text-ink",
+                  : "text-text-2 hover:text-ink",
               )}
             >
               {label}
@@ -338,7 +338,7 @@ export function FlowReader({
           {view === "pub" ? (
             <>
               {showTranslated && translated && (
-                <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
+                <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
                   {t("translate.note")}
                 </p>
               )}
@@ -348,8 +348,8 @@ export function FlowReader({
             </>
           ) : (
             <div>
-              <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-3">
-                Transcript · sin pulir
+              <p className="mb-3 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
+                {t("flow.viewRawLabel")}
               </p>
               <p className="whitespace-pre-wrap font-serif text-[17px] leading-[1.7] text-text-2">
                 {transcript}
@@ -381,7 +381,7 @@ export function FlowReader({
             type="button"
             onClick={onShare}
             aria-label={t("share")}
-            className="ml-auto grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
+            className="fp-hit-y ml-auto grid h-9 w-9 place-items-center rounded-pill text-text-2 transition-colors hover:bg-[var(--hover)] hover:text-ink"
           >
             <Share2 size={18} />
           </button>
@@ -391,7 +391,7 @@ export function FlowReader({
             aria-pressed={saved}
             aria-label={t("save")}
             className={cn(
-              "grid h-9 w-9 place-items-center rounded-pill transition-colors hover:bg-[var(--hover)]",
+              "fp-hit-y grid h-9 w-9 place-items-center rounded-pill transition-colors hover:bg-[var(--hover)]",
               saved ? "text-grana" : "text-text-2 hover:text-ink",
             )}
           >
@@ -402,8 +402,8 @@ export function FlowReader({
         {/* comentarios */}
         <section className="mt-10">
           <h2 className="mb-5 font-serif text-[22px] font-medium text-ink">
-            Comentarios{" "}
-            <span className="font-mono text-[15px] text-text-3">
+            {t("flow.commentsTitle")}{" "}
+            <span className="font-mono text-[15px] text-text-2">
               {comments.length}
             </span>
           </h2>
@@ -412,8 +412,8 @@ export function FlowReader({
 
           <div className="mt-7 flex flex-col gap-6">
             {comments.length === 0 ? (
-              <p className="py-8 text-center font-sans text-[14px] text-text-3">
-                Sé la primera voz en responder.
+              <p className="py-8 text-center font-sans text-[14px] text-text-2">
+                {t("comments.empty")}
               </p>
             ) : (
               comments.map((c) => (
@@ -431,6 +431,8 @@ export function FlowReader({
           flowId={flow.id}
           initialTitle={title}
           initialBody={body}
+          initialCoverUrl={flow.coverUrl}
+          initialCoverKind={flow.coverKind}
           onSaved={(newTitle, newBody) => {
             setTitle(newTitle);
             setBody(newBody);
