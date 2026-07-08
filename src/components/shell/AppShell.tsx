@@ -473,8 +473,11 @@ function AccountMenuItems({
 }
 
 /** Cuenta en el riel desktop (en lugar del item «Perfil»): avatar + nombre que
- *  abre un menú con ver perfil / panel de admin / cerrar sesión. Cierra con
- *  click fuera y con Esc (el foco vuelve al disparador). */
+ *  abre un menú con ver perfil / panel de admin / cerrar sesión. Abre AL HOVER
+ *  (y al foco, para teclado) y se despliega HACIA LA DERECHA anclado al fondo
+ *  —el disparador vive al pie del riel, así el menú no se sale de pantalla ni
+ *  tapa «Grabar un Flow»—. Cierra al salir (con una gracia corta para cruzar el
+ *  hueco) y con Esc (el foco vuelve al disparador). */
 function RailAccountMenu({
   user,
   active,
@@ -489,33 +492,58 @@ function RailAccountMenu({
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openNow = () => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+    setOpen(true);
+  };
+  // Gracia corta al salir: permite mover el cursor del disparador al menú
+  // (que abre a la derecha) sin que se cierre al cruzar el hueco.
+  const closeSoon = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => {
+      // Si el teclado tiene el foco dentro del menú, el hover-out no lo cierra.
+      if (rootRef.current?.contains(document.activeElement)) return;
+      setOpen(false);
+    }, 140);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setOpen(false);
         triggerRef.current?.focus();
       }
     };
-    document.addEventListener("mousedown", onDown);
     document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
   const item =
     "flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left font-sans text-[14px] font-medium text-ink transition-colors hover:bg-[var(--hover)]";
 
   return (
-    <div ref={rootRef} className={cn("relative", className)}>
+    <div
+      ref={rootRef}
+      className={cn("relative", className)}
+      onMouseEnter={openNow}
+      onMouseLeave={closeSoon}
+      onFocus={openNow}
+      onBlur={(e) => {
+        if (!rootRef.current?.contains(e.relatedTarget as Node)) setOpen(false);
+      }}
+    >
       <button
         ref={triggerRef}
         type="button"
@@ -525,7 +553,7 @@ function RailAccountMenu({
         aria-current={active ? "page" : undefined}
         onClick={() => {
           play("tick");
-          setOpen((o) => !o);
+          openNow();
         }}
         className={cn(
           "flex w-full items-center gap-3 rounded-[12px] px-3.5 py-2.5 text-left text-[15px] transition-colors duration-150 ease-flow",
@@ -543,16 +571,20 @@ function RailAccountMenu({
         <span className="min-w-0 flex-1 truncate">{user.displayName}</span>
       </button>
 
+      {/* A la derecha del riel y anclado al fondo; el pl-2 tiende un puente
+          invisible sobre el hueco para que el hover no se corte al cruzar. */}
       {open && (
-        <div
-          role="menu"
-          className="absolute left-0 top-[calc(100%+8px)] z-30 w-[210px] rounded-[14px] border border-line bg-surface p-1.5 shadow-[var(--shadow-hover)] [animation:fp-rise_.18s_var(--ease-flow)]"
-        >
-          <AccountMenuItems
-            user={user}
-            itemClass={item}
-            onNavigate={() => setOpen(false)}
-          />
+        <div className="absolute bottom-0 left-full z-30 pl-2">
+          <div
+            role="menu"
+            className="w-[210px] rounded-[14px] border border-line bg-surface p-1.5 shadow-[var(--shadow-hover)] [animation:fp-emerge_.18s_var(--ease-flow)]"
+          >
+            <AccountMenuItems
+              user={user}
+              itemClass={item}
+              onNavigate={() => setOpen(false)}
+            />
+          </div>
         </div>
       )}
     </div>

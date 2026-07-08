@@ -1,9 +1,84 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 8 — 2026-07-08 (SEO a fondo, letrero beta,
-> legales; + `/design`: manual de marca bilingüe con descargas. 3 workflows;
-> build de producción VERDE)**.
+> Última actualización: **sesión 9 — 2026-07-08 (landing `/splash` con Three.js,
+> pitch deck `/deck`, paquete de marca en `D:\FlowPub\design`, campaña de marketing
+> en `D:\FlowPub\marketing`, fix del FAB de cuenta. Build de producción VERDE)**.
+
+## Sesión 9 — 2026-07-08: landing + deck + marca + marketing (tanda grande)
+
+**typecheck/lint/`next build` VERDES** (build corrido con el dev server detenido).
+`/splash` y `/deck` prerenderizan estáticas. Tanda pedida por Julio para lanzar
+el sitio: **front puro, CERO SQL, cero dashboard**. Nuevas deps: `three` (+ dev
+`@types/three`, `puppeteer-core` solo para generar capturas/verificar).
+
+- **Fix del FAB de cuenta (desktop)** (`AppShell.tsx` → `RailAccountMenu`): el menú
+  abría **hacia abajo** (`top-[calc(100%+8px)]`) y como el disparador vive al pie del
+  riel, se salía de pantalla. Ahora abre **a la DERECHA anclado al fondo**
+  (`absolute bottom-0 left-full`) y **al hover/foco** (con gracia de 140 ms para
+  cruzar el hueco; `pl-2` como puente), sin tapar «Grabar un Flow». Escape cierra y
+  devuelve foco. Keyframe nuevo `fp-emerge` en globals. **⚠️ Verificar con sesión
+  real** (el menú solo aparece logueado; yo no pude loguearme en el preview).
+- **Landing `/splash`** (`app/splash/page.tsx` + `components/welcome/`):
+  splash pública guiada por scroll, **bilingüe ES/EN** (`COPY[lang]` local, no toca
+  el diccionario global), claro/oscuro, reduce-motion-safe. Secciones: hero (vírgula
+  + tagline + CTA «Grabar un Flow» → `/componer`) · por qué la voz · 3 pasos · el Pub
+  (con capturas reales) · features · cierre. **Fondo Three.js** (`ThreeStage.tsx`,
+  dynamic `ssr:false`): campo de partículas que fluye, reacciona a scroll+cursor,
+  paleta por tema, limpia TODO al desmontar, static frame en reduce-motion. En
+  sitemap (priority .9).
+- **Pitch deck `/deck`** (`app/deck/page.tsx` + `components/deck/`): 14 slides
+  interactivas (teclado ←/→, dots, swipe, barra de progreso), motion por slide
+  (`visuals.tsx`), claro/oscuro, **noindex** (activo de fundraising, se comparte por
+  enlace). Incluye capturas de la app en frames de navegador/teléfono y una **slide
+  de finanzas** con 3 escenarios (Austero $2,058 / Base $18,858 / Ambicioso $81,498
+  al año) y la petición **$20,000 USD / 12 meses** (escenario Base). Narrativa +
+  finanzas salieron de un workflow de contenido (verificado con precios de jul 2026).
+- **Capturas de la app** en `app/public/shots/` (16: Pub/Flow/perfil/explorar/entrar,
+  móvil+desktop, claro+oscuro), generadas con puppeteer-core + Chrome del sistema
+  (headless, idioma ES, tema forzado). Las usan la landing, el deck y el marketing.
+
+### Entregables FUERA del repo de la app (no se despliegan)
+
+- **`D:\FlowPub\design`** — paquete de marca: **27 SVG + 61 PNG + 14 PDF**
+  (vírgula/wordmark/lockups/isotipo/favicon/avatar/OG/headers/swatches/clearspace en
+  claro y oscuro) + **`flowpub-brand-book.pdf`** (5 págs) + `tokens.css`/`tokens.json`
+  + `README.md`. Generado desde el path real de la vírgula y las TTF locales
+  (Fraunces/Hanken/Space Mono) con texto **convertido a trazos** (portátil); PNG con
+  `sharp`, PDF con PyMuPDF.
+- **`D:\FlowPub\marketing`** — campaña «¡Saca el Flow!»: `copy/` (ES/EN +
+  prensa-plan-calendario), `graphics/` (anuncio cuadrado/story, ad, cita,
+  cómo-funciona en claro/oscuro; SVG+PNG; + copia de las capturas), `motion/`
+  (`launch-teaser.html` animado autocontenido con fuentes embebidas + storyboards de
+  reels), `checklist-lanzamiento.md`, `README.md`.
+
+**Review adversarial (workflow · 4 dimensiones → verificación; 14 hallazgos
+confirmados, TODOS arreglados salvo 1 diferido):**
+- ThreeStage: `forceContextLoss()` al desmontar (evita fuga de contextos WebGL al
+  alternar tema); `onResize` repinta en reduced-motion y reajusta pixelRatio.
+- Deck: `go()` puro (sonido FUERA del updater de setState); teclado solo ←/→ (ya no
+  secuestra el scroll del slide de finanzas); región `aria-live` que anuncia el
+  cambio de slide; dots con hit ≥44px (`fp-hit-y`).
+- FAB de cuenta: `closeSoon` ya no cierra si el teclado tiene el foco dentro del menú.
+- Landing: `alt` de imágenes bilingüe (ES/EN); texto informativo chico `text-3→text-2`
+  (AA); cue de scroll `aria-hidden`.
+- Deck covers: caras de cubo `#fff/#000` → `var(--amate)/var(--tinta)` (tokens).
+- **Diferido (baja, pre-existente):** el `role="menu"` del menú de cuenta no implementa
+  el patrón completo de flechas/roving-tabindex (mismo patrón que el menú del avatar
+  móvil; refactor de a11y para otra sesión).
+
+**Verificado EN VIVO tras los fixes:** la landing aguanta 4 toggles de tema con
+**0 errores de consola** y el canvas sigue vivo; el deck anuncia «Diapositiva N de
+14…» por `aria-live`. typecheck/lint/`next build` verdes.
+
+**👉 Julio:** es solo front — commit + push a `main` (= deploy). Nuevas rutas vivas:
+`flowpub.app/splash` (landing) y `flowpub.app/deck` (pitch, noindex). **Verifica
+el FAB con tu sesión** en desktop (pasa el cursor sobre tu avatar al pie del riel:
+el menú debe abrir a la derecha, no abajo). Los paquetes `design/` y `marketing/`
+son entregables locales (no se despliegan). Reenvía el sitemap en Search Console
+(ahora trae `/splash`). **Ojo:** `npm install` agregó `three` — ya está en
+`package.json`, Vercel lo instala solo en el próximo deploy.
+
 
 ## Sesión 8 (cont.) — 2026-07-08: /design (manual de marca) + build
 

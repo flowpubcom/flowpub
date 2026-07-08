@@ -398,6 +398,18 @@
   }
 }
 
+/* emergencia lateral: menús que abren a la derecha (menú de cuenta del riel) */
+@keyframes fp-emerge {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 /* blobs a la deriva del panel hipnótico (onboarding · welcome) */
 @keyframes fp-blob1 {
   0% {
