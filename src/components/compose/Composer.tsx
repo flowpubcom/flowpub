@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronDown, ImagePlus, Mic, RefreshCw, Square, X } from "lucide-react";
+import { ChevronDown, ImagePlus, Mic, Pause, Play, RefreshCw, Square, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/format";
 import { useRecorder, type Recorder } from "@/lib/useRecorder";
@@ -482,17 +482,18 @@ const BARS = [
   "bg-grana",
 ];
 
-function Waveform() {
+function Waveform({ paused }: { paused?: boolean }) {
   return (
     <div className="mt-5 flex h-12 items-center justify-center gap-1.5" aria-hidden>
       {BARS.map((c, i) => (
         <span
           key={i}
-          className={cn("w-1 rounded-pill", c)}
+          className={cn("w-1 rounded-pill", c, paused && "opacity-40")}
           style={{
             height: 40,
             transformOrigin: "center",
             animation: `fp-bar 1.1s ease-in-out ${i * 0.09}s infinite`,
+            animationPlayState: paused ? "paused" : "running",
           }}
         />
       ))}
@@ -511,18 +512,30 @@ function RecordingStep({
   onStop: () => void;
   onCancel: () => void;
 }) {
+  const { play } = useSound();
   useEffect(() => {
     if (recorder.elapsed >= maxSeconds) onStop();
   }, [recorder.elapsed, maxSeconds, onStop]);
 
   const warn = recorder.elapsed >= maxSeconds - 60;
+  const paused = recorder.paused;
 
   return (
     <div className="flex flex-col items-center py-8 text-center">
       <div className="flex items-center gap-2">
-        <span className="h-2.5 w-2.5 animate-pulse rounded-pill bg-grana" />
-        <span className="font-sans text-[12px] font-semibold uppercase tracking-[0.14em] text-grana">
-          REC
+        <span
+          className={cn(
+            "h-2.5 w-2.5 rounded-pill",
+            paused ? "bg-text-3" : "animate-pulse bg-grana",
+          )}
+        />
+        <span
+          className={cn(
+            "font-sans text-[12px] font-semibold uppercase tracking-[0.14em]",
+            paused ? "text-text-3" : "text-grana",
+          )}
+        >
+          {paused ? "En pausa" : "REC"}
         </span>
       </div>
       <div
@@ -534,27 +547,52 @@ function RecordingStep({
         {formatDuration(recorder.elapsed)} / {formatDuration(maxSeconds)}
       </div>
 
-      <Waveform />
+      <Waveform paused={paused} />
 
       <p className="mb-1 mt-7 font-serif text-[18px] text-text-2">
-        Te escuchamos…
+        {paused ? "En pausa" : "Te escuchamos…"}
       </p>
       <p className="max-w-xs font-sans text-[13px] leading-relaxed text-text-2">
-        Al terminar, Gemini transcribe y pule tu voz en un Flow.
+        {paused
+          ? "Cuando quieras, seguimos grabando desde donde te quedaste."
+          : "Al terminar, Gemini transcribe y pule tu voz en un Flow."}
       </p>
 
-      <button
-        type="button"
-        aria-label="Detener"
-        onClick={onStop}
-        className="mt-8 grid h-[78px] w-[78px] place-items-center rounded-pill bg-grana text-white shadow-[0_10px_26px_-8px_rgba(192,48,58,.8)] transition-transform duration-150 ease-flow active:scale-[.94]"
-      >
-        <Square size={24} fill="currentColor" />
-      </button>
+      {/* Pausar/reanudar + detener, juntos pero claros. */}
+      <div className="mt-8 flex items-center gap-6">
+        <button
+          type="button"
+          aria-label={paused ? "Reanudar" : "Pausar"}
+          onClick={() => {
+            if (paused) {
+              recorder.resume();
+              play("soft");
+            } else {
+              recorder.pause();
+              play("tick");
+            }
+          }}
+          className="grid h-[62px] w-[62px] place-items-center rounded-pill border border-line-2 bg-surface text-ink transition-colors duration-150 ease-flow hover:bg-[var(--hover)] active:scale-[.94]"
+        >
+          {paused ? <Play size={22} fill="currentColor" /> : <Pause size={22} fill="currentColor" />}
+        </button>
+        <button
+          type="button"
+          aria-label="Detener"
+          onClick={onStop}
+          className="grid h-[78px] w-[78px] place-items-center rounded-pill bg-grana text-white shadow-[0_10px_26px_-8px_rgba(192,48,58,.8)] transition-transform duration-150 ease-flow active:scale-[.94]"
+        >
+          <Square size={24} fill="currentColor" />
+        </button>
+      </div>
+      <p className="mt-3 font-mono text-[11px] text-text-3">
+        {paused ? "Reanudar · Detener" : "Pausar · Detener"}
+      </p>
+
       <button
         type="button"
         onClick={onCancel}
-        className="mt-4 font-sans text-[13px] text-text-2 underline underline-offset-2 hover:text-ink"
+        className="mt-9 font-sans text-[13px] text-text-3 underline underline-offset-2 transition-colors hover:text-ink"
       >
         Cancelar
       </button>

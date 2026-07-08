@@ -2,7 +2,7 @@
 // exponencial ~140ms). No viene en los .dc.html; aquí está la fuente de verdad.
 // Frecuencias tomadas del design-map: rec/pop/click/soft/tick.
 
-export type BlipType = "rec" | "pop" | "click" | "soft" | "tick";
+export type BlipType = "rec" | "pop" | "click" | "soft" | "tick" | "bubble";
 
 const FREQ: Record<BlipType, number> = {
   rec: 220,
@@ -10,6 +10,7 @@ const FREQ: Record<BlipType, number> = {
   click: 400,
   soft: 320,
   tick: 540,
+  bubble: 680, // frecuencia inicial; «bubble» hace un glissando hacia abajo (ver blip)
 };
 
 export interface SoundEngine {
@@ -46,15 +47,27 @@ export function createSoundEngine(): SoundEngine {
     const now = ac.currentTime;
     const osc = ac.createOscillator();
     const gain = ac.createGain();
-
     osc.type = "sine";
-    osc.frequency.setValueAtTime(FREQ[type], now);
 
+    if (type === "bubble") {
+      // Burbuja que se truena: glissando corto de agudo→grave, muy sutil.
+      osc.frequency.setValueAtTime(680, now);
+      osc.frequency.exponentialRampToValueAtTime(240, now + 0.085);
+      const peak = Math.max(0.0002, 0.04 * volume);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(peak, now + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+      return;
+    }
+
+    osc.frequency.setValueAtTime(FREQ[type], now);
     const peak = Math.max(0.0002, 0.05 * volume);
     gain.gain.setValueAtTime(0.0001, now);
     gain.gain.exponentialRampToValueAtTime(peak, now + 0.006);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-
     osc.connect(gain).connect(ac.destination);
     osc.start(now);
     osc.stop(now + 0.16);

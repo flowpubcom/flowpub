@@ -3,6 +3,8 @@ import { useI18n } from "@/providers/I18nProvider";
 
 // Grabador REAL (MediaRecorder). La transcripción es post-grabación (Gemini STT
 // en /api/transcribe); no hay transcript en vivo por ahora. Respeta permisos.
+// Soporta pausar/reanudar: el cronómetro acumula tiempo por segmentos, así el
+// elapsed refleja SOLO lo grabado (las pausas no cuentan).
 
 export interface RecordingResult {
   blob: Blob;
@@ -11,9 +13,12 @@ export interface RecordingResult {
 
 export interface Recorder {
   recording: boolean;
+  paused: boolean;
   elapsed: number;
   error: string | null;
   start: () => Promise<boolean>;
+  pause: () => void;
+  resume: () => void;
   stop: () => Promise<RecordingResult | null>;
   reset: () => void;
 }
@@ -34,6 +39,7 @@ function pickMimeType(): string {
 
 export function useRecorder(maxSeconds = 540): Recorder {
   const [recording, setRecording] = useState(false);
+  const [paused, setPaused] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,17 +53,36 @@ export function useRecorder(maxSeconds = 540): Recorder {
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
-  const startTs = useRef(0);
   const mimeRef = useRef<string>("");
+
+  // Cronómetro por segmentos: accMs = tiempo grabado ya cerrado; segStart =
+  // performance.now() del segmento en curso (mientras NO está en pausa).
+  const accMsRef = useRef(0);
+  const segStartRef = useRef(0);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) window.clearInterval(timerRef.current);
     timerRef.current = null;
   }, []);
 
+  const currentMs = useCallback(() => {
+    const seg =
+      mediaRef.current?.state === "recording"
+        ? performance.now() - segStartRef.current
+        : 0;
+    return accMsRef.current + seg;
+  }, []);
+
+  const startTimer = useCallback(() => {
+    clearTimer();
+    timerRef.current = window.setInterval(() => {
+      setElapsed(Math.min(maxSeconds, currentMs() / 1000));
+    }, 200);
+  }, [clearTimer, maxSeconds, currentMs]);
+
   const cleanup = useCallback(() => {
     clearTimer();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current?.getTracks().forEach((tr) => tr.stop());
     streamRef.current = null;
     mediaRef.current = null;
   }, [clearTimer]);
@@ -80,29 +105,53 @@ export function useRecorder(maxSeconds = 540): Recorder {
       };
       mediaRef.current = mr;
       mr.start();
+      accMsRef.current = 0;
+      segStartRef.current = performance.now();
       setRecording(true);
+      setPaused(false);
       setElapsed(0);
-      startTs.current = performance.now();
-      timerRef.current = window.setInterval(() => {
-        const e = (performance.now() - startTs.current) / 1000;
-        setElapsed(Math.min(maxSeconds, e));
-      }, 200);
+      startTimer();
       return true;
     } catch {
       setError(tRef.current("rec.micError"));
       cleanup();
       return false;
     }
-  }, [maxSeconds, cleanup]);
+  }, [startTimer, cleanup]);
+
+  const pause = useCallback(() => {
+    const mr = mediaRef.current;
+    if (!mr || mr.state !== "recording") return;
+    accMsRef.current += performance.now() - segStartRef.current;
+    clearTimer();
+    try {
+      mr.pause();
+    } catch {
+      /* si el navegador no soporta pausar, no rompemos */
+    }
+    setPaused(true);
+    setElapsed(Math.min(maxSeconds, accMsRef.current / 1000));
+  }, [clearTimer, maxSeconds]);
+
+  const resume = useCallback(() => {
+    const mr = mediaRef.current;
+    if (!mr || mr.state !== "paused") return;
+    segStartRef.current = performance.now();
+    try {
+      mr.resume();
+    } catch {
+      /* noop */
+    }
+    setPaused(false);
+    startTimer();
+  }, [startTimer]);
 
   const stop = useCallback(() => {
     const mr = mediaRef.current;
     clearTimer();
+    const durationSeconds = Math.min(maxSeconds, currentMs() / 1000);
     setRecording(false);
-    const durationSeconds = Math.min(
-      maxSeconds,
-      (performance.now() - startTs.current) / 1000,
-    );
+    setPaused(false);
     if (!mr) return Promise.resolve(null);
     return new Promise<RecordingResult | null>((resolve) => {
       mr.onstop = () => {
@@ -113,23 +162,26 @@ export function useRecorder(maxSeconds = 540): Recorder {
         resolve({ blob, durationSeconds });
       };
       try {
-        mr.stop();
+        mr.stop(); // stop() funciona igual desde estado "paused"
       } catch {
         cleanup();
         resolve(null);
       }
     });
-  }, [maxSeconds, clearTimer, cleanup]);
+  }, [maxSeconds, clearTimer, currentMs, cleanup]);
 
   const reset = useCallback(() => {
     cleanup();
     setRecording(false);
+    setPaused(false);
     setElapsed(0);
     setError(null);
     chunksRef.current = [];
+    accMsRef.current = 0;
+    segStartRef.current = 0;
   }, [cleanup]);
 
   useEffect(() => cleanup, [cleanup]);
 
-  return { recording, elapsed, error, start, stop, reset };
+  return { recording, paused, elapsed, error, start, pause, resume, stop, reset };
 }
