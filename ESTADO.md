@@ -5,6 +5,40 @@
 > pitch deck `/deck`, paquete de marca en `D:\FlowPub\design`, campaña de marketing
 > en `D:\FlowPub\marketing`, fix del FAB de cuenta. Build de producción VERDE)**.
 
+## Sesión 9 (cont.) — 2026-07-08: /splash, fix z del menú, Analytics propias
+
+Post-deploy de la tanda grande (ya en `main`). typecheck/lint/`next build` VERDES.
+
+- **`/bienvenida` → `/splash`** (pedido de Julio): ruta renombrada + canonical/OG +
+  sitemap. Julio ya subió el `sitemap.xml` a Search Console.
+- **Fix del z del menú de cuenta**: abría a la derecha pero se dibujaba BAJO las
+  cards del feed. El `<aside>` del riel era `sticky` sin z-index (contexto de
+  apilamiento en auto). Se le dio `z-30` → su contexto (y el menú) pinta sobre el
+  contenido. Verificado por inyección. El banner de cookies (z-40) y los modales
+  (z-50) siguen arriba a propósito.
+- **Analytics propias (privacy-first) — ⚠️ `migration_21_analytics.sql` PENDIENTE
+  de correr:**
+  - Tabla `analytics_events` (RLS: SOLO admin lee; sin insert directo). Sin PII: no
+    guarda IP (solo país ISO-2 del header de Vercel), `session` = id anónimo de
+    localStorage (NO cookie).
+  - RPC `track_event()` (security-definer, grant anon) inserta validado. RPC
+    `admin_analytics(days)` (security-definer, guard `is_admin()`) devuelve los
+    agregados en jsonb (vistas, sesiones, vistas/día, top páginas/Flows/referrers,
+    dispositivos, idioma, cuentas y Flows nuevos).
+  - **Beacon** `components/analytics/AnalyticsBeacon.tsx` (montado en AppProviders):
+    manda «view» al cambiar de ruta vía `fetch keepalive` a **`/api/track`** (route
+    handler: valida, rate-limita por IP, deriva país, llama `track_event`). No cuenta
+    `/admin`. Verificado EN VIVO: `POST /api/track → 204` en cada carga (y degrada
+    con gracia mientras la migración no corre).
+  - **Pestaña «Analytics» en `/admin`** (`AdminView` + `fetchAdminAnalytics`): stats,
+    barras por día, top páginas/Flows/referrers, reparto dispositivo/idioma. Estado
+    «Aún sin datos» hasta que haya tráfico. Las métricas de «Resumen» se conservan.
+    Tolerante a que la migración corra después (degrada a vacío).
+
+**👉 Julio — SQL Editor: correr `migration_21_analytics.sql`.** Tras correrla, la
+analítica registra sola (el código ya está desplegado) y la pestaña «Analytics» se
+va llenando con el tráfico. Nada más que hacer.
+
 ## Sesión 9 — 2026-07-08: landing + deck + marca + marketing (tanda grande)
 
 **typecheck/lint/`next build` VERDES** (build corrido con el dev server detenido).

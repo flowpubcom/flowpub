@@ -211,3 +211,80 @@ export const fetchAdminSettings = cache(async (): Promise<AdminSettings> => {
   for (const r of data ?? []) out[r.key as string] = r.value;
   return out;
 });
+
+// ── Analytics propias ────────────────────────────────────────────────────────
+
+export interface AdminAnalytics {
+  hasData: boolean;
+  days: number;
+  totalViews: number;
+  totalSessions: number;
+  newUsers: number;
+  newFlows: number;
+  viewsByDay: { date: string; count: number }[];
+  topPaths: { path: string; count: number }[];
+  topFlows: { id: string; title: string; count: number }[];
+  referrers: { host: string; count: number }[];
+  devices: { device: string; count: number }[];
+  langs: { lang: string; count: number }[];
+}
+
+const EMPTY_ANALYTICS: AdminAnalytics = {
+  hasData: false,
+  days: 30,
+  totalViews: 0,
+  totalSessions: 0,
+  newUsers: 0,
+  newFlows: 0,
+  viewsByDay: [],
+  topPaths: [],
+  topFlows: [],
+  referrers: [],
+  devices: [],
+  langs: [],
+};
+
+/**
+ * Agregados de analítica (RPC `admin_analytics`, security-definer con guard
+ * is_admin()). Degrada a vacío si la migración 21 aún no corre — la pestaña
+ * muestra su estado sin datos, sin romper el panel.
+ */
+export const fetchAdminAnalytics = cache(async (): Promise<AdminAnalytics> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("admin_analytics", { p_days: 30 });
+  if (error || !data) return EMPTY_ANALYTICS;
+  const d = data as Record<string, any>;
+  return {
+    hasData: (d.total_views ?? 0) > 0 || (d.new_users ?? 0) > 0,
+    days: d.days ?? 30,
+    totalViews: d.total_views ?? 0,
+    totalSessions: d.total_sessions ?? 0,
+    newUsers: d.new_users ?? 0,
+    newFlows: d.new_flows ?? 0,
+    viewsByDay: (d.views_by_day ?? []).map((x: any) => ({
+      date: String(x.d),
+      count: Number(x.count) || 0,
+    })),
+    topPaths: (d.top_paths ?? []).map((x: any) => ({
+      path: String(x.path),
+      count: Number(x.count) || 0,
+    })),
+    topFlows: (d.top_flows ?? []).map((x: any) => ({
+      id: String(x.id),
+      title: String(x.title),
+      count: Number(x.count) || 0,
+    })),
+    referrers: (d.referrers ?? []).map((x: any) => ({
+      host: String(x.host),
+      count: Number(x.count) || 0,
+    })),
+    devices: (d.devices ?? []).map((x: any) => ({
+      device: String(x.device),
+      count: Number(x.count) || 0,
+    })),
+    langs: (d.langs ?? []).map((x: any) => ({
+      lang: String(x.lang),
+      count: Number(x.count) || 0,
+    })),
+  };
+});

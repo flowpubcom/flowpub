@@ -8,6 +8,7 @@ import { AuthProvider } from "./AuthProvider";
 import { LegalProvider } from "./LegalProvider";
 import { VersionWatcher } from "@/components/shell/VersionWatcher";
 import { InstallPrompt } from "@/components/shell/InstallPrompt";
+import { AnalyticsBeacon } from "@/components/analytics/AnalyticsBeacon";
 
 /**
  * Raíz de providers de cliente + vigías globales (versión nueva, instalar
@@ -23,6 +24,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
               {children}
               <VersionWatcher />
               <InstallPrompt />
+              <AnalyticsBeacon />
             </LegalProvider>
           </AuthProvider>
         </SoundProvider>

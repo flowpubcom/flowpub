@@ -15,6 +15,7 @@ import {
   type FlowModStatus,
 } from "@/data/adminClient";
 import type {
+  AdminAnalytics,
   AdminFlowRow,
   AdminMetrics,
   AdminSettings,
@@ -25,10 +26,11 @@ import type {
 // Panel de control (solo admin; el gate vive en la página). El copy es
 // español fijo: pantalla de fundador, entra al barrido i18n de la fase 9.
 
-type Section = "resumen" | "flows" | "usuarios" | "temas" | "ajustes";
+type Section = "resumen" | "analytics" | "flows" | "usuarios" | "temas" | "ajustes";
 
 const SECTIONS: [Section, string][] = [
   ["resumen", "Resumen"],
+  ["analytics", "Analytics"],
   ["flows", "Flows"],
   ["usuarios", "Usuarios"],
   ["temas", "Temas"],
@@ -53,12 +55,14 @@ function CardBox({ children, className }: { children: React.ReactNode; className
 
 export function AdminView({
   metrics,
+  analytics,
   flows: initialFlows,
   users,
   tags: initialTags,
   settings: initialSettings,
 }: {
   metrics: AdminMetrics;
+  analytics: AdminAnalytics;
   flows: AdminFlowRow[];
   users: AdminUserRow[];
   tags: AdminTagRow[];
@@ -100,6 +104,7 @@ export function AdminView({
 
       <div className="mt-6">
         {section === "resumen" && <ResumenSection metrics={metrics} />}
+        {section === "analytics" && <AnalyticsSection analytics={analytics} />}
         {section === "flows" && <FlowsSection initial={initialFlows} />}
         {section === "usuarios" && <UsersSection users={users} />}
         {section === "temas" && <TagsSection initial={initialTags} />}
@@ -182,6 +187,209 @@ function ResumenSection({ metrics }: { metrics: AdminMetrics }) {
           )}
         </CardBox>
       </div>
+    </div>
+  );
+}
+
+// ── Analytics (propias, privacy-first) ───────────────────────────────────────
+
+const DEVICE_LABEL: Record<string, string> = {
+  mobile: "Móvil",
+  desktop: "Escritorio",
+  "—": "Desconocido",
+};
+const LANG_LABEL: Record<string, string> = {
+  es: "Español",
+  en: "English",
+  "—": "Desconocido",
+};
+
+function prettyPath(p: string): string {
+  if (p === "/") return "/ (inicio)";
+  return p.length > 30 ? p.slice(0, 29) + "…" : p;
+}
+
+/** Lista de barras horizontales (etiqueta · barra · conteo). */
+function BarList({
+  items,
+  accent = "grana",
+}: {
+  items: { key: string; label: string; count: number }[];
+  accent?: "grana" | "ocre";
+}) {
+  if (items.length === 0) {
+    return <p className="font-sans text-[13px] text-text-3">Aún sin datos.</p>;
+  }
+  const max = Math.max(1, ...items.map((i) => i.count));
+  const bar = accent === "ocre" ? "bg-ocre" : "bg-grana";
+  return (
+    <ul className="flex flex-col gap-2.5">
+      {items.map((it) => (
+        <li key={it.key}>
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="truncate font-sans text-[13px] text-ink">{it.label}</span>
+            <span className="font-mono text-[12px] text-text-3">{it.count}</span>
+          </div>
+          <div className="mt-1 h-[6px] overflow-hidden rounded-pill bg-surface-3">
+            <div
+              className={cn("h-full rounded-pill", bar)}
+              style={{ width: `${Math.round((it.count / max) * 100)}%` }}
+              aria-hidden
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** Reparto compacto (dispositivo / idioma) como barritas con %. */
+function Split({ items, total }: { items: { label: string; count: number }[]; total: number }) {
+  if (items.length === 0) {
+    return <p className="font-sans text-[12px] text-text-3">Sin datos.</p>;
+  }
+  return (
+    <ul className="flex flex-col gap-2">
+      {items.map((it) => {
+        const pct = Math.round((it.count / total) * 100);
+        return (
+          <li key={it.label} className="flex items-center gap-2.5">
+            <span className="w-[74px] flex-none font-sans text-[12px] text-text-2">{it.label}</span>
+            <div className="h-[6px] flex-1 overflow-hidden rounded-pill bg-surface-3">
+              <div className="h-full rounded-pill bg-ocre" style={{ width: `${pct}%` }} aria-hidden />
+            </div>
+            <span className="w-[34px] flex-none text-right font-mono text-[11px] text-text-3">{pct}%</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function AnalyticsSection({ analytics }: { analytics: AdminAnalytics }) {
+  if (!analytics.hasData) {
+    return (
+      <CardBox className="px-5 py-10 text-center">
+        <p className="font-serif text-[19px] text-ink">Aún sin datos</p>
+        <p className="mx-auto mt-2 max-w-[48ch] font-sans text-[13.5px] text-text-2">
+          En cuanto la gente navegue el sitio verás aquí las vistas, las páginas y
+          los Flows más vistos, de dónde llega la gente y con qué dispositivo. Sin
+          cookies de terceros, todo en tu propia base.
+        </p>
+        <p className="mt-3 font-mono text-[11px] text-text-3">
+          ¿Recién corriste la migración 21? Dale unos minutos de tráfico y recarga.
+        </p>
+      </CardBox>
+    );
+  }
+
+  const maxDay = Math.max(1, ...analytics.viewsByDay.map((d) => d.count));
+  const stats: [string, number][] = [
+    ["Vistas", analytics.totalViews],
+    ["Sesiones", analytics.totalSessions],
+    ["Cuentas nuevas", analytics.newUsers],
+    ["Flows nuevos", analytics.newFlows],
+  ];
+  const devTotal = analytics.devices.reduce((a, d) => a + d.count, 0) || 1;
+  const langTotal = analytics.langs.reduce((a, d) => a + d.count, 0) || 1;
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="font-sans text-[12px] text-text-3">
+        Analítica propia · privacy-first · últimos {analytics.days} días
+      </p>
+
+      <div className="grid grid-cols-2 gap-3.5 md:grid-cols-4">
+        {stats.map(([label, value]) => (
+          <CardBox key={label}>
+            <p className="font-sans text-[12px] font-medium text-text-3">{label}</p>
+            <p className="mt-1 font-serif text-[28px] font-medium leading-none text-ink">
+              {compactNumber(value)}
+            </p>
+          </CardBox>
+        ))}
+      </div>
+
+      <div className="grid gap-3.5 md:grid-cols-[1.6fr_1fr]">
+        <CardBox>
+          <div className="flex items-baseline justify-between">
+            <Eyebrow>Vistas por día</Eyebrow>
+            <span className="font-mono text-[11px] text-text-3">{analytics.days} días</span>
+          </div>
+          <div className="flex h-[120px] items-end gap-[3px]">
+            {analytics.viewsByDay.map((d, i) => (
+              <div
+                key={i}
+                title={`${d.date}: ${d.count}`}
+                className="flex-1 rounded-t-[3px] bg-grana-wash"
+                style={{
+                  height: `${Math.max(3, Math.round((d.count / maxDay) * 108))}px`,
+                  backgroundColor: d.count === maxDay ? "var(--grana)" : undefined,
+                }}
+                aria-hidden
+              />
+            ))}
+          </div>
+        </CardBox>
+
+        <CardBox>
+          <Eyebrow>Dispositivo · idioma</Eyebrow>
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="mb-2 font-sans text-[11px] font-medium text-text-3">Dispositivo</p>
+              <Split
+                items={analytics.devices.map((d) => ({ label: DEVICE_LABEL[d.device] ?? d.device, count: d.count }))}
+                total={devTotal}
+              />
+            </div>
+            <div>
+              <p className="mb-2 font-sans text-[11px] font-medium text-text-3">Idioma</p>
+              <Split
+                items={analytics.langs.map((d) => ({ label: LANG_LABEL[d.lang] ?? d.lang, count: d.count }))}
+                total={langTotal}
+              />
+            </div>
+          </div>
+        </CardBox>
+      </div>
+
+      <div className="grid gap-3.5 md:grid-cols-2">
+        <CardBox>
+          <Eyebrow>Páginas más vistas</Eyebrow>
+          <BarList items={analytics.topPaths.map((p) => ({ key: p.path, label: prettyPath(p.path), count: p.count }))} />
+        </CardBox>
+        <CardBox>
+          <Eyebrow>Flows más vistos</Eyebrow>
+          {analytics.topFlows.length === 0 ? (
+            <p className="font-sans text-[13px] text-text-3">Aún sin datos.</p>
+          ) : (
+            <ul className="flex flex-col gap-2.5">
+              {analytics.topFlows.map((f) => (
+                <li key={f.id} className="flex items-center justify-between gap-3">
+                  <Link href={`/flow/${f.id}`} className="min-w-0 truncate font-serif text-[14px] text-ink hover:underline">
+                    {f.title}
+                  </Link>
+                  <span className="flex-none font-mono text-[12px] text-text-3">{f.count}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardBox>
+      </div>
+
+      <CardBox>
+        <Eyebrow>De dónde llega la gente</Eyebrow>
+        {analytics.referrers.length === 0 ? (
+          <p className="font-sans text-[13px] text-text-3">
+            Casi todo es tráfico directo por ahora. Cuando te enlacen desde otras redes, aparecerá aquí.
+          </p>
+        ) : (
+          <BarList
+            items={analytics.referrers.map((r) => ({ key: r.host, label: r.host, count: r.count }))}
+            accent="ocre"
+          />
+        )}
+      </CardBox>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/shell/AppShell";
 import { AdminView } from "@/components/admin/AdminView";
 import {
+  fetchAdminAnalytics,
   fetchAdminFlows,
   fetchAdminMetrics,
   fetchAdminSettings,
@@ -22,8 +23,9 @@ export default async function AdminPage() {
   const isAdmin = await fetchIsAdmin();
   if (!isAdmin) redirect("/");
 
-  const [metrics, flows, users, tags, settings] = await Promise.all([
+  const [metrics, analytics, flows, users, tags, settings] = await Promise.all([
     fetchAdminMetrics(),
+    fetchAdminAnalytics(),
     fetchAdminFlows(),
     fetchAdminUsers(),
     fetchAdminTags(),
@@ -34,6 +36,7 @@ export default async function AdminPage() {
     <AppShell active="admin">
       <AdminView
         metrics={metrics}
+        analytics={analytics}
         flows={flows}
         users={users}
         tags={tags}
