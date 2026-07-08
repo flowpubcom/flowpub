@@ -5,6 +5,48 @@
 > pitch deck `/deck`, paquete de marca en `D:\FlowPub\design`, campaña de marketing
 > en `D:\FlowPub\marketing`, fix del FAB de cuenta. Build de producción VERDE)**.
 
+## Sesión 9 (cont. 3) — 2026-07-08: Configuración + eliminar cuenta + Web Push
+
+typecheck/lint/`next build` VERDES. Front listo; ⚠️ **backend pendiente de Julio**.
+
+- **`/configuracion`** (gateada, en el menú de cuenta): apariencia (tema/idioma/
+  sonido), notificaciones push (master + toggles mensajes/seguidores/comentarios),
+  cuenta (correo, cambiar contraseña vía reset email, legales, cerrar sesión) y
+  **Zona de peligro** (eliminar cuenta escribiendo «ELIMINAR»). Bilingüe con `tr()`.
+- **Web Push** (mensajes privados, nuevos seguidores, comentarios en tus Flows):
+  - `migration_22`: `push_subscriptions` (RLS dueño), `profiles.push_prefs` jsonb,
+    RPC `delete_my_account()` (security definer; `delete from auth.users where id =
+    auth.uid()` → cascada por FK profiles→auth.users).
+  - `public/sw.js` (push + notificationclick), `lib/push.ts` (VAPID; enable/disable/
+    state), `/api/push/{subscribe,unsubscribe}`, `data/settingsClient.ts`.
+  - **Edge Function `supabase/functions/send-push`**: al INSERT en `notifications`
+    (follow/comment/voice) y en `messages`, manda el push respetando `push_prefs`;
+    borra suscripciones muertas (404/410). Usa `npm:web-push` + service_role.
+  - **VAPID public key** hardcodeada como fallback en `lib/push.ts` (es pública). La
+    **private key NO está en el repo** (verificado) — va como secreto del Edge Function.
+
+**👉 Julio — para prender el push (una vez):**
+1. SQL Editor: correr **`migration_22_push_y_cuenta.sql`**.
+2. Desplegar el Edge Function: `supabase functions deploy send-push`.
+3. Secretos: `supabase secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=… VAPID_SUBJECT=mailto:hola@flowpub.app WEBHOOK_SECRET=…` (las llaves VAPID te las pasé en el chat; la private NUNCA al repo).
+4. Dos **Database Webhooks** (Supabase → Database → Webhooks) sobre INSERT: uno en
+   `public.notifications` y otro en `public.messages`, ambos al Edge Function
+   `send-push`, con header `x-webhook-secret: <WEBHOOK_SECRET>`.
+5. (Opcional) `NEXT_PUBLIC_VAPID_PUBLIC_KEY` en Vercel si algún día regeneras llaves.
+El resto ya está vivo: los usuarios activan/permiten push desde `/configuracion`.
+
+## Sesión 9 (cont. 2) — 2026-07-08: pulido UX (partículas, seek, perfil)
+
+- **Partículas /splash**: el estallido al hover reaccionaba en el espejo vertical
+  del cursor (Y de NDC sin invertir) → arreglado; en oscuro más tenues; al pasar el
+  cursor cerca estalla suavecito + sonido «spark»; tap → onda + «bubble».
+- **Reproductor**: la línea de tiempo es seekable (click/arrastre/teclado).
+- **Perfil**: origen en cascada País→Estado→Municipio (`country-state-city`), fecha
+  de nacimiento en 3 dropdowns (día/mes/año), y los temas de registro ya no se
+  muestran (se conservan en `profile.topics`).
+- **BrandHypnotic**: quitados los dos anillos finos que giraban alrededor de la
+  marca (la «línea muy finita» que veía Julio).
+
 ## Sesión 9 (cont.) — 2026-07-08: /splash, fix z del menú, Analytics propias
 
 Post-deploy de la tanda grande (ya en `main`). typecheck/lint/`next build` VERDES.

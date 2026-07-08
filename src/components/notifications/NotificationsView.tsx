@@ -20,6 +20,8 @@ import { useSound } from "@/providers/SoundProvider";
 import { relativeTime } from "@/lib/format";
 import { setFollow } from "@/data/engagement";
 import {
+  announceAllNotifRead,
+  announceNotifRead,
   markAllNotificationsRead,
   markNotificationRead,
 } from "@/data/notificationsClient";
@@ -87,11 +89,15 @@ export function NotificationsView({
     if (!unreadCount) return;
     play("pop");
     setItems((prev) => prev.map((i) => ({ ...i, read: true })));
+    announceAllNotifRead(); // apaga el punto de la campana al instante
     await markAllNotificationsRead();
   };
 
+  // Solo se llama para notificaciones sin leer (los llamadores lo cuidan), así
+  // que cada llamada = una transición sin-leer → leída: resta 1 a la campana.
   const markOne = (id: string) => {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, read: true } : i)));
+    announceNotifRead();
     void markNotificationRead(id);
   };
 
@@ -212,6 +218,7 @@ function NotificationRow({
   const toggleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!item.actor) return;
+    if (!item.read) onRead(); // interactuar con la notif la marca leída
     const n = !following;
     setFollowing(n);
     play(n ? "soft" : "pop");

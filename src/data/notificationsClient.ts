@@ -40,3 +40,21 @@ export async function markAllNotificationsRead(): Promise<boolean> {
     .eq("read", false);
   return !error;
 }
+
+// Puente ligero entre la bandeja (NotificationsView) y el punto de la campana
+// (useUnreadCount): al marcar leído avisamos por un evento del window para que
+// el punto se actualice al instante, sin esperar a la siguiente navegación.
+export const NOTIF_READ_EVENT = "fp-notif-read";
+export const NOTIF_READ_ALL_EVENT = "fp-notif-read-all";
+
+/** Una notificación pasó a leída → resta 1 al punto de la campana. */
+export function announceNotifRead() {
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new Event(NOTIF_READ_EVENT));
+}
+
+/** Se marcaron todas como leídas → apaga el punto de la campana. */
+export function announceAllNotifRead() {
+  if (typeof window !== "undefined")
+    window.dispatchEvent(new Event(NOTIF_READ_ALL_EVENT));
+}
