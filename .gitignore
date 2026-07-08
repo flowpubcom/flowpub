@@ -42,3 +42,6 @@ next-env.d.ts
 
 # worktrees temporales de agentes (Claude Code)
 .claude/worktrees/
+
+# Caché local del CLI de Supabase
+supabase/.temp/
