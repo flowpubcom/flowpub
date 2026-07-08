@@ -11,6 +11,7 @@ import { COVER_KINDS } from "@/lib/covers";
 import { Logo, FlowMark } from "@/components/brand";
 import { AudioPlayer, Button, Switch } from "@/components/ui";
 import { Cover } from "@/components/cover";
+import { ImageCropper } from "@/components/profile/ImageCropper";
 import { useSound } from "@/providers/SoundProvider";
 import { useI18n } from "@/providers/I18nProvider";
 import { publishFlow } from "@/data/publishApi";
@@ -42,6 +43,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
   // Portada con foto propia (opcional): null = portada generativa.
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
+  const [pickedCoverFile, setPickedCoverFile] = useState<File | null>(null);
   // Contenido sensible: altisonantes se pre-marca al transcribir; 18+ queda
   // fijo si el Flow lleva el tema Hot.
   const [explicitLang, setExplicitLang] = useState(false);
@@ -284,11 +286,19 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
     play("pop");
   };
 
-  const pickCoverPhoto = async (file: File | null) => {
+  // Elegir foto → recortar a 16:9 (WYSIWYG) → subir la versión recortada.
+  const pickCoverPhoto = (file: File | null) => {
     if (!file || coverUploading) return;
     play("click");
+    setPickedCoverFile(file);
+  };
+
+  const onCroppedCover = async (blob: Blob) => {
+    setPickedCoverFile(null);
     setCoverUploading(true);
-    const url = await uploadCover(file);
+    const url = await uploadCover(
+      new File([blob], "cover.jpg", { type: "image/jpeg" }),
+    );
     setCoverUploading(false);
     if (url) {
       setCoverUrl(url);
@@ -397,6 +407,18 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
           />
         )}
       </main>
+
+      {pickedCoverFile && (
+        <ImageCropper
+          file={pickedCoverFile}
+          aspect={16 / 9}
+          title={t("cover.crop.title")}
+          hint={t("cover.crop.hint")}
+          confirmLabel={t("cover.crop.confirm")}
+          onClose={() => setPickedCoverFile(null)}
+          onCropped={(blob) => void onCroppedCover(blob)}
+        />
+      )}
     </div>
   );
 }

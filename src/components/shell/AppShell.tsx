@@ -99,11 +99,10 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
               unread={item.key === "notifications" ? unreadCount : 0}
             />
           ))}
-          {/* En lugar del item «Perfil»: cuenta (avatar + menú). Invitados no
-              tienen equivalente aquí — su par Sign up | Login vive al fondo,
-              justo arriba de Grabar un Flow. */}
-          {user && <RailAccountMenu user={user} active={active === "profile"} />}
         </nav>
+        {/* Todo lo de cuenta vive al fondo, alrededor de Grabar un Flow: los
+            invitados ven Sign up | Login arriba del botón; con sesión, el
+            avatar + nombre (menú de cuenta) va debajo. */}
         <div className="mt-auto pt-4">
           {!user && (
             <div className="mb-3 flex items-center justify-center gap-1.5 font-sans text-[15px] font-medium">
@@ -128,6 +127,13 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
             <Mic size={18} />
             {t("record")}
           </Button>
+          {user && (
+            <RailAccountMenu
+              user={user}
+              active={active === "profile"}
+              className="mt-3"
+            />
+          )}
           <LegalLinks className="mt-4 items-center text-center" />
         </div>
       </aside>
@@ -469,7 +475,15 @@ function AccountMenuItems({
 /** Cuenta en el riel desktop (en lugar del item «Perfil»): avatar + nombre que
  *  abre un menú con ver perfil / panel de admin / cerrar sesión. Cierra con
  *  click fuera y con Esc (el foco vuelve al disparador). */
-function RailAccountMenu({ user, active }: { user: SessionUser; active: boolean }) {
+function RailAccountMenu({
+  user,
+  active,
+  className,
+}: {
+  user: SessionUser;
+  active: boolean;
+  className?: string;
+}) {
   const { t } = useI18n();
   const { play } = useSound();
   const [open, setOpen] = useState(false);
@@ -501,7 +515,7 @@ function RailAccountMenu({ user, active }: { user: SessionUser; active: boolean 
     "flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left font-sans text-[14px] font-medium text-ink transition-colors hover:bg-[var(--hover)]";
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={cn("relative", className)}>
       <button
         ref={triggerRef}
         type="button"

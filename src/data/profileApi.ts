@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import { normalizeHandle, normalizeWebsite } from "@/lib/links";
 
 // Escrituras del onboarding desde el cliente (como el usuario autenticado; RLS
 // exige que profile_id / id == auth.uid()).
@@ -37,6 +38,16 @@ export async function updateProfile(input: {
   bio?: string;
   /** "YYYY-MM-DD" | null para borrarla | undefined = no tocarla. */
   birthdate?: string | null;
+  /** Lugar de origen (opcional). "" → se borra a null. */
+  city?: string;
+  state?: string;
+  country?: string;
+  /** Web + redes (opcional). Se normalizan/sanean aquí antes de guardar. */
+  website?: string;
+  instagram?: string;
+  x?: string;
+  tiktok?: string;
+  youtube?: string;
 }): Promise<OnboardingResult> {
   const supabase = createClient();
   const {
@@ -44,21 +55,48 @@ export async function updateProfile(input: {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "no-session" };
 
+  const clean = (v?: string) => (v?.trim() ? v.trim() : null);
+  const handle = (v?: string) => {
+    const h = v ? normalizeHandle(v) : "";
+    return h || null;
+  };
+
   const base: Record<string, unknown> = {
     display_name: input.displayName.trim(),
     username: input.username,
     bio: input.bio?.trim() || null,
   };
+  // Migración 20 (origen + redes + web). Patrón de birthdate: `undefined` =
+  // NO tocar. Así, si el perfil se leyó degradado (columnas no traídas), el
+  // editor manda undefined y NO borra datos reales guardados. Solo se escribe
+  // lo que el caller mandó explícitamente.
+  const extras: Record<string, unknown> = {};
+  if (input.city !== undefined) extras.city = clean(input.city);
+  if (input.state !== undefined) extras.state = clean(input.state);
+  if (input.country !== undefined) extras.country = clean(input.country);
+  if (input.website !== undefined) extras.website = normalizeWebsite(input.website);
+  if (input.instagram !== undefined) extras.instagram = handle(input.instagram);
+  if (input.x !== undefined) extras.x = handle(input.x);
+  if (input.tiktok !== undefined) extras.tiktok = handle(input.tiktok);
+  if (input.youtube !== undefined) extras.youtube = handle(input.youtube);
+  const withBirthdate = (o: Record<string, unknown>) =>
+    input.birthdate === undefined ? o : { ...o, birthdate: input.birthdate };
+
+  const tolerant = (code?: string) =>
+    code === "PGRST204" || code === "42703" || code === "42501";
+
+  // full (extras + birthdate) → base+birthdate (sin extras) → base pelón.
   let { error } = await supabase
     .from("profiles")
-    .update(
-      input.birthdate === undefined
-        ? base
-        : { ...base, birthdate: input.birthdate },
-    )
+    .update(withBirthdate({ ...base, ...extras }))
     .eq("id", user.id);
-  // Cascada tolerante: sin migración 15, guarda lo demás sin la fecha.
-  if (error?.code === "PGRST204" || error?.code === "42703" || error?.code === "42501") {
+  if (tolerant(error?.code)) {
+    ({ error } = await supabase
+      .from("profiles")
+      .update(withBirthdate(base))
+      .eq("id", user.id));
+  }
+  if (tolerant(error?.code)) {
     ({ error } = await supabase.from("profiles").update(base).eq("id", user.id));
   }
   if (error) {

@@ -3,6 +3,7 @@
 import type { RefObject } from "react";
 import { Bold, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { EmojiButton } from "@/components/ui";
 import { useSound } from "@/providers/SoundProvider";
 
 type ToolKind = "h2" | "bold" | "italic" | "quote" | "ul" | "link";
@@ -82,6 +83,7 @@ export function MarkdownToolbar({
           <Icon size={16} />
         </button>
       ))}
+      <EmojiButton targetRef={textareaRef} value={value} onChange={onChange} />
     </div>
   );
 }

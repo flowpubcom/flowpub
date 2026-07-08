@@ -7,3 +7,4 @@ export { Switch, type SwitchProps } from "./Switch";
 export { Slider, type SliderProps } from "./Slider";
 export { AudioPlayer, type AudioPlayerProps } from "./AudioPlayer";
 export { Modal, type ModalProps } from "./Modal";
+export { EmojiButton } from "./EmojiButton";

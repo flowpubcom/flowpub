@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ImagePlus, RefreshCw } from "lucide-react";
 import { Modal, Button } from "@/components/ui";
 import { FlowCover } from "@/components/cover";
+import { ImageCropper } from "@/components/profile/ImageCropper";
 import { TagPicker } from "@/components/compose/TagPicker";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
@@ -44,6 +45,7 @@ export function FlowEditModal({
     initialCoverKind ?? "collage",
   );
   const [coverUploading, setCoverUploading] = useState(false);
+  const [pickedCoverFile, setPickedCoverFile] = useState<File | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagOptions, setTagOptions] = useState<string[] | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -70,11 +72,19 @@ export function FlowEditModal({
     };
   }, [open, flowId, initialTitle, initialBody, initialCoverUrl, initialCoverKind]);
 
-  const pickCoverPhoto = async (file: File | null) => {
+  // Elegir foto → recortar a 16:9 (WYSIWYG) → subir la versión recortada.
+  const pickCoverPhoto = (file: File | null) => {
     if (!file || coverUploading) return;
     play("click");
+    setPickedCoverFile(file);
+  };
+
+  const onCroppedCover = async (blob: Blob) => {
+    setPickedCoverFile(null);
     setCoverUploading(true);
-    const url = await uploadCover(file);
+    const url = await uploadCover(
+      new File([blob], "cover.jpg", { type: "image/jpeg" }),
+    );
     setCoverUploading(false);
     if (url) {
       setCoverUrl(url);
@@ -130,6 +140,7 @@ export function FlowEditModal({
       onClose={onClose}
       title={t("flow.edit")}
       className="w-[560px]"
+      closeOnEscape={!pickedCoverFile}
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="ghost" size="sm" onClick={onClose}>
@@ -179,7 +190,7 @@ export function FlowEditModal({
               className="hidden"
               disabled={coverUploading}
               onChange={(e) => {
-                void pickCoverPhoto(e.target.files?.[0] ?? null);
+                pickCoverPhoto(e.target.files?.[0] ?? null);
                 e.target.value = "";
               }}
             />
@@ -239,6 +250,18 @@ export function FlowEditModal({
         <p role="status" className="mt-3 font-sans text-[13px] text-grana-text">
           {error}
         </p>
+      )}
+
+      {pickedCoverFile && (
+        <ImageCropper
+          file={pickedCoverFile}
+          aspect={16 / 9}
+          title={t("cover.crop.title")}
+          hint={t("cover.crop.hint")}
+          confirmLabel={t("cover.crop.confirm")}
+          onClose={() => setPickedCoverFile(null)}
+          onCropped={(blob) => void onCroppedCover(blob)}
+        />
       )}
     </Modal>
   );

@@ -13,13 +13,29 @@ export interface PublicProfile {
   /** Banner subido por el usuario; null = banner generativo. */
   bannerUrl: string | null;
   bio: string | null;
-  location: string | null;
+  /** Lugar de origen (opcional). Cualquiera puede faltar. */
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  /** Página web (URL http(s) ya normalizada). */
+  website: string | null;
+  /** Redes sociales: handle limpio (sin @), o null. */
+  socials: {
+    instagram: string | null;
+    x: string | null;
+    tiktok: string | null;
+    youtube: string | null;
+  };
   /** Fecha de alta ISO («En FlowPub desde el {fecha}»); formatear con fullDate(). */
   sinceDate: string | null;
   /** Temas elegidos, con slug para enlazar a su hub (/tema/[slug]). */
   topics: { name: string; slug: string }[];
   /** Invitaciones canjeadas (para la badge OG); 0 si aún no corre migration_18. */
   inviteRedemptions: number;
+  /** ¿La lectura trajo las columnas de origen/redes/web (migración 20 + grant)?
+   *  Si es false (lectura degradada), el editor NO debe reescribir esos campos
+   *  para no borrar datos reales por una lectura incompleta. */
+  hasLinks: boolean;
 }
 
 export interface ProfileStats {
@@ -31,23 +47,25 @@ export interface ProfileStats {
 export const fetchProfileByUsername = cache(
   async (username: string): Promise<PublicProfile | null> => {
     const supabase = await createClient();
-    const SEL =
-      "id,username,display_name,avatar_url,banner_url,bio,location,created_at,profile_tags(tags(name_es,slug))";
-    // Cascada tolerante: sin banner_url (migración 14 pendiente) reintenta.
-    const SEL_LEGACY =
-      "id,username,display_name,avatar_url,bio,location,created_at,profile_tags(tags(name_es,slug))";
-    let { data, error } = await supabase
-      .from("profiles")
-      .select(SEL)
-      .eq("username", username)
-      .maybeSingle();
-    if (error?.code === "42703") {
-      ({ data, error } = await supabase
-        .from("profiles")
-        .select(SEL_LEGACY)
-        .eq("username", username)
-        .maybeSingle());
+    const TAGS = "profile_tags(tags(name_es,slug))";
+    // Cascada tolerante por columnas (grant por columna): full (migración 20) →
+    // pre-20 (con banner) → legacy (sin banner). 42501 = columna sin grant,
+    // 42703 = columna inexistente — ambas caen al select más chico.
+    const SEL_FULL = `id,username,display_name,avatar_url,banner_url,bio,location,city,state,country,website,instagram,x,tiktok,youtube,created_at,${TAGS}`;
+    const SEL_PRE20 = `id,username,display_name,avatar_url,banner_url,bio,location,created_at,${TAGS}`;
+    const SEL_LEGACY = `id,username,display_name,avatar_url,bio,location,created_at,${TAGS}`;
+    const missing = (code?: string) => code === "42703" || code === "42501";
+
+    const run = (sel: string) =>
+      supabase.from("profiles").select(sel).eq("username", username).maybeSingle();
+
+    let { data, error } = await run(SEL_FULL);
+    let hasLinks = !missing(error?.code); // ¿el select con las columnas nuevas pasó?
+    if (missing(error?.code)) {
+      hasLinks = false;
+      ({ data, error } = await run(SEL_PRE20));
     }
+    if (missing(error?.code)) ({ data, error } = await run(SEL_LEGACY));
     if (error || !data) return null;
     const row = data as Record<string, any>;
 
@@ -65,7 +83,16 @@ export const fetchProfileByUsername = cache(
       avatarUrl: (row.avatar_url as string | null) ?? null,
       bannerUrl: (row.banner_url as string | null) ?? null,
       bio: (row.bio as string | null) ?? null,
-      location: (row.location as string | null) ?? null,
+      city: (row.city as string | null) ?? null,
+      state: (row.state as string | null) ?? null,
+      country: (row.country as string | null) ?? null,
+      website: (row.website as string | null) ?? null,
+      socials: {
+        instagram: (row.instagram as string | null) ?? null,
+        x: (row.x as string | null) ?? null,
+        tiktok: (row.tiktok as string | null) ?? null,
+        youtube: (row.youtube as string | null) ?? null,
+      },
       sinceDate: (row.created_at as string | null) ?? null,
       topics: (row.profile_tags ?? [])
         .map((pt: any) =>
@@ -75,6 +102,7 @@ export const fetchProfileByUsername = cache(
         )
         .filter((t: { name: string; slug: string } | null): t is { name: string; slug: string } => t !== null),
       inviteRedemptions: redErr ? 0 : Number(redemptions ?? 0),
+      hasLinks,
     };
   },
 );

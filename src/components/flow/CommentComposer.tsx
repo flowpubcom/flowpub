@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Mic, Send, Square } from "lucide-react";
 import { cn } from "@/lib/cn";
-import { Avatar } from "@/components/ui";
+import { Avatar, EmojiButton } from "@/components/ui";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { useI18n } from "@/providers/I18nProvider";
@@ -49,6 +49,7 @@ export function CommentComposer({
   const recorder = useRecorder(MAX_VOICE);
   const [tab, setTab] = useState<"text" | "voice">("text");
   const [text, setText] = useState("");
+  const textRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState(false);
   const [voiceState, setVoiceState] = useState<"idle" | "recording" | "processing">("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -184,6 +185,7 @@ export function CommentComposer({
             className="flex-none"
           />
           <textarea
+            ref={textRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             rows={1}
@@ -197,6 +199,7 @@ export function CommentComposer({
             }}
             className="min-h-[40px] flex-1 resize-none rounded-[12px] border border-line bg-surface-2 px-3 py-2 font-sans text-[15px] text-ink outline-none focus:border-grana"
           />
+          <EmojiButton targetRef={textRef} value={text} onChange={setText} className="self-center" />
           <button
             type="button"
             onClick={() => void sendText()}

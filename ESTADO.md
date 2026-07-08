@@ -1,8 +1,55 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 6 — 2026-07-07 (auditoría pre-beta + correos +
-> features delegadas + audit de seguridad + MIGRACIÓN DE DOMINIO a flowpub.app)**.
+> Última actualización: **sesión 7 — 2026-07-08 (perfil: origen/redes/web,
+> cropper 16:9, emojis, fix scroll de modales; review adversarial + 3 fixes)**.
+
+## Sesión 7 — 2026-07-08: perfil enriquecido, cropper 16:9, emojis, modales
+
+**typecheck/lint/build verdes; review adversarial multi-agente (3 hallazgos
+confirmados, TODOS arreglados antes del push).**
+
+- **Fix scroll de modales** (`Modal.tsx`): el modal base ahora es flex-column con
+  `max-h-[calc(100dvh-2rem)]`; con footer, el cuerpo hace scroll y el footer queda
+  fijo (antes «Guardar» de Edit Flow caía fuera del viewport). Sin footer
+  (LegalProvider) renderiza directo, self-managed. Nuevo prop `closeOnEscape`.
+- **`ImageCropper`** (reemplaza a AvatarCropper): pan+zoom, aspecto 1:1 circular
+  (avatar) o 16:9 (portada de Flow). Cableado en composer + FlowEditModal: subir
+  foto de portada ahora RECORTA/previsualiza en 16:9 siempre. Escape del cropper
+  ya no cierra el modal padre (ver fix del review).
+- **Perfil: origen + redes + web** (`migration_20` ⚠️ correr): columnas
+  city/state/country/website/instagram/x/tiktok/youtube + **re-grant SELECT con
+  TODAS las columnas** (conserva las de migration_15 + 8 nuevas; birthdate sigue
+  fuera) y UPDATE. `lib/links.ts` sanea (solo http/https, sin javascript:).
+  `SocialLinks` pinta íconos monolínea. Editar perfil trae los campos nuevos.
+  Cascada tolerante triple (SEL_FULL→PRE20→LEGACY) — el perfil carga aunque la
+  migración no haya corrido (verificado).
+- **Emojis en desktop** (`EmojiButton`): set curado, inserta en el caret;
+  cableado en cuerpo del Flow (MarkdownToolbar), comentarios y mensajes. Oculto
+  en móvil (teclado del SO ya trae emojis). **Ojo CLAUDE.md**: es para CONTENIDO
+  del usuario; el chrome de la app sigue sin emoji (la única marca es la vírgula).
+- **Copy** «En el Flow desde el {fecha}» (ES) / «In the Flow since {date}» (EN).
+
+**Review adversarial — 3 fixes aplicados (habrían sido bugs en prod):**
+- [MAYOR] `closeOnEscape` quedaba en closure obsoleto (deps del effect sin él) →
+  el guard de modal anidado estaba MUERTO, Escape sobre el cropper cerraba el
+  modal padre y perdía las ediciones. Fix: listener de Escape en effect propio
+  con `closeOnEscape` en deps.
+- [MAYOR] `safeHref` solo probaba el prefijo del esquema → una web malformada
+  (`http://[`) guardada por REST hacía tronar `new URL` al renderizar y tumbaba
+  la página pública del perfil (DoS almacenado, auto-scope por RLS). Fix:
+  `safeHref` parsea con `new URL` en try/catch y exige http/https; `hostLabel`
+  guardado. Verificado contra entradas hostiles.
+- [MENOR] `updateProfile` escribía origen/redes/web SIEMPRE (null en vacío),
+  sin el centinela `undefined=no tocar` de birthdate → ante lectura degradada
+  (grant partido) el primer guardado borraba datos reales. Fix: extras con
+  `undefined=no tocar` + `PublicProfile.hasLinks` (el editor solo reescribe si
+  la lectura trajo las columnas). Defensa en profundidad (el proyecto tiene
+  historial de grants por columna partidos — ver memoria).
+
+**👉 Julio — SQL Editor: `migration_20`** (origen + redes + web). Tras correrla:
+edita tu perfil (ciudad/estado/país, IG/X/TikTok/YouTube, web) y velos en tu
+perfil. El resto es solo front (sin más SQL).
 
 ## Sesión 6 (cont. 4) — 2026-07-07: compra de flowpub.app + prompt de instalación
 

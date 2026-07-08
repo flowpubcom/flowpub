@@ -9,6 +9,8 @@ import { Avatar, Button, Modal } from "@/components/ui";
 import { FlowMark } from "@/components/brand";
 import { FlowCover } from "@/components/cover";
 import { FlowEditModal } from "@/components/flow/FlowEditModal";
+import { ImageCropper } from "./ImageCropper";
+import { SocialLinks } from "./SocialLinks";
 import { InvitesCard } from "./InvitesCard";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
@@ -107,6 +109,9 @@ export function ProfileView({
     ...(isOwn ? ([["drafts", t("profile.drafts")]] as [Tab, string][]) : []),
   ];
   const grid = tab === "flows" ? flows : tab === "liked" ? liked : drafts;
+  const originText = [profile.city, profile.state, profile.country]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <div className="px-4 pb-16 lg:px-9">
@@ -193,12 +198,12 @@ export function ProfileView({
           {profile.bio}
         </p>
       )}
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        {profile.location && (
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {originText && (
           <>
             <span className="inline-flex items-center gap-1.5 font-sans text-[13px] text-text-2">
               <MapPin size={14} strokeWidth={1.8} />
-              {profile.location}
+              {originText}
             </span>
             <span className="text-text-3">·</span>
           </>
@@ -217,6 +222,10 @@ export function ProfileView({
             {topic.name}
           </Link>
         ))}
+      </div>
+
+      <div className="mb-4">
+        <SocialLinks website={profile.website} socials={profile.socials} />
       </div>
 
       {/* stats */}
@@ -497,18 +506,38 @@ function EditProfileModal({
   const [bio, setBio] = useState(profile.bio ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [bannerUrl, setBannerUrl] = useState(profile.bannerUrl);
+  const [city, setCity] = useState(profile.city ?? "");
+  const [stateName, setStateName] = useState(profile.state ?? "");
+  const [country, setCountry] = useState(profile.country ?? "");
+  const [website, setWebsite] = useState(profile.website ?? "");
+  const [instagram, setInstagram] = useState(profile.socials.instagram ?? "");
+  const [x, setX] = useState(profile.socials.x ?? "");
+  const [tiktok, setTiktok] = useState(profile.socials.tiktok ?? "");
+  const [youtube, setYoutube] = useState(profile.socials.youtube ?? "");
   // La fecha viene del AuthProvider (RPC privada), no del perfil público.
   const { user: me } = useAuth();
   const [birthdate, setBirthdate] = useState(me?.birthdate ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pickedAvatarFile, setPickedAvatarFile] = useState<File | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [bannerUploading, setBannerUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const bannerRef = useRef<HTMLInputElement>(null);
 
-  const onPickPhoto = async (file: File | null) => {
+  const onPickPhoto = (file: File | null) => {
     if (!file) return;
     play("click");
-    const url = await uploadAvatar(file);
+    setPickedAvatarFile(file);
+  };
+
+  const onCroppedAvatar = async (blob: Blob) => {
+    setPickedAvatarFile(null);
+    setAvatarUploading(true);
+    const url = await uploadAvatar(
+      new File([blob], "avatar.jpg", { type: "image/jpeg" }),
+    );
+    setAvatarUploading(false);
     if (url) {
       setAvatarUrl(url);
       play("pop");
@@ -521,11 +550,18 @@ function EditProfileModal({
   const onPickBanner = async (file: File | null) => {
     if (!file) return;
     play("click");
+    // Previsualización instantánea (local): no esperar la red para ver algo.
+    const localUrl = URL.createObjectURL(file);
+    setBannerUrl(localUrl);
+    setBannerUploading(true);
     const res = await uploadBanner(file);
+    setBannerUploading(false);
+    URL.revokeObjectURL(localUrl);
     if (res.url) {
       setBannerUrl(res.url);
       play("pop");
     } else {
+      setBannerUrl(profile.bannerUrl); // revierte a lo que había
       setError(
         res.pending
           ? "El banner necesita la migración 14 en la base. Avísale a Claude."
@@ -544,11 +580,26 @@ function EditProfileModal({
     }
     setSaving(true);
     setError(null);
+    // Solo reescribe origen/redes/web si la lectura los trajo (hasLinks). Si el
+    // perfil se leyó degradado, se mandan undefined → no se tocan (no se borran).
+    const links = profile.hasLinks
+      ? {
+          city,
+          state: stateName,
+          country,
+          website,
+          instagram,
+          x,
+          tiktok,
+          youtube,
+        }
+      : {};
     const res = await updateProfile({
       displayName: name,
       username: uname,
       bio,
       birthdate: birthdate ? birthdate : me?.birthdate ? null : undefined,
+      ...links,
     });
     setSaving(false);
     if (!res.ok) {
@@ -573,6 +624,7 @@ function EditProfileModal({
       onClose={onClose}
       title={t("profile.edit")}
       className="w-[440px]"
+      closeOnEscape={!pickedAvatarFile}
       footer={
         <div className="flex justify-end gap-2.5">
           <Button variant="secondary" sound="soft" onClick={onClose}>
@@ -604,31 +656,52 @@ function EditProfileModal({
         <button
           type="button"
           onClick={() => bannerRef.current?.click()}
-          className="absolute bottom-2 right-2 flex items-center gap-2 rounded-pill bg-[rgba(251,250,246,0.92)] px-3 py-1.5 font-sans text-[12px] font-semibold text-[#1A1714] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-[1.03]"
+          disabled={bannerUploading}
+          className={cn(
+            "absolute bottom-2 right-2 flex items-center gap-2 rounded-pill bg-[rgba(251,250,246,0.92)] px-3 py-1.5 font-sans text-[12px] font-semibold text-[#1A1714] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-[1.03]",
+            bannerUploading && "opacity-70",
+          )}
         >
           <Camera size={13} strokeWidth={1.8} />
-          {t("profile.changeBanner")}
+          {bannerUploading ? t("flow.editCoverUploading") : t("profile.changeBanner")}
         </button>
       </div>
 
       <div className="mb-5 flex items-center gap-4">
-        <Avatar name={name || profile.displayName} src={avatarUrl} size={74} />
+        <span className={cn("inline-block", avatarUploading && "opacity-60")}>
+          <Avatar name={name || profile.displayName} src={avatarUrl} size={74} />
+        </span>
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => void onPickPhoto(e.target.files?.[0] ?? null)}
+          onChange={(e) => {
+            onPickPhoto(e.target.files?.[0] ?? null);
+            e.target.value = "";
+          }}
         />
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="flex items-center gap-2 rounded-pill border border-line-2 px-4 py-2 font-sans text-[13px] font-semibold text-ink transition-colors hover-tint"
+          disabled={avatarUploading}
+          className="flex items-center gap-2 rounded-pill border border-line-2 px-4 py-2 font-sans text-[13px] font-semibold text-ink transition-colors hover-tint disabled:opacity-60"
         >
           <Camera size={15} strokeWidth={1.7} />
           {t("profile.changePhoto")}
         </button>
       </div>
+      {pickedAvatarFile && (
+        <ImageCropper
+          file={pickedAvatarFile}
+          round
+          title={t("avatar.crop.title")}
+          hint={t("avatar.crop.hint")}
+          confirmLabel={t("avatar.crop.confirm")}
+          onClose={() => setPickedAvatarFile(null)}
+          onCropped={(blob) => void onCroppedAvatar(blob)}
+        />
+      )}
 
       <div className="flex flex-col gap-3.5">
         <Field label={t("onb.profile.name")}>
@@ -662,6 +735,50 @@ function EditProfileModal({
             className={cn(inputCls, "resize-none font-serif text-[16px]")}
           />
         </Field>
+        <Field label={t("profile.origin")}>
+          <div className="grid grid-cols-3 gap-2">
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder={t("profile.city")}
+              aria-label={t("profile.city")}
+              className={inputCls}
+            />
+            <input
+              value={stateName}
+              onChange={(e) => setStateName(e.target.value)}
+              placeholder={t("profile.state")}
+              aria-label={t("profile.state")}
+              className={inputCls}
+            />
+            <input
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              placeholder={t("profile.country")}
+              aria-label={t("profile.country")}
+              className={inputCls}
+            />
+          </div>
+        </Field>
+        <Field label={t("profile.website")}>
+          <input
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            inputMode="url"
+            autoCapitalize="none"
+            placeholder={t("profile.websitePlaceholder")}
+            aria-label={t("profile.website")}
+            className={inputCls}
+          />
+        </Field>
+        <Field label={t("profile.socials")}>
+          <div className="flex flex-col gap-2">
+            <SocialInput name="Instagram" value={instagram} onChange={setInstagram} placeholder={t("profile.socialPlaceholder")} />
+            <SocialInput name="X" value={x} onChange={setX} placeholder={t("profile.socialPlaceholder")} />
+            <SocialInput name="TikTok" value={tiktok} onChange={setTiktok} placeholder={t("profile.socialPlaceholder")} />
+            <SocialInput name="YouTube" value={youtube} onChange={setYoutube} placeholder={t("profile.socialPlaceholder")} />
+          </div>
+        </Field>
         <Field label={t("profile.birthdate")}>
           <input
             type="date"
@@ -693,5 +810,37 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
       </span>
       {children}
     </label>
+  );
+}
+
+/** Input de red social: etiqueta de plataforma + «@» + handle. Se guarda solo
+ *  el handle limpio (normalizeHandle en updateProfile). */
+function SocialInput({
+  name,
+  value,
+  onChange,
+  placeholder,
+}: {
+  name: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <span className="flex items-center overflow-hidden rounded-md border border-line-2 bg-surface focus-within:border-grana">
+      <span className="w-[82px] flex-none border-r border-line-2 py-2.5 pl-3 pr-2 font-sans text-[13px] text-text-2">
+        {name}
+      </span>
+      <span className="py-2.5 pl-2.5 pr-0.5 font-sans text-[15px] text-text-2">@</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        autoCapitalize="none"
+        autoComplete="off"
+        aria-label={name}
+        placeholder={placeholder}
+        className="min-w-0 flex-1 border-none bg-transparent py-2.5 pl-0.5 pr-3.5 font-sans text-[15px] text-ink outline-none placeholder:text-text-3"
+      />
+    </span>
   );
 }

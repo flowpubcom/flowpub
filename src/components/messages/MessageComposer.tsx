@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mic, Send, Square } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { EmojiButton } from "@/components/ui";
 import { useSound } from "@/providers/SoundProvider";
 import { useRecorder } from "@/lib/useRecorder";
 import { useI18n } from "@/providers/I18nProvider";
@@ -38,6 +39,7 @@ export function MessageComposer({
   const { t } = useI18n();
   const recorder = useRecorder(MAX_VOICE);
   const [text, setText] = useState("");
+  const textRef = useRef<HTMLInputElement>(null);
   const [sending, setSending] = useState(false);
   const [voiceState, setVoiceState] = useState<"idle" | "recording" | "processing">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +101,7 @@ export function MessageComposer({
       {voiceState === "idle" && (
         <div className="flex items-center gap-2.5">
           <input
+            ref={textRef}
             type="text"
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -112,6 +115,7 @@ export function MessageComposer({
             aria-label={t("msg.placeholder")}
             className="min-w-0 flex-1 rounded-pill border border-line-2 bg-transparent px-4 py-3 font-sans text-[14px] text-ink outline-none transition-colors focus:border-grana"
           />
+          <EmojiButton targetRef={textRef} value={text} onChange={setText} />
           <button
             type="button"
             onClick={() => void startVoice()}

@@ -20,12 +20,14 @@ import {
   isUsernameAvailable,
   isValidUsername,
   normalizeUsername,
+  uploadAvatar,
 } from "@/data/profileApi";
 import { redeemInvite } from "@/data/invitesClient";
 import { tagName, type TagRow } from "@/data/tags";
 import type { DictKey } from "@/lib/i18n/dictionaries";
 import { FlowMark } from "@/components/brand";
 import { useLegal } from "@/providers/LegalProvider";
+import { ImageCropper } from "@/components/profile/ImageCropper";
 import { BrandHypnotic, BrandLockup } from "./BrandHypnotic";
 import { Turnstile, captchaEnabled } from "./Turnstile";
 
@@ -73,6 +75,12 @@ export function Onboarding({
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const [selected, setSelected] = useState<number[]>([]);
+  // Foto de perfil: si entró por Google, el trigger de alta ya la trajo
+  // (raw_user_meta_data.avatar_url) — se precarga sola, sin pedirla de nuevo.
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [pickedAvatarFile, setPickedAvatarFile] = useState<File | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<DictKey | null>(null);
@@ -107,7 +115,29 @@ export function Onboarding({
     }
     setStep("themes");
     setDisplayName((v) => v || user.displayName);
+    setAvatarUrl((v) => v ?? user.avatarUrl ?? null);
   }, [user, step, router]);
+
+  const onPickAvatar = (file: File | null) => {
+    if (!file) return;
+    play("click");
+    setPickedAvatarFile(file);
+  };
+
+  const onCroppedAvatar = async (blob: Blob) => {
+    setPickedAvatarFile(null);
+    setAvatarUploading(true);
+    const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+    const url = await uploadAvatar(file);
+    setAvatarUploading(false);
+    if (url) {
+      setAvatarUrl(url);
+      play("pop");
+    } else {
+      setError("onb.err.generic");
+      play("soft");
+    }
+  };
 
   // Disponibilidad de usuario (debounce).
   useEffect(() => {
@@ -652,27 +682,74 @@ export function Onboarding({
       </p>
 
       <div className="mb-6 flex items-center gap-[18px] max-lg:justify-center">
-        <div
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            onPickAvatar(e.target.files?.[0] ?? null);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => avatarInputRef.current?.click()}
+          disabled={avatarUploading}
+          aria-label={t(avatarUrl ? "avatar.change" : "avatar.pick")}
           className={cn(
-            "relative grid h-[86px] w-[86px] place-items-center overflow-hidden rounded-pill",
-            displayName.trim()
+            "relative grid h-[86px] w-[86px] flex-none place-items-center overflow-hidden rounded-pill transition-opacity",
+            avatarUrl
               ? "bg-ink"
-              : "border-2 border-dashed border-line-2 bg-surface-2 text-text-3",
+              : displayName.trim()
+                ? "bg-ink"
+                : "border-2 border-dashed border-line-2 bg-surface-2 text-text-3 hover:border-ink",
+            avatarUploading && "opacity-60",
           )}
         >
-          {displayName.trim() ? (
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt=""
+              className="h-full w-full object-cover"
+            />
+          ) : displayName.trim() ? (
             <span className="font-serif text-[34px] italic text-ink-on">
               {displayName.trim()[0]?.toUpperCase()}
             </span>
           ) : (
             <Camera size={26} strokeWidth={1.7} />
           )}
-        </div>
+          {/* Insignia de cámara: siempre visible, invita a cambiarla aunque
+              ya haya foto (p. ej. la que trajo Google). */}
+          <span
+            aria-hidden
+            className="absolute bottom-0 right-0 grid h-6 w-6 place-items-center rounded-pill border-2 border-surface bg-grana text-white"
+          >
+            <Camera size={11} strokeWidth={2.2} />
+          </span>
+        </button>
         <div className="font-sans text-[13px] leading-snug text-text-2 max-lg:hidden">
-          {t("onb.profile.photo")}
-          <br />({t("onb.profile.optional")})
+          {t(avatarUrl ? "avatar.change" : "onb.profile.photo")}
+          {!avatarUrl && (
+            <>
+              <br />({t("onb.profile.optional")})
+            </>
+          )}
         </div>
       </div>
+      {pickedAvatarFile && (
+        <ImageCropper
+          file={pickedAvatarFile}
+          round
+          title={t("avatar.crop.title")}
+          hint={t("avatar.crop.hint")}
+          confirmLabel={t("avatar.crop.confirm")}
+          onClose={() => setPickedAvatarFile(null)}
+          onCropped={(blob) => void onCroppedAvatar(blob)}
+        />
+      )}
 
       <div className="flex max-w-[420px] flex-col gap-4">
         <label className="block">
