@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, LayoutDashboard, LogOut, Mic, User } from "lucide-react";
+import { Bell, LayoutDashboard, LogOut, Mic, Settings, User } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Logo } from "@/components/brand";
 import { Avatar, Button } from "@/components/ui";
@@ -454,6 +454,19 @@ function AccountMenuItems({
           {t("menu.admin")}
         </button>
       )}
+      <button
+        type="button"
+        role="menuitem"
+        className={itemClass}
+        onClick={() => {
+          play("click");
+          onNavigate();
+          router.push("/configuracion");
+        }}
+      >
+        <Settings size={16} className="text-text-2" />
+        {t("menu.settings")}
+      </button>
       <button
         type="button"
         role="menuitem"
