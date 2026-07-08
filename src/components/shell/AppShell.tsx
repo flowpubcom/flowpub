@@ -84,7 +84,7 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
   return (
     <div className="mx-auto flex w-full max-w-[1280px]">
       {/* Riel izquierdo (desktop) */}
-      <aside className="sticky top-0 hidden h-dvh w-[236px] flex-none flex-col border-r border-line px-4 py-6 lg:flex">
+      <aside className="sticky top-0 z-30 hidden h-dvh w-[236px] flex-none flex-col border-r border-line px-4 py-6 lg:flex">
         <Link href="/" aria-label="FlowPub" className="mb-7 px-2">
           <Logo markSize={28} textSize={22} beta />
         </Link>
