@@ -12,6 +12,8 @@ import { FlowEditModal } from "@/components/flow/FlowEditModal";
 import { ImageCropper } from "./ImageCropper";
 import { SocialLinks } from "./SocialLinks";
 import { InvitesCard } from "./InvitesCard";
+import { OriginSelect } from "./OriginSelect";
+import { BirthdateSelect } from "./BirthdateSelect";
 import { useI18n } from "@/providers/I18nProvider";
 import { useSound } from "@/providers/SoundProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -213,15 +215,8 @@ export function ProfileView({
             {t("profile.since", { date: fullDate(profile.sinceDate, lang) })}
           </span>
         )}
-        {profile.topics.map((topic) => (
-          <Link
-            key={topic.slug}
-            href={`/tema/${topic.slug}`}
-            className="ml-1.5 rounded-pill bg-grana-wash px-2.5 py-1 font-sans text-[12px] font-semibold text-grana-text transition-transform duration-150 ease-flow hover:scale-[1.03]"
-          >
-            {topic.name}
-          </Link>
-        ))}
+        {/* Los temas elegidos al registrarse NO se muestran en el perfil; se
+            conservan (profile.topics) para, más adelante, personalizar el feed. */}
       </div>
 
       <div className="mb-4">
@@ -736,29 +731,17 @@ function EditProfileModal({
           />
         </Field>
         <Field label={t("profile.origin")}>
-          <div className="grid grid-cols-3 gap-2">
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder={t("profile.city")}
-              aria-label={t("profile.city")}
-              className={inputCls}
-            />
-            <input
-              value={stateName}
-              onChange={(e) => setStateName(e.target.value)}
-              placeholder={t("profile.state")}
-              aria-label={t("profile.state")}
-              className={inputCls}
-            />
-            <input
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              placeholder={t("profile.country")}
-              aria-label={t("profile.country")}
-              className={inputCls}
-            />
-          </div>
+          <OriginSelect
+            country={country}
+            state={stateName}
+            city={city}
+            selectCls={inputCls}
+            onChange={(v) => {
+              setCountry(v.country);
+              setStateName(v.state);
+              setCity(v.city);
+            }}
+          />
         </Field>
         <Field label={t("profile.website")}>
           <input
@@ -780,14 +763,7 @@ function EditProfileModal({
           </div>
         </Field>
         <Field label={t("profile.birthdate")}>
-          <input
-            type="date"
-            value={birthdate}
-            max={new Date().toISOString().slice(0, 10)}
-            onChange={(e) => setBirthdate(e.target.value)}
-            aria-label={t("profile.birthdate")}
-            className={inputCls}
-          />
+          <BirthdateSelect value={birthdate} onChange={setBirthdate} selectCls={inputCls} />
           <span className="mt-1 block font-sans text-[12px] text-text-2">
             {t("profile.birthdateHint")}
           </span>

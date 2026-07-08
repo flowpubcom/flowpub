@@ -23,6 +23,7 @@ const es = {
   "pub.emptyFiltered": "Nada por aquí con ese filtro. Prueba otro tema o duración.",
 
   "player.speed": "Velocidad de reproducción",
+  "player.seek": "Barra de progreso — toca para adelantar o atrasar",
 
   "audio": "Audio",
   "play": "Reproducir",
@@ -376,6 +377,7 @@ const en: Record<DictKey, string> = {
   "pub.emptyFiltered": "Nothing here with that filter. Try another topic or duration.",
 
   "player.speed": "Playback speed",
+  "player.seek": "Progress bar — tap to seek",
 
   "audio": "Audio",
   "play": "Play",

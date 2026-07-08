@@ -6,20 +6,34 @@ import { useSound } from "@/providers/SoundProvider";
 
 // Fondo generativo (Three.js) de la landing: DOS capas de partículas (cerca +
 // lejos, para dar profundidad) que fluyen como una voz, ondulan, derivan y
-// responden al scroll y al cursor. Interactivo: al TOCAR (tap/click en zona no
-// interactiva) se lanza una onda que empuja las partículas cercanas y suena una
-// burbuja sutil. Paleta de marca; voltea con el tema. Respeta
-// prefers-reduced-motion (frame quieto, sin interacción). Limpia TODO al
-// desmontar (geo/mat/sprite/renderer/canvas/listeners).
+// responden al scroll y al cursor. Interactivo de dos formas:
+//   · TAP/click en zona vacía → onda que empuja las cercanas + «burbuja».
+//   · el cursor PASA cerca de una → estalla suavecito + «spark».
+// Paleta de marca; voltea con el tema. Respeta prefers-reduced-motion (frame
+// quieto, sin interacción). Limpia TODO al desmontar.
 
 type Props = { dark: boolean };
 
 const LIGHT = ["#1A1714", "#C0303A", "#D98A3D", "#9A2530", "#6E685D"];
 const DARK = ["#F2EFE8", "#C0303A", "#D98A3D", "#F6D49A", "#EC9DA2"];
 
-const RIPPLE_LIFE = 0.85; // s de vida de una onda
-const RIPPLE_SPEED = 9; // u/s de avance del frente
-const RIPPLE_WIDTH = 1.8; // grosor del frente
+// Onda de un tap.
+const TAP = { strength: 1, speed: 9, life: 0.85, width: 1.8 };
+// Estallido suave al pasar el cursor.
+const HOVER = { strength: 0.55, speed: 6, life: 0.5, width: 1.1 };
+const HOVER_R2 = 0.5 * 0.5; // radio² (unidades de mundo) para "tocar" una partícula
+const HOVER_COOLDOWN = 2.0; // s antes de que una partícula pueda re-estallar
+const SPARK_THROTTLE = 0.09; // s entre sonidos de spark
+
+interface Ripple {
+  x: number;
+  y: number;
+  t: number;
+  strength: number;
+  speed: number;
+  life: number;
+  width: number;
+}
 
 function roundSprite() {
   const c = document.createElement("canvas");
@@ -45,6 +59,7 @@ interface Layer {
   pos: THREE.BufferAttribute;
   base: Float32Array;
   seeds: Float32Array;
+  popAt: Float32Array;
   count: number;
   waveScale: number;
   rippleAmp: number;
@@ -54,6 +69,7 @@ export default function ThreeStage({ dark }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const progRef = useRef(0);
   const ptr = useRef({ x: 0, y: 0 });
+  const lastMoveRef = useRef(0);
   const { play } = useSound();
   const playRef = useRef(play);
   playRef.current = play;
@@ -138,17 +154,18 @@ export default function ThreeStage({ dark }: Props) {
         pos: geo.attributes.position as THREE.BufferAttribute,
         base: positions.slice(),
         seeds,
+        popAt: new Float32Array(count),
         count,
         waveScale: opts.waveScale,
         rippleAmp: opts.rippleAmp,
       };
     };
 
-    // Capa cercana (más presente) + capa lejana (más chica, más tenue) = profundidad.
+    // Más chicas y más transparentes que antes. Cerca (presentes) + lejos (tenues).
     const near = buildLayer({
       count: reduce ? 200 : Math.min(640, Math.round(area / 2500)),
-      size: dark ? 0.2 : 0.15,
-      opacity: dark ? 0.6 : 0.42,
+      size: dark ? 0.15 : 0.11,
+      opacity: dark ? 0.5 : 0.34,
       zMin: -3,
       zMax: 3,
       waveScale: 1,
@@ -156,8 +173,8 @@ export default function ThreeStage({ dark }: Props) {
     });
     const far = buildLayer({
       count: reduce ? 120 : Math.min(440, Math.round(area / 3600)),
-      size: dark ? 0.1 : 0.08,
-      opacity: dark ? 0.34 : 0.24,
+      size: dark ? 0.07 : 0.055,
+      opacity: dark ? 0.26 : 0.18,
       zMin: -16,
       zMax: -9,
       waveScale: 0.7,
@@ -167,11 +184,13 @@ export default function ThreeStage({ dark }: Props) {
 
     const clock = new THREE.Clock();
     let raf = 0;
-    const ripples: { x: number; y: number; t: number }[] = [];
+    const ripples: Ripple[] = [];
+    let lastSpark = 0;
 
     // ── interacción: tap → onda + burbuja ──────────────────────────────────
     const raycaster = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
+    const rayDir = new THREE.Vector3();
     const planeZ0 = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     const hitPt = new THREE.Vector3();
     let down: { x: number; y: number; t: number; skip: boolean } | null = null;
@@ -182,7 +201,6 @@ export default function ThreeStage({ dark }: Props) {
         x: e.clientX,
         y: e.clientY,
         t: performance.now(),
-        // No "popear" al tocar controles reales (botones, enlaces, campos).
         skip: !!el?.closest?.(
           'a,button,input,textarea,select,label,[role="button"]',
         ),
@@ -193,14 +211,14 @@ export default function ThreeStage({ dark }: Props) {
       down = null;
       if (!d || reduce) return;
       const moved = Math.hypot(e.clientX - d.x, e.clientY - d.y);
-      if (d.skip || moved > 12 || performance.now() - d.t > 500) return; // fue scroll/drag/control
+      if (d.skip || moved > 12 || performance.now() - d.t > 500) return;
       const rect = renderer.domElement.getBoundingClientRect();
       ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       raycaster.setFromCamera(ndc, camera);
       if (!raycaster.ray.intersectPlane(planeZ0, hitPt)) return;
-      ripples.push({ x: hitPt.x, y: hitPt.y, t: clock.getElapsedTime() });
-      if (ripples.length > 8) ripples.shift();
+      ripples.push({ x: hitPt.x, y: hitPt.y, t: clock.getElapsedTime(), ...TAP });
+      if (ripples.length > 22) ripples.shift();
       playRef.current?.("bubble");
     };
 
@@ -214,6 +232,7 @@ export default function ThreeStage({ dark }: Props) {
     const onPointer = (e: PointerEvent) => {
       ptr.current.x = (e.clientX / window.innerWidth) * 2 - 1;
       ptr.current.y = (e.clientY / window.innerHeight) * 2 - 1;
+      lastMoveRef.current = performance.now();
     };
     const onResize = () => {
       camera.aspect = w() / h();
@@ -232,7 +251,45 @@ export default function ThreeStage({ dark }: Props) {
     const frame = () => {
       const t = clock.getElapsedTime();
       const prog = progRef.current;
-      while (ripples.length && t - ripples[0].t > RIPPLE_LIFE) ripples.shift();
+      while (ripples.length && t - ripples[0].t > ripples[0].life) ripples.shift();
+
+      // Estallido suave al pasar el cursor cerca de una partícula (capa cercana).
+      if (performance.now() - lastMoveRef.current < 1100) {
+        rayDir
+          .set(ptr.current.x, ptr.current.y, 0.5)
+          .unproject(camera)
+          .sub(camera.position)
+          .normalize();
+        const ox = camera.position.x;
+        const oy = camera.position.y;
+        const oz = camera.position.z;
+        let pops = 0;
+        for (let i = 0; i < near.count && pops < 3; i++) {
+          if (t < near.popAt[i]) continue;
+          const vx = near.base[i * 3] - ox;
+          const vy = near.base[i * 3 + 1] - oy;
+          const vz = near.base[i * 3 + 2] - oz;
+          // distancia² punto→rayo = |v × dir|²  (dir normalizado)
+          const cx = vy * rayDir.z - vz * rayDir.y;
+          const cy = vz * rayDir.x - vx * rayDir.z;
+          const cz = vx * rayDir.y - vy * rayDir.x;
+          if (cx * cx + cy * cy + cz * cz < HOVER_R2) {
+            ripples.push({
+              x: near.base[i * 3],
+              y: near.base[i * 3 + 1],
+              t,
+              ...HOVER,
+            });
+            if (ripples.length > 22) ripples.shift();
+            near.popAt[i] = t + HOVER_COOLDOWN;
+            pops++;
+            if (t - lastSpark > SPARK_THROTTLE) {
+              playRef.current?.("spark", 0.6);
+              lastSpark = t;
+            }
+          }
+        }
+      }
 
       for (const L of layers) {
         for (let i = 0; i < L.count; i++) {
@@ -249,14 +306,15 @@ export default function ThreeStage({ dark }: Props) {
           for (let r = 0; r < ripples.length; r++) {
             const rp = ripples[r];
             const age = t - rp.t;
+            if (age > rp.life) continue;
             const ex = bx - rp.x;
             const ey = by - rp.y;
             const dist = Math.hypot(ex, ey);
-            const front = age * RIPPLE_SPEED;
+            const front = age * rp.speed;
             const band = Math.exp(
-              -((dist - front) * (dist - front)) / (2 * RIPPLE_WIDTH * RIPPLE_WIDTH),
+              -((dist - front) * (dist - front)) / (2 * rp.width * rp.width),
             );
-            const amp = L.rippleAmp * (1 - age / RIPPLE_LIFE) * band;
+            const amp = L.rippleAmp * rp.strength * (1 - age / rp.life) * band;
             if (dist > 0.001) {
               dx += (ex / dist) * amp;
               dy += (ey / dist) * amp;

@@ -46,6 +46,8 @@ export function AudioPlayer({
   const elapsedRef = useRef(0);
   const rateRef = useRef(1);
   const epochRef = useRef(0);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const draggingRef = useRef(false);
 
   const [playing, setPlaying] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -171,6 +173,32 @@ export function AudioPlayer({
     setRate((r) => RATES[(RATES.indexOf(r) + 1) % RATES.length]);
   };
 
+  // Adelantar/atrasar tocando la línea de tiempo (click, arrastre y teclado).
+  const seekToFraction = (frac: number) => {
+    const time = Math.min(1, Math.max(0, frac)) * total;
+    if (src) {
+      const a = audioRef.current;
+      if (a) {
+        try {
+          a.currentTime = time;
+        } catch {
+          /* aún sin metadata: se ignora */
+        }
+      }
+    } else {
+      baseRef.current = time;
+      elapsedRef.current = time;
+      startRef.current = performance.now();
+    }
+    setElapsed(time);
+  };
+  const fracFromClientX = (clientX: number) => {
+    const el = trackRef.current;
+    if (!el) return 0;
+    const rect = el.getBoundingClientRect();
+    return rect.width ? (clientX - rect.left) / rect.width : 0;
+  };
+
   return (
     <div
       className={cn(
@@ -206,24 +234,68 @@ export function AudioPlayer({
         </span>
       ) : (
         <>
-          <svg
-            viewBox="0 0 300 26"
-            fill="none"
-            preserveAspectRatio="none"
-            className={cn("h-[26px]", isFull ? "w-full min-w-0 flex-1" : "w-[124px]")}
-            aria-hidden="true"
+          <div
+            ref={trackRef}
+            role="slider"
+            tabIndex={0}
+            aria-label={t("player.seek")}
+            aria-valuemin={0}
+            aria-valuemax={Math.max(1, Math.round(total))}
+            aria-valuenow={Math.round(elapsed)}
+            aria-valuetext={`${formatTime(elapsed)} / ${formatTime(total)}`}
+            onPointerDown={(e) => {
+              draggingRef.current = true;
+              e.currentTarget.setPointerCapture?.(e.pointerId);
+              blip("tick");
+              seekToFraction(fracFromClientX(e.clientX));
+            }}
+            onPointerMove={(e) => {
+              if (draggingRef.current) seekToFraction(fracFromClientX(e.clientX));
+            }}
+            onPointerUp={(e) => {
+              draggingRef.current = false;
+              e.currentTarget.releasePointerCapture?.(e.pointerId);
+            }}
+            onKeyDown={(e) => {
+              const stepFrac = total > 0 ? 5 / total : 0;
+              if (e.key === "ArrowRight") {
+                e.preventDefault();
+                seekToFraction(progress + stepFrac);
+              } else if (e.key === "ArrowLeft") {
+                e.preventDefault();
+                seekToFraction(progress - stepFrac);
+              } else if (e.key === "Home") {
+                e.preventDefault();
+                seekToFraction(0);
+              } else if (e.key === "End") {
+                e.preventDefault();
+                seekToFraction(1);
+              }
+            }}
+            className={cn(
+              "-my-2 cursor-pointer touch-none py-2",
+              isFull ? "min-w-0 flex-1" : "w-[124px]",
+            )}
           >
-            <path d={VIRGULA} stroke="var(--wave)" strokeWidth={2.4} strokeLinecap="round" />
-            <path
-              d={VIRGULA}
-              stroke="var(--grana)"
-              strokeWidth={2.4}
-              strokeLinecap="round"
-              pathLength={1}
-              strokeDasharray={1}
-              strokeDashoffset={1 - progress}
-            />
-          </svg>
+            <svg
+              viewBox="0 0 300 26"
+              fill="none"
+              preserveAspectRatio="none"
+              className="block h-[26px] w-full"
+              aria-hidden="true"
+            >
+              <path d={VIRGULA} stroke="var(--wave)" strokeWidth={2.4} strokeLinecap="round" />
+              <path
+                d={VIRGULA}
+                stroke="var(--grana)"
+                strokeWidth={2.4}
+                strokeLinecap="round"
+                pathLength={1}
+                strokeDasharray={1}
+                strokeDashoffset={1 - progress}
+              />
+            </svg>
+          </div>
 
           <span className="flex-none font-mono text-[12px] tabular-nums text-text-2">
             {isFull ? `${formatTime(elapsed)} / ${formatTime(total)}` : formatTime(total)}

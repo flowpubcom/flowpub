@@ -2,7 +2,14 @@
 // exponencial ~140ms). No viene en los .dc.html; aquí está la fuente de verdad.
 // Frecuencias tomadas del design-map: rec/pop/click/soft/tick.
 
-export type BlipType = "rec" | "pop" | "click" | "soft" | "tick" | "bubble";
+export type BlipType =
+  | "rec"
+  | "pop"
+  | "click"
+  | "soft"
+  | "tick"
+  | "bubble"
+  | "spark";
 
 const FREQ: Record<BlipType, number> = {
   rec: 220,
@@ -11,6 +18,7 @@ const FREQ: Record<BlipType, number> = {
   soft: 320,
   tick: 540,
   bubble: 680, // frecuencia inicial; «bubble» hace un glissando hacia abajo (ver blip)
+  spark: 1020, // «spark»: estallidito muy corto y agudo (hover de partículas)
 };
 
 export interface SoundEngine {
@@ -48,6 +56,20 @@ export function createSoundEngine(): SoundEngine {
     const osc = ac.createOscillator();
     const gain = ac.createGain();
     osc.type = "sine";
+
+    if (type === "spark") {
+      // Estallidito de partícula al pasar el cursor: muy corto, agudo y tenue.
+      osc.frequency.setValueAtTime(1020, now);
+      osc.frequency.exponentialRampToValueAtTime(720, now + 0.05);
+      const peak = Math.max(0.0002, 0.03 * volume);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(peak, now + 0.003);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
+      osc.connect(gain).connect(ac.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+      return;
+    }
 
     if (type === "bubble") {
       // Burbuja que se truena: glissando corto de agudo→grave, muy sutil.
