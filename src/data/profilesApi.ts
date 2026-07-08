@@ -14,10 +14,10 @@ export interface PublicProfile {
   bannerUrl: string | null;
   bio: string | null;
   location: string | null;
-  /** Año de alta («En FlowPub desde YYYY»). */
-  sinceYear: number | null;
-  /** Nombres de sus temas elegidos. */
-  topics: string[];
+  /** Fecha de alta ISO («En FlowPub desde el {fecha}»); formatear con fullDate(). */
+  sinceDate: string | null;
+  /** Temas elegidos, con slug para enlazar a su hub (/tema/[slug]). */
+  topics: { name: string; slug: string }[];
   /** Invitaciones canjeadas (para la badge OG); 0 si aún no corre migration_18. */
   inviteRedemptions: number;
 }
@@ -32,10 +32,10 @@ export const fetchProfileByUsername = cache(
   async (username: string): Promise<PublicProfile | null> => {
     const supabase = await createClient();
     const SEL =
-      "id,username,display_name,avatar_url,banner_url,bio,location,created_at,profile_tags(tags(name_es))";
+      "id,username,display_name,avatar_url,banner_url,bio,location,created_at,profile_tags(tags(name_es,slug))";
     // Cascada tolerante: sin banner_url (migración 14 pendiente) reintenta.
     const SEL_LEGACY =
-      "id,username,display_name,avatar_url,bio,location,created_at,profile_tags(tags(name_es))";
+      "id,username,display_name,avatar_url,bio,location,created_at,profile_tags(tags(name_es,slug))";
     let { data, error } = await supabase
       .from("profiles")
       .select(SEL)
@@ -66,13 +66,14 @@ export const fetchProfileByUsername = cache(
       bannerUrl: (row.banner_url as string | null) ?? null,
       bio: (row.bio as string | null) ?? null,
       location: (row.location as string | null) ?? null,
-      sinceYear: row.created_at
-        ? new Date(row.created_at as string).getFullYear()
-        : null,
+      sinceDate: (row.created_at as string | null) ?? null,
       topics: (row.profile_tags ?? [])
-
-        .map((pt: any) => pt.tags?.name_es)
-        .filter(Boolean),
+        .map((pt: any) =>
+          pt.tags?.name_es && pt.tags?.slug
+            ? { name: pt.tags.name_es as string, slug: pt.tags.slug as string }
+            : null,
+        )
+        .filter((t: { name: string; slug: string } | null): t is { name: string; slug: string } => t !== null),
       inviteRedemptions: redErr ? 0 : Number(redemptions ?? 0),
     };
   },

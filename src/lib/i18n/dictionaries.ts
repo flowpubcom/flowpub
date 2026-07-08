@@ -183,7 +183,7 @@ const es = {
   "profile.followingCount": "Siguiendo",
   "profile.liked": "Me gusta",
   "profile.drafts": "Borradores",
-  "profile.since": "En FlowPub desde {y}",
+  "profile.since": "En FlowPub desde el {date}",
   "profile.saveChanges": "Guardar cambios",
   "profile.changePhoto": "Cambiar foto",
   "profile.changeBanner": "Cambiar portada",
@@ -203,6 +203,7 @@ const es = {
     "Cualquiera puede escuchar el Pub. Para publicar tu voz, crea tu cuenta —toma menos de un minuto.",
   "auth.google": "Continuar con Google",
   "auth.email": "Crear cuenta con correo",
+  "onb.or": "o",
   "auth.dismiss": "Ahora no, sigo escuchando",
   "auth.signout": "Cerrar sesión",
   // Siempre en inglés (ES y EN): ahorran espacio en el chrome.
@@ -298,6 +299,7 @@ const es = {
   "invites.progress.max": "{n} amigos se han unido — ¡ya tienes las 3 estrellas OG!",
   "badge.og.label": "OG",
   "badge.og.aria": "Insignia OG: {n} invitaciones canjeadas",
+  "badge.founder.aria": "Creador de FlowPub",
   "invite.waText":
     "Te invito a FlowPub: hablas y tu voz se vuelve publicación. Entra con mi invitación:",
   "invite.landing.eyebrow": "Tienes una invitación",
@@ -513,7 +515,7 @@ const en: Record<DictKey, string> = {
   "profile.followingCount": "Following",
   "profile.liked": "Likes",
   "profile.drafts": "Drafts",
-  "profile.since": "On FlowPub since {y}",
+  "profile.since": "On FlowPub since {date}",
   "profile.saveChanges": "Save changes",
   "profile.changePhoto": "Change photo",
   "profile.changeBanner": "Change banner",
@@ -533,6 +535,7 @@ const en: Record<DictKey, string> = {
     "Anyone can listen to the Pub. To publish your voice, create your account —it takes less than a minute.",
   "auth.google": "Continue with Google",
   "auth.email": "Create account with email",
+  "onb.or": "or",
   "auth.dismiss": "Not now, I'll keep listening",
   "auth.signout": "Sign out",
   // Always English (ES and EN): saves space in the chrome.
@@ -628,6 +631,7 @@ const en: Record<DictKey, string> = {
   "invites.progress.max": "{n} friends have joined — you've earned all 3 OG stars!",
   "badge.og.label": "OG",
   "badge.og.aria": "OG badge: {n} invites redeemed",
+  "badge.founder.aria": "FlowPub creator",
   "invite.waText":
     "I'm inviting you to FlowPub: you speak and your voice becomes a publication. Join with my invitation:",
   "invite.landing.eyebrow": "You have an invitation",

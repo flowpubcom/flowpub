@@ -301,13 +301,9 @@ export function Onboarding({
       rel="noopener noreferrer"
       className={cn(
         "font-sans text-[11px] underline-offset-2 transition-colors hover:underline",
-        !dark && "text-text-2 hover:text-ink",
+        !dark && "text-grana-text",
       )}
-      style={
-        dark
-          ? { color: "color-mix(in srgb, var(--amate) 60%, transparent)" }
-          : undefined
-      }
+      style={dark ? { color: "#EC9DA2" } : undefined}
     >
       {t("credit")}
     </a>
@@ -450,52 +446,64 @@ export function Onboarding({
     }
     const isLogin = authMode === "login";
     return (
-      <form
-        onSubmit={isLogin ? onLogin : onSignup}
-        className="flex max-w-[380px] flex-col gap-3.5"
-      >
-        {emailPassFields()}
-        {isLogin && (
-          <p className="-mt-1 text-right font-sans text-[13px]">
+      <div className="flex max-w-[380px] flex-col gap-4">
+        {/* Google siempre visible aquí: quien llega directo a /entrar?m=signup
+            o ?m=login (link del riel, top bar móvil, o compartido) no tiene
+            forma de volver a la pantalla «elige método» — así que ambas
+            entradas la traen de una vez. */}
+        {googleButton()}
+        <div className="flex items-center gap-3" aria-hidden>
+          <span className="h-px flex-1 bg-line" />
+          <span className="font-sans text-[12px] text-text-2">{t("onb.or")}</span>
+          <span className="h-px flex-1 bg-line" />
+        </div>
+        <form
+          onSubmit={isLogin ? onLogin : onSignup}
+          className="flex flex-col gap-3.5"
+        >
+          {emailPassFields()}
+          {isLogin && (
+            <p className="-mt-1 text-right font-sans text-[13px]">
+              <button
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setResetSent(false);
+                  setAuthMode("forgot");
+                }}
+                className="font-medium text-text-2 transition-colors hover:text-grana-text"
+              >
+                {t("onb.forgot")}
+              </button>
+            </p>
+          )}
+          <Turnstile onToken={setCaptchaToken} resetRef={captchaReset} />
+          {errText()}
+          <button
+            type="submit"
+            disabled={submitting || (captchaEnabled && !captchaToken)}
+            className={cn(
+              granaBtn,
+              (submitting || (captchaEnabled && !captchaToken)) && "opacity-60",
+            )}
+          >
+            {t(isLogin ? "onb.login.submit" : "onb.signup.submit")}
+          </button>
+          <p className="mt-1 font-sans text-[13px] text-text-2">
+            {isLogin ? t("onb.noAccount") : t("onb.haveAccount")}{" "}
             <button
               type="button"
               onClick={() => {
                 setError(null);
-                setResetSent(false);
-                setAuthMode("forgot");
+                setAuthMode(isLogin ? "signup" : "login");
               }}
-              className="font-medium text-text-2 transition-colors hover:text-grana-text"
+              className="font-semibold text-grana-text"
             >
-              {t("onb.forgot")}
+              {isLogin ? t("onb.createOne") : t("onb.login")}
             </button>
           </p>
-        )}
-        <Turnstile onToken={setCaptchaToken} resetRef={captchaReset} />
-        {errText()}
-        <button
-          type="submit"
-          disabled={submitting || (captchaEnabled && !captchaToken)}
-          className={cn(
-            granaBtn,
-            (submitting || (captchaEnabled && !captchaToken)) && "opacity-60",
-          )}
-        >
-          {t(isLogin ? "onb.login.submit" : "onb.signup.submit")}
-        </button>
-        <p className="mt-1 font-sans text-[13px] text-text-2">
-          {isLogin ? t("onb.noAccount") : t("onb.haveAccount")}{" "}
-          <button
-            type="button"
-            onClick={() => {
-              setError(null);
-              setAuthMode(isLogin ? "signup" : "login");
-            }}
-            className="font-semibold text-grana-text"
-          >
-            {isLogin ? t("onb.createOne") : t("onb.login")}
-          </button>
-        </p>
-      </form>
+        </form>
+      </div>
     );
   };
 

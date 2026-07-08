@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2, Star } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Avatar, Button, Modal } from "@/components/ui";
+import { FlowMark } from "@/components/brand";
 import { FlowCover } from "@/components/cover";
 import { FlowEditModal } from "@/components/flow/FlowEditModal";
 import { InvitesCard } from "./InvitesCard";
@@ -21,7 +22,7 @@ import {
   uploadAvatar,
   uploadBanner,
 } from "@/data/profileApi";
-import { compactNumber, durationLabel, ogLevel } from "@/lib/format";
+import { compactNumber, durationLabel, fullDate, ogLevel } from "@/lib/format";
 import type { Flow } from "@/data/types";
 import type { ProfileStats, PublicProfile } from "@/data/profilesApi";
 
@@ -44,7 +45,7 @@ export function ProfileView({
   isOwn: boolean;
   initialFollowing: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { play } = useSound();
   const { user, refresh } = useAuth();
   const router = useRouter();
@@ -181,6 +182,7 @@ export function ProfileView({
         <h1 className="font-serif text-[32px] font-medium leading-[1.1] text-ink">
           {profile.displayName}
         </h1>
+        <FounderBadge username={profile.username} />
         <OgBadge redemptions={profile.inviteRedemptions} />
       </div>
       <p className="mb-3.5 mt-1 font-sans text-[15px] text-text-2">
@@ -201,18 +203,19 @@ export function ProfileView({
             <span className="text-text-3">·</span>
           </>
         )}
-        {profile.sinceYear && (
+        {profile.sinceDate && (
           <span className="font-sans text-[13px] text-text-2">
-            {t("profile.since", { y: profile.sinceYear })}
+            {t("profile.since", { date: fullDate(profile.sinceDate, lang) })}
           </span>
         )}
         {profile.topics.map((topic) => (
-          <span
-            key={topic}
-            className="ml-1.5 rounded-pill bg-grana-wash px-2.5 py-1 font-sans text-[12px] font-semibold text-grana-700"
+          <Link
+            key={topic.slug}
+            href={`/tema/${topic.slug}`}
+            className="ml-1.5 rounded-pill bg-grana-wash px-2.5 py-1 font-sans text-[12px] font-semibold text-grana-text transition-transform duration-150 ease-flow hover:scale-[1.03]"
           >
-            {topic}
-          </span>
+            {topic.name}
+          </Link>
         ))}
       </div>
 
@@ -315,6 +318,29 @@ export function ProfileView({
         />
       )}
     </div>
+  );
+}
+
+// Único username que ve esta insignia — es literal, no un rol: el fundador es
+// una persona, no un permiso (a diferencia de is_admin, que puede tener más de
+// un titular el día de mañana).
+const FOUNDER_USERNAME = "julio";
+
+/** Sello del fundador: la vírgula de marca en tinta sólida — discreto (un solo
+ *  ícono, sin texto) pero inconfundible para quien sepa qué es. Solo aparece en
+ *  el perfil de FOUNDER_USERNAME; nadie más puede tenerlo. */
+function FounderBadge({ username }: { username: string }) {
+  const { t } = useI18n();
+  if (username !== FOUNDER_USERNAME) return null;
+  const label = t("badge.founder.aria");
+  return (
+    <span
+      title={label}
+      aria-label={label}
+      className="inline-flex h-6 w-6 flex-none items-center justify-center rounded-pill bg-ink text-ink-on"
+    >
+      <FlowMark size={13} strokeWidth={20} breathe={false} intro={false} aria-hidden />
+    </span>
   );
 }
 

@@ -60,3 +60,12 @@ export function nextOgMilestone(redemptions: number): number | null {
   const next = OG_MILESTONES.find((m) => redemptions < m);
   return next ?? null;
 }
+
+/** «7 de julio de 2026» / «July 7, 2026» — fecha completa de alta (perfil). */
+export function fullDate(iso: string, lang: "es" | "en" = "es"): string {
+  return new Intl.DateTimeFormat(lang === "es" ? "es-MX" : "en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(iso));
+}

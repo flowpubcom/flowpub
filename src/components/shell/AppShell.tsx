@@ -47,7 +47,7 @@ function LegalLinks({ className }: { className?: string }) {
         href="https://juliosahagunsanchez.com/"
         target="_blank"
         rel="noopener noreferrer"
-        className="font-sans text-[11px] text-text-2 transition-colors hover:text-ink"
+        className="font-sans text-[11px] text-grana-text transition-opacity hover:opacity-80"
       >
         {t("credit")}
       </a>
@@ -99,12 +99,14 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
               unread={item.key === "notifications" ? unreadCount : 0}
             />
           ))}
-          {/* En lugar del item «Perfil»: cuenta (avatar + menú) o el par
-              Sign up | Login para invitados. */}
-          {user ? (
-            <RailAccountMenu user={user} active={active === "profile"} />
-          ) : (
-            <div className="flex items-center gap-1.5 px-3.5 py-2.5 font-sans text-[15px] font-medium">
+          {/* En lugar del item «Perfil»: cuenta (avatar + menú). Invitados no
+              tienen equivalente aquí — su par Sign up | Login vive al fondo,
+              justo arriba de Grabar un Flow. */}
+          {user && <RailAccountMenu user={user} active={active === "profile"} />}
+        </nav>
+        <div className="mt-auto pt-4">
+          {!user && (
+            <div className="mb-3 flex items-center justify-center gap-1.5 font-sans text-[15px] font-medium">
               <Link
                 href="/entrar?m=signup"
                 onClick={() => play("click")}
@@ -122,8 +124,6 @@ export function AppShell({ children, active = "pub", rightRail, flush = false }:
               </Link>
             </div>
           )}
-        </nav>
-        <div className="mt-auto pt-4">
           <Button fullWidth size="lg" sound={null} onClick={onRecord}>
             <Mic size={18} />
             {t("record")}
