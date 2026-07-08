@@ -10,8 +10,6 @@ const MARK_PATH =
  * movimiento se apaga con prefers-reduced-motion (capa global).
  */
 function HypnoticBg() {
-  const ring = "color-mix(in srgb, var(--champagne) 18%, transparent)";
-  const ringDash = "color-mix(in srgb, var(--champagne) 14%, transparent)";
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       <span
@@ -48,26 +46,6 @@ function HypnoticBg() {
           opacity: 0.45,
           background: "radial-gradient(circle, var(--grana-700), transparent 70%)",
           animation: "fp-blob3 12s ease-in-out infinite",
-        }}
-      />
-      <span
-        className="absolute left-1/2 top-1/2 rounded-pill"
-        style={{
-          width: 300,
-          height: 300,
-          margin: "-150px 0 0 -150px",
-          border: `1px solid ${ring}`,
-          animation: "fp-spin 40s linear infinite",
-        }}
-      />
-      <span
-        className="absolute left-1/2 top-1/2 rounded-pill"
-        style={{
-          width: 210,
-          height: 210,
-          margin: "-105px 0 0 -105px",
-          border: `1px dashed ${ringDash}`,
-          animation: "fp-spin 28s linear infinite reverse",
         }}
       />
     </div>

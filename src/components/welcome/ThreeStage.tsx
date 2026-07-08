@@ -165,7 +165,7 @@ export default function ThreeStage({ dark }: Props) {
     const near = buildLayer({
       count: reduce ? 200 : Math.min(640, Math.round(area / 2500)),
       size: dark ? 0.15 : 0.11,
-      opacity: dark ? 0.5 : 0.34,
+      opacity: dark ? 0.3 : 0.34,
       zMin: -3,
       zMax: 3,
       waveScale: 1,
@@ -174,7 +174,7 @@ export default function ThreeStage({ dark }: Props) {
     const far = buildLayer({
       count: reduce ? 120 : Math.min(440, Math.round(area / 3600)),
       size: dark ? 0.07 : 0.055,
-      opacity: dark ? 0.26 : 0.18,
+      opacity: dark ? 0.14 : 0.18,
       zMin: -16,
       zMax: -9,
       waveScale: 0.7,
@@ -255,8 +255,10 @@ export default function ThreeStage({ dark }: Props) {
 
       // Estallido suave al pasar el cursor cerca de una partícula (capa cercana).
       if (performance.now() - lastMoveRef.current < 1100) {
+        // NDC: la Y va invertida respecto a la coordenada de pantalla; sin este
+        // signo las partículas estallaban en el espejo vertical del cursor.
         rayDir
-          .set(ptr.current.x, ptr.current.y, 0.5)
+          .set(ptr.current.x, -ptr.current.y, 0.5)
           .unproject(camera)
           .sub(camera.position)
           .normalize();
