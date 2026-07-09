@@ -1,9 +1,63 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 9 — 2026-07-08 (landing `/splash` con Three.js,
-> pitch deck `/deck`, paquete de marca en `D:\FlowPub\design`, campaña de marketing
-> en `D:\FlowPub\marketing`, fix del FAB de cuenta. Build de producción VERDE)**.
+> Última actualización: **sesión 10 — 2026-07-08 (audit integral multi-agente +
+> fixes: i18n/tema globales en las 4 superficies, seguridad, correctness, a11y.
+> Deploy `a9d4b54` VIVO; ⚠️ 3 pasos manuales de backend pendientes de Julio)**.
+
+## Sesión 10 — 2026-07-08: audit integral multi-agente (deploy `a9d4b54`)
+
+Audit de 5 dimensiones (i18n, tema, seguridad, correctness, a11y/perf) con
+verificación adversarial + 6 agentes de fixes. typecheck/lint/build VERDES;
+verificado en vivo (deck EN+oscuro, sincronía global, splash móvil). En `main`.
+
+**👉 Julio — 3 pasos manuales pendientes:**
+1. SQL Editor: correr **`migration_23_guard_flow_status.sql`** (trigger que
+   reserva `featured`/`reported` al admin; hoy cualquier autor puede
+   auto-destacarse por REST).
+2. SQL Editor: correr **`migration_24_notifications_realtime.sql`** (mete
+   `notifications` a la publicación Realtime; sin esto el punto de la campana
+   no aparece en vivo — solo al navegar/volver a la pestaña).
+3. Redeploy del Edge Function: `supabase functions deploy send-push` — ANTES
+   confirma `supabase secrets list` muestre `WEBHOOK_SECRET` (ahora es
+   fail-closed: sin secret los push responden 401 a propósito).
+
+**Qué cambió (por dimensión):**
+- **i18n global**: `/deck` completamente bilingüe ES/EN (14 slides + chrome +
+  arias, `bi(es,en)` en `data.ts`, `LangToggle` en su header, reacciona en vivo
+  al idioma global). `LangToggle` de `/splash` visible en móvil (wordmark cede
+  bajo 420px). `<html lang>` se queda `"es"` en SSR **a propósito**: leer
+  `Accept-Language` con `headers()` volvía dinámicas TODAS las rutas estáticas
+  (probado con build A/B); el cliente lo corrige al hidratar.
+- **Tema global**: script anti-FOUC inline en `<head>` (override explícito pinta
+  antes del primer frame; `system` lo sigue cubriendo el `@media` de CSS).
+  `ThemeProvider` arranca leyendo `data-theme` del DOM (adiós parpadeo claro del
+  Three.js/screenshots en SO oscuro) y sincroniza `<meta theme-color>`. Opción
+  «Sistema» en `/configuracion` (la fila Tema es segmented de 3). Bezel del
+  PhoneFrame del deck fijo (`border-tinta`).
+- **Seguridad**: `migration_23` (trigger anti-auto-destacado, cubre INSERT y
+  UPDATE; `service_role`/SQL Editor exentos). `send-push` fail-closed con
+  comparación de secret en tiempo constante. Lo demás salió limpio: secretos,
+  RLS default-deny, XSS (react-markdown sin rehype-raw), open redirects.
+- **Correctness**: notas de voz ya NO se insertan mudas si falla la subida
+  (comments/messages devuelven error). `useRecorder.stop()` idempotente (tope de
+  3 min + click simultáneo ya no cuelga la promesa ni pierde audio). Candados
+  in-flight en like/save/follow. La campana escucha INSERT de `notifications`
+  por Realtime + refetch al enfocar la pestaña.
+- **A11y/tokens**: focus trap en `Modal`; fila de notificaciones rediseñada con
+  link estirado (sin interactivos anidados en `role="button"`). `--text-3` a AA:
+  claro `#797265` (4.56:1), oscuro `#948d80` (5.26:1). Tokens nuevos:
+  `--grana-text-on-dark`, `--scrim`/`-soft`/`-strong`, `--shadow-thumb` (con
+  relieve visible en oscuro).
+
+**Señalado sin tocar (decisiones abiertas):**
+- El admin (`AdminView`) sigue en español fijo — Julio es el único admin; si se
+  quiere bilingüe, va por `tr(es,en)` como SettingsView.
+- Dos sombras bespoke del botón de grabar (`Composer.tsx` ~450/~583) no se
+  tokenizaron: mapearlas a tokens existentes cambiaría el look del CTA.
+- `/api/track` puede inflarse con IPs rotativas — trade-off aceptado
+  (analítica best-effort, primera parte).
+- `backdrop-filter` en headers sticky — gotcha conocido, sin jank reportado.
 
 ## Sesión 9 (cont. 3) — 2026-07-08: Configuración + eliminar cuenta + Web Push
 
