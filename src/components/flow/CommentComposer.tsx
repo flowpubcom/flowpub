@@ -47,7 +47,9 @@ export function CommentComposer({
   const { user } = useAuth();
   const { t } = useI18n();
   const recorder = useRecorder(MAX_VOICE);
-  const [tab, setTab] = useState<"text" | "voice">("text");
+  // Voice-first: el composer abre en voz (sin auto-grabar; el permiso de mic
+  // solo salta al tocar Grabar). Escribir queda a un tap en la pestaña de texto.
+  const [tab, setTab] = useState<"voice" | "text">("voice");
   const [text, setText] = useState("");
   const textRef = useRef<HTMLTextAreaElement>(null);
   const [sending, setSending] = useState(false);
@@ -154,7 +156,7 @@ export function CommentComposer({
   return (
     <div className="rounded-[16px] border border-line bg-surface p-4">
       <div className="mb-3 inline-flex rounded-pill bg-surface-2 p-[3px]">
-        {(["text", "voice"] as const).map((v) => (
+        {(["voice", "text"] as const).map((v) => (
           <button
             key={v}
             type="button"
