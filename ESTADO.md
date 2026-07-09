@@ -22,8 +22,12 @@
     Three.js, glass, narrativa por scroll en 6 actos, toggles ES/EN + claro/oscuro
     reales, CTA «¡Saca el Flow!». Corre con `servir.cmd`. Verificada en los 4 combos.
     Pendiente si se hostea: convertir los ~10 PNG reales a WebP (pesa ~22 MB).
-  - **Abierto**: dónde vive la webxperience si se publica (¿`flowpub.app/brag`,
-    subdominio, Vercel aparte?). Julio no ha decidido.
+  - **Webxperience PUBLICADA en `flowpub.app/brag`** (deploy `c50356e`): copiada a
+    `app/public/brag/` con rutas absolutas bajo `/brag/`; los 10 shots reusan
+    `public/shots/` del app (no se duplicaron → el brag hospedado pesa 1.6 MB, no
+    22). Rewrite en `next.config.ts` (`/brag` → `/brag/index.html`) para la URL
+    limpia. La copia de `public/brag/` diverge del original en `marketing/brag/`
+    solo en esas rutas (base absoluta + `/shots/`); si se regenera la pieza, re-aplicar.
 - **backend de la sesión 10 YA CORRIDO por Julio**: migration_23 (candado de
   featured/reported), migration_24 (notifications en Realtime → campana en vivo) y
   redeploy de `send-push` (fail-closed) — confirmado por él el 2026-07-08.
