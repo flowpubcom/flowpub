@@ -29,7 +29,7 @@ import type { Comment } from "@/data/comments";
 // Badge sobre la portada (etiqueta fija tipo sticker: legible sobre ambas
 // variantes de portada, clara y oscura).
 const BADGE =
-  "inline-flex items-center gap-1.5 rounded-pill bg-[rgba(251,250,246,0.92)] px-2.5 py-1 text-[#1A1714]";
+  "inline-flex items-center gap-1.5 rounded-pill bg-papel/90 px-2.5 py-1 text-tinta";
 
 export function FlowCard({ flow }: { flow: Flow }) {
   const { play } = useSound();
@@ -67,6 +67,10 @@ export function FlowCard({ flow }: { flow: Flow }) {
   // declarada y mayoría de edad. El autor siempre puede oír lo suyo.
   const canListen = !flow.adult || isOwn || (user?.isAdult ?? false);
 
+  // Candado in-flight: ignora re-toques con la petición en vuelo, así el
+  // insert/delete no llega fuera de orden y desincroniza BD vs UI.
+  const likePending = useRef(false);
+
   // Optimista con revert: pinta ya, persiste atrás, revierte si falla.
   const toggleLike = async () => {
     if (!user) {
@@ -74,6 +78,8 @@ export function FlowCard({ flow }: { flow: Flow }) {
       router.push("/entrar");
       return;
     }
+    if (likePending.current) return;
+    likePending.current = true;
     const next = !liked;
     setLiked(next);
     setLikes((n) => n + (next ? 1 : -1));
@@ -82,10 +88,14 @@ export function FlowCard({ flow }: { flow: Flow }) {
       setPop(true);
       window.setTimeout(() => setPop(false), 320);
     }
-    const res = await setFlowLike(flow.id, next);
-    if (!res.ok) {
-      setLiked(!next);
-      setLikes((n) => n + (next ? -1 : 1));
+    try {
+      const res = await setFlowLike(flow.id, next);
+      if (!res.ok) {
+        setLiked(!next);
+        setLikes((n) => n + (next ? -1 : 1));
+      }
+    } finally {
+      likePending.current = false;
     }
   };
 

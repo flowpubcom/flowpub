@@ -52,14 +52,28 @@ export const viewport: Viewport = {
   ],
 };
 
+// Anti-FOUC de tema: el default del SO lo resuelve `@media
+// (prefers-color-scheme)` en globals.css, pero un override explícito guardado
+// en localStorage('fp-theme') solo lo aplicaba el ThemeProvider al hidratar —
+// flash garantizado para quien forzó el tema contrario a su SO. Este script
+// corre antes del primer pintado y adelanta el data-theme SOLO si hay valor
+// explícito; con «system» no toca nada y el @media sigue mandando.
+const THEME_INIT = `try{var t=localStorage.getItem("fp-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // No-flash sin script: el default del SO lo resuelve `@media
-  // (prefers-color-scheme)` en globals.css; el override explícito lo aplica el
-  // ThemeProvider vía data-theme. Sin <script> = consola limpia.
+  // <html lang>: se queda "es" en SSR a propósito. Leer Accept-Language con
+  // headers() aquí vuelve dinámico TODO el árbol (verificado con `next build`:
+  // /splash, /deck, /entrar… pasan de ○ prerendered a ƒ on-demand), y perder
+  // el prerender de las páginas públicas cuesta más que el lang provisional.
+  // El I18nProvider corrige document.documentElement.lang al hidratar
+  // (localStorage('fp-lang') / navigator.language).
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT }} />
+      </head>
       <body
         className={`${fraunces.variable} ${hanken.variable} ${spaceMono.variable}`}
       >

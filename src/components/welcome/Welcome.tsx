@@ -264,17 +264,19 @@ export function Welcome() {
 
       {/* header */}
       <header className="glass sticky top-0 z-40 border-b border-line-soft">
-        <div className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-6 py-3">
+        <div className="mx-auto flex w-full max-w-[1080px] items-center justify-between px-4 py-3 sm:px-6">
           <Link
             href="/"
             aria-label="FlowPub"
             className="fp-logo inline-flex items-center gap-2 text-ink"
           >
             <FlowMark size={26} />
-            <Wordmark size={20} />
+            {/* En pantallas muy angostas el wordmark cede su lugar a los
+                toggles de idioma y tema; la vírgula sigue firmando. */}
+            <Wordmark size={20} className="hidden min-[420px]:inline" />
           </Link>
           <div className="flex items-center gap-2">
-            <LangToggle className="hidden sm:inline-flex" />
+            <LangToggle />
             <ThemeToggle />
             <Link
               href="/entrar"

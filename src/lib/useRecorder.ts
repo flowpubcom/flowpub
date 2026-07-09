@@ -60,6 +60,11 @@ export function useRecorder(maxSeconds = 540): Recorder {
   const accMsRef = useRef(0);
   const segStartRef = useRef(0);
 
+  // stop() puede llamarse dos veces casi a la vez (el tope de 3 min y el click
+  // del usuario): guardamos la promesa en vuelo para que la 2ª devuelva la
+  // misma en vez de reasignar onstop y colgar la 1ª (se perdía la grabación).
+  const stopPromiseRef = useRef<Promise<RecordingResult | null> | null>(null);
+
   const clearTimer = useCallback(() => {
     if (timerRef.current) window.clearInterval(timerRef.current);
     timerRef.current = null;
@@ -147,27 +152,48 @@ export function useRecorder(maxSeconds = 540): Recorder {
   }, [startTimer]);
 
   const stop = useCallback(() => {
+    // Reentrante: si ya hay un stop en vuelo, devuelve esa misma promesa.
+    if (stopPromiseRef.current) return stopPromiseRef.current;
+
     const mr = mediaRef.current;
     clearTimer();
     const durationSeconds = Math.min(maxSeconds, currentMs() / 1000);
     setRecording(false);
     setPaused(false);
-    if (!mr) return Promise.resolve(null);
-    return new Promise<RecordingResult | null>((resolve) => {
+
+    // Sin recorder o ya detenido: no hay onstop que esperar; resuelve con lo
+    // que haya (los chunks ya juntados), o null si nunca hubo grabación.
+    if (!mr || mr.state === "inactive") {
+      if (!mr && chunksRef.current.length === 0) {
+        cleanup();
+        return Promise.resolve(null);
+      }
+      const blob = new Blob(chunksRef.current, {
+        type: mimeRef.current || "audio/webm",
+      });
+      cleanup();
+      return Promise.resolve({ blob, durationSeconds });
+    }
+
+    const p = new Promise<RecordingResult | null>((resolve) => {
       mr.onstop = () => {
         const blob = new Blob(chunksRef.current, {
           type: mimeRef.current || "audio/webm",
         });
         cleanup();
+        stopPromiseRef.current = null;
         resolve({ blob, durationSeconds });
       };
       try {
         mr.stop(); // stop() funciona igual desde estado "paused"
       } catch {
         cleanup();
+        stopPromiseRef.current = null;
         resolve(null);
       }
     });
+    stopPromiseRef.current = p;
+    return p;
   }, [maxSeconds, clearTimer, currentMs, cleanup]);
 
   const reset = useCallback(() => {
@@ -179,6 +205,7 @@ export function useRecorder(maxSeconds = 540): Recorder {
     chunksRef.current = [];
     accMsRef.current = 0;
     segStartRef.current = 0;
+    stopPromiseRef.current = null;
   }, [cleanup]);
 
   useEffect(() => cleanup, [cleanup]);

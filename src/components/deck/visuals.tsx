@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ImagePlus, Mic, PenLine, Volume2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FlowMark, Wordmark } from "@/components/brand";
+import { useI18n } from "@/providers/I18nProvider";
 import { ASK } from "./data";
 
 type V = { theme: "light" | "dark"; active: boolean };
@@ -70,19 +71,26 @@ export function NoiseVisual() {
   );
 }
 
-const PHRASE = "Escuchar a alguien tiene una profundidad que leer no da".split(" ");
+const PHRASES = {
+  es: "Escuchar a alguien tiene una profundidad que leer no da".split(" "),
+  en: "Listening to someone has a depth that reading never gives".split(" "),
+};
 export function KaraokeVisual({ active }: V) {
+  const { lang } = useI18n();
+  const phrase = PHRASES[lang];
+  const words = phrase.length;
   const [k, setK] = useState(0);
   useEffect(() => {
+    setK(0); // reinicia el karaoke al cambiar de idioma
     if (!active) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const id = setInterval(() => setK((x) => (x + 1) % PHRASE.length), 420);
+    const id = setInterval(() => setK((x) => (x + 1) % words), 420);
     return () => clearInterval(id);
-  }, [active]);
+  }, [active, words]);
   return (
     <div className="flex h-full w-full flex-col justify-center gap-6">
       <p className="font-serif text-[clamp(1.5rem,3vw,2.4rem)] leading-snug">
-        {PHRASE.map((w, i) => (
+        {phrase.map((w, i) => (
           <span
             key={i}
             className={cn(
@@ -155,12 +163,13 @@ function MiniCover() {
 }
 
 const STEPS = [
-  { Icon: Mic, t: "Grabar" },
-  { Icon: Volume2, t: "Transcribe" },
-  { Icon: PenLine, t: "Pulir" },
-  { Icon: ImagePlus, t: "Portada" },
+  { Icon: Mic, t: { es: "Grabar", en: "Record" } },
+  { Icon: Volume2, t: { es: "Transcribe", en: "Transcribe" } },
+  { Icon: PenLine, t: { es: "Pulir", en: "Polish" } },
+  { Icon: ImagePlus, t: { es: "Portada", en: "Cover" } },
 ];
 export function PipelineVisual() {
+  const { lang } = useI18n();
   return (
     <div className="flex h-full w-full flex-col justify-center">
       <div className="relative">
@@ -170,12 +179,12 @@ export function PipelineVisual() {
         </svg>
         <div className="relative flex justify-between">
           {STEPS.map(({ Icon, t }, i) => (
-            <div key={t} className="flex flex-col items-center gap-2">
+            <div key={t.es} className="flex flex-col items-center gap-2">
               <span className="grid h-12 w-12 place-items-center rounded-tile border border-line bg-surface text-grana-text">
                 <Icon size={20} />
               </span>
               <span className="font-mono text-[11px] text-text-2">0{i + 1}</span>
-              <span className="font-sans text-[13px] font-semibold text-ink">{t}</span>
+              <span className="font-sans text-[13px] font-semibold text-ink">{t[lang]}</span>
             </div>
           ))}
         </div>
@@ -199,9 +208,10 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
   );
 }
 
+// Bezel en tinta cruda (no --ink): los bezels no voltean con el tema.
 function PhoneFrame({ src, alt, className }: { src: string; alt: string; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-[26px] border-[5px] border-ink/85 bg-surface shadow-[var(--shadow-window)]", className)}>
+    <div className={cn("overflow-hidden rounded-[26px] border-[5px] border-tinta/85 bg-surface shadow-[var(--shadow-window)]", className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt={alt} className="block w-full" loading="lazy" />
     </div>
@@ -209,18 +219,30 @@ function PhoneFrame({ src, alt, className }: { src: string; alt: string; classNa
 }
 
 export function FeaturesVisual({ theme }: V) {
+  const { lang } = useI18n();
   return (
     <div className="relative h-full w-full">
-      <BrowserFrame src={`/shots/pub-desktop-${theme}.png`} alt="El Pub de FlowPub" />
-      <PhoneFrame src={`/shots/flow-mobile-${theme}.png`} alt="Un Flow en móvil" className="absolute -bottom-6 -right-2 w-[26%]" />
+      <BrowserFrame
+        src={`/shots/pub-desktop-${theme}.png`}
+        alt={lang === "es" ? "El Pub de FlowPub" : "The Pub in FlowPub"}
+      />
+      <PhoneFrame
+        src={`/shots/flow-mobile-${theme}.png`}
+        alt={lang === "es" ? "Un Flow en móvil" : "A Flow on mobile"}
+        className="absolute -bottom-6 -right-2 w-[26%]"
+      />
     </div>
   );
 }
 
 export function StateVisual({ theme }: V) {
+  const { lang } = useI18n();
   return (
     <div className="grid h-full w-full place-items-center">
-      <BrowserFrame src={`/shots/perfil-desktop-${theme}.png`} alt="Perfil en FlowPub" />
+      <BrowserFrame
+        src={`/shots/perfil-desktop-${theme}.png`}
+        alt={lang === "es" ? "Perfil en FlowPub" : "A profile on FlowPub"}
+      />
     </div>
   );
 }
@@ -248,6 +270,8 @@ export function BrandVisual() {
 }
 
 export function GenerativeVisual() {
+  const { lang } = useI18n();
+  const tr = (es: string, en: string) => (lang === "es" ? es : en);
   return (
     <div className="flex h-full w-full flex-col justify-center gap-5">
       {[
@@ -256,15 +280,21 @@ export function GenerativeVisual() {
         { s: "text-base", o: "opacity-45" },
       ].map((r, i) => (
         <p key={i} className={cn("font-serif italic text-ink", r.s, r.o)} style={{ animation: `fp-rise .6s var(--ease-flow) ${i * 140}ms both` }}>
-          La misma voz, otro ritmo.
+          {tr("La misma voz, otro ritmo.", "The same voice, another rhythm.")}
         </p>
       ))}
-      <p className="font-mono text-[12px] text-grana-text">un LLM orquesta la presentación · la marca no cambia</p>
+      <p className="font-mono text-[12px] text-grana-text">
+        {tr(
+          "un LLM orquesta la presentación · la marca no cambia",
+          "an LLM orchestrates the presentation · the brand never changes",
+        )}
+      </p>
     </div>
   );
 }
 
 export function FounderVisual() {
+  const { lang } = useI18n();
   return (
     <div className="grid h-full w-full place-items-center">
       <svg viewBox="0 0 240 200" className="w-[74%]" aria-hidden>
@@ -281,13 +311,16 @@ export function FounderVisual() {
             <path d="M0 0 L14 -7 L14 7 L0 14 Z" fill="var(--tinta)" opacity="0.18" />
           </g>
         ))}
-        <text x="120" y="185" textAnchor="middle" className="font-mono" fontSize="11" fill="var(--text-2)" fontFamily="var(--font-mono)">barro → código</text>
+        <text x="120" y="185" textAnchor="middle" className="font-mono" fontSize="11" fill="var(--text-2)" fontFamily="var(--font-mono)">
+          {lang === "es" ? "barro → código" : "clay → code"}
+        </text>
       </svg>
     </div>
   );
 }
 
 export function BraidVisual() {
+  const { lang } = useI18n();
   return (
     <div className="grid h-full w-full place-items-center gap-6">
       <svg viewBox="0 0 260 120" className="w-[80%]" aria-hidden>
@@ -297,12 +330,15 @@ export function BraidVisual() {
           <path d="M 96 176 C 140 172 176 140 176 100 C 176 56 140 24 100 24 C 60 24 26 56 26 100 C 26 138 56 166 96 156 C 130 148 150 124 150 100 C 150 76 130 60 108 64 C 92 67 86 80 92 92" fill="none" stroke="var(--grana)" strokeWidth="14" strokeLinecap="round" strokeLinejoin="round" />
         </g>
       </svg>
-      <p className="font-mono text-[12px] text-text-2">voz + IA → una sola vírgula</p>
+      <p className="font-mono text-[12px] text-text-2">
+        {lang === "es" ? "voz + IA → una sola vírgula" : "voice + AI → a single vírgula"}
+      </p>
     </div>
   );
 }
 
 export function AskVisual({ active }: V) {
+  const { lang } = useI18n();
   return (
     <div className="flex flex-col items-center gap-8">
       <div className="text-center">
@@ -310,7 +346,8 @@ export function AskVisual({ active }: V) {
           ${ASK.amountUsd.toLocaleString("en-US")}
         </p>
         <p className="mt-2 font-mono text-[14px] text-text-2">
-          USD · ≈ ${ASK.mxn.toLocaleString("es-MX")} MXN · {ASK.months} meses de runway
+          USD · ≈ ${ASK.mxn.toLocaleString("es-MX")} MXN · {ASK.months}{" "}
+          {lang === "es" ? "meses de runway" : "months of runway"}
         </p>
       </div>
       <div className="grid grid-cols-6 gap-2 sm:grid-cols-12">

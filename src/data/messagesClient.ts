@@ -84,6 +84,9 @@ export async function sendVoiceMessage(
   ]);
 
   if (!transcript) return { ok: false, error: "transcribe" };
+  // Si la subida del audio falló, NO insertamos: un mensaje de voz sin audio_url
+  // quedaría mudo para siempre. Mejor avisar del error y que reintente.
+  if (!audioUrl) return { ok: false, error: "generic" };
 
   const base = {
     conversation_id: convId,

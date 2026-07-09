@@ -35,6 +35,44 @@ export function Modal({
 
   useEffect(() => setMounted(true), []);
 
+  // Trampa de foco: Tab/Shift+Tab no debe escapar al fondo (WCAG 2.4.3). En los
+  // extremos, cicla dentro del panel; con 0/1 enfocables mantiene el foco en el
+  // propio panel (que ya es tabIndex=-1 y recibió foco al abrir).
+  const onPanelKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== "Tab") return;
+    const panel = panelRef.current;
+    if (!panel) return;
+    const focusables = Array.from(
+      panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => el.offsetParent !== null || el === document.activeElement);
+
+    if (focusables.length === 0) {
+      e.preventDefault();
+      panel.focus();
+      return;
+    }
+
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+
+    if (e.shiftKey) {
+      // Al inicio (o fuera del set) hacia atrás → salta al último.
+      if (active === first || !panel.contains(active)) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      // Al final (o fuera del set) hacia adelante → vuelve al primero.
+      if (active === last || !panel.contains(active)) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
+
   // Foco + scroll lock: solo depende de `open` (no re-corre al cambiar
   // closeOnEscape, así no hay churn de foco cuando se abre un modal anidado).
   useEffect(() => {
@@ -68,7 +106,7 @@ export function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(10,8,6,.55)] p-4 backdrop-blur-[6px] [animation:fp-fade_.18s_ease-out]"
+      className="fixed inset-0 z-50 grid place-items-center bg-[var(--scrim)] p-4 backdrop-blur-[6px] [animation:fp-fade_.18s_ease-out]"
       onClick={onClose}
     >
       <div
@@ -78,6 +116,7 @@ export function Modal({
         aria-labelledby={titleId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={onPanelKeyDown}
         className={cn(
           // flex-col + cap de viewport: cuando el contenido es alto, el CUERPO
           // hace scroll y el footer (Guardar/Cancelar) queda siempre a la vista.

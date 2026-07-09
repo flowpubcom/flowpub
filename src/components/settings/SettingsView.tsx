@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { Bell, LogOut, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button, Modal, Switch } from "@/components/ui";
-import { ThemeToggle } from "@/components/chrome/ThemeToggle";
 import { LangToggle } from "@/components/chrome/LangToggle";
 import { SoundToggle } from "@/components/chrome/SoundToggle";
 import { useI18n } from "@/providers/I18nProvider";
 import { useAuth } from "@/providers/AuthProvider";
 import { useLegal } from "@/providers/LegalProvider";
 import { useSound } from "@/providers/SoundProvider";
+import { useTheme } from "@/providers/ThemeProvider";
 import { createClient } from "@/lib/supabase/client";
 import {
   deleteMyAccount,
@@ -60,6 +60,7 @@ function Row({
 export function SettingsView({ email }: { email: string }) {
   const { lang } = useI18n();
   const { play } = useSound();
+  const { pref: themePref, setPref: setThemePref } = useTheme();
   const { signOut } = useAuth();
   const { openLegal } = useLegal();
   const router = useRouter();
@@ -148,8 +149,39 @@ export function SettingsView({ email }: { email: string }) {
 
       {/* Apariencia */}
       <Card title={tr("Apariencia", "Appearance")}>
-        <Row title={tr("Tema", "Theme")} detail={tr("Claro u oscuro (por defecto sigue a tu sistema).", "Light or dark (defaults to your system).")}>
-          <ThemeToggle />
+        <Row
+          title={tr("Tema", "Theme")}
+          detail={tr("Claro, oscuro o el que use tu sistema.", "Light, dark or whatever your system uses.")}
+        >
+          <div
+            role="group"
+            aria-label={tr("Tema", "Theme")}
+            className="inline-flex items-center rounded-pill border border-line-2 bg-surface p-[3px]"
+          >
+            {(
+              [
+                { v: "light", label: tr("Claro", "Light") },
+                { v: "dark", label: tr("Oscuro", "Dark") },
+                { v: "system", label: tr("Sistema", "System") },
+              ] as const
+            ).map(({ v, label }) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={themePref === v}
+                onClick={() => {
+                  setThemePref(v);
+                  play("tick");
+                }}
+                className={cn(
+                  "fp-hit-y rounded-pill px-3 py-1.5 font-sans text-[12px] font-semibold transition-colors duration-150 ease-flow",
+                  themePref === v ? "bg-ink text-ink-on" : "text-text-2 hover:text-ink",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </Row>
         <Row title={tr("Idioma", "Language")} detail={tr("Solo la interfaz; el contenido queda en su idioma.", "Interface only; content stays in its language.")}>
           <LangToggle />

@@ -406,7 +406,7 @@ function TileEditButton({
       className={cn(
         "absolute right-2 top-2 z-10 grid h-9 w-9 place-items-center rounded-pill shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-105 active:scale-[.95]",
         overCover
-          ? "bg-[rgba(251,250,246,0.92)] text-[#1A1714]"
+          ? "bg-papel/90 text-tinta"
           : "border border-line-2 bg-surface text-ink",
       )}
     >
@@ -434,13 +434,13 @@ function FlowTile({ flow, onEdit }: { flow: Flow; onEdit?: () => void }) {
         />
         <span
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(14,11,9,.86),transparent_55%)]"
+          className="absolute inset-0 bg-[linear-gradient(to_top,var(--scrim-strong),transparent_55%)]"
         />
         <span className="absolute inset-x-3 bottom-2.5 text-left">
           <span className="block font-serif text-[15px] font-medium leading-[1.2] text-amate">
             {flow.title}
           </span>
-          <span className="mt-0.5 block font-mono text-[11px] text-[rgba(242,239,232,.7)]">
+          <span className="mt-0.5 block font-mono text-[11px] text-amate/70">
             {durationLabel(flow.durationSeconds)} · {compactNumber(flow.likeCount)}{" "}
             <span aria-hidden>♥</span>
           </span>
@@ -653,7 +653,7 @@ function EditProfileModal({
           onClick={() => bannerRef.current?.click()}
           disabled={bannerUploading}
           className={cn(
-            "absolute bottom-2 right-2 flex items-center gap-2 rounded-pill bg-[rgba(251,250,246,0.92)] px-3 py-1.5 font-sans text-[12px] font-semibold text-[#1A1714] shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-[1.03]",
+            "absolute bottom-2 right-2 flex items-center gap-2 rounded-pill bg-papel/90 px-3 py-1.5 font-sans text-[12px] font-semibold text-tinta shadow-[var(--shadow-card)] transition-transform duration-150 ease-flow hover:scale-[1.03]",
             bannerUploading && "opacity-70",
           )}
         >

@@ -5,9 +5,11 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { ArrowLeft, ArrowRight, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { FlowMark, Wordmark } from "@/components/brand";
+import { LangToggle } from "@/components/chrome/LangToggle";
 import { ThemeToggle } from "@/components/chrome/ThemeToggle";
 import { useTheme } from "@/providers/ThemeProvider";
 import { useSound } from "@/providers/SoundProvider";
+import { useI18n } from "@/providers/I18nProvider";
 import { SLIDES, TIERS, ASK, BASE_BREAKDOWN, FINANCE_NOTES, type Slide, type Visual } from "./data";
 import {
   AskVisual,
@@ -54,16 +56,17 @@ function Kicker({ children }: { children: ReactNode }) {
 }
 
 function TextBlock({ slide, center }: { slide: Slide; center?: boolean }) {
+  const { lang } = useI18n();
   return (
     <div className={cn("flex flex-col gap-5", center && "items-center text-center")}>
-      <Kicker>{slide.kicker}</Kicker>
+      <Kicker>{slide.kicker[lang]}</Kicker>
       <h2
         className="max-w-[18ch] font-serif text-[clamp(2rem,4.6vw,3.6rem)] font-medium leading-[1.06] tracking-[-0.01em] text-ink"
         style={{ animation: "fp-rise .5s var(--ease-flow) 80ms both" }}
       >
-        {slide.title}
+        {slide.title[lang]}
       </h2>
-      {slide.body && (
+      {slide.body[lang] && (
         <p
           className={cn(
             "max-w-[56ch] font-sans text-[clamp(1rem,1.5vw,1.2rem)] leading-relaxed text-text-2",
@@ -71,7 +74,7 @@ function TextBlock({ slide, center }: { slide: Slide; center?: boolean }) {
           )}
           style={{ animation: "fp-rise .5s var(--ease-flow) 160ms both" }}
         >
-          {slide.body}
+          {slide.body[lang]}
         </p>
       )}
       {slide.bullets.length > 0 && (
@@ -80,9 +83,9 @@ function TextBlock({ slide, center }: { slide: Slide; center?: boolean }) {
           style={{ animation: "fp-rise .5s var(--ease-flow) 240ms both" }}
         >
           {slide.bullets.map((b) => (
-            <li key={b} className="flex items-start gap-2.5 font-sans text-[15px] text-ink">
+            <li key={b.es} className="flex items-start gap-2.5 font-sans text-[15px] text-ink">
               <span className="mt-2 h-1.5 w-1.5 flex-none rounded-pill bg-grana" aria-hidden />
-              <span>{b}</span>
+              <span>{b[lang]}</span>
             </li>
           ))}
         </ul>
@@ -92,6 +95,8 @@ function TextBlock({ slide, center }: { slide: Slide; center?: boolean }) {
 }
 
 function FinanceSlide({ slide }: { slide: Slide }) {
+  const { lang } = useI18n();
+  const tr = (es: string, en: string) => (lang === "es" ? es : en);
   const max = Math.max(...BASE_BREAKDOWN.map((b) => b.usd));
   return (
     <div
@@ -100,9 +105,9 @@ function FinanceSlide({ slide }: { slide: Slide }) {
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Kicker>{slide.kicker}</Kicker>
+          <Kicker>{slide.kicker[lang]}</Kicker>
           <h2 className="mt-2 font-serif text-[clamp(1.8rem,3.4vw,2.8rem)] font-medium tracking-[-0.01em] text-ink">
-            {slide.title}
+            {slide.title[lang]}
           </h2>
         </div>
         <div className="rounded-card border border-grana/30 bg-grana-wash px-5 py-3 text-right">
@@ -110,7 +115,7 @@ function FinanceSlide({ slide }: { slide: Slide }) {
             ${ASK.amountUsd.toLocaleString("en-US")}<span className="ml-1 font-mono text-[13px] text-text-2">USD</span>
           </p>
           <p className="mt-1 font-mono text-[12px] text-text-2">
-            ≈ ${ASK.mxn.toLocaleString("es-MX")} MXN · {ASK.months} meses
+            ≈ ${ASK.mxn.toLocaleString("es-MX")} MXN · {ASK.months} {tr("meses", "months")}
           </p>
         </div>
       </div>
@@ -118,40 +123,40 @@ function FinanceSlide({ slide }: { slide: Slide }) {
       <div className="grid gap-4 md:grid-cols-3">
         {TIERS.map((t) => (
           <div
-            key={t.name}
+            key={t.name.es}
             className={cn(
               "flex flex-col rounded-card border p-5",
               t.recommended ? "border-grana bg-surface shadow-[var(--shadow-glow)]" : "border-line bg-surface/70",
             )}
           >
             <div className="flex items-center justify-between">
-              <span className="font-sans text-[15px] font-semibold text-ink">{t.name}</span>
+              <span className="font-sans text-[15px] font-semibold text-ink">{t.name[lang]}</span>
               {t.recommended && (
                 <span className="rounded-pill bg-grana px-2 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-white">
-                  Recomendado
+                  {tr("Recomendado", "Recommended")}
                 </span>
               )}
             </div>
             <p className="mt-3 font-serif text-[1.9rem] font-medium leading-none text-ink">
               ${t.annualUsd.toLocaleString("en-US")}
-              <span className="ml-1 font-mono text-[12px] text-text-3">/año</span>
+              <span className="ml-1 font-mono text-[12px] text-text-3">{tr("/año", "/yr")}</span>
             </p>
             <p className="mt-1 font-mono text-[12px] text-text-2">
-              ${t.monthlyUsd.toLocaleString("en-US")}/mes
+              ${t.monthlyUsd.toLocaleString("en-US")}{tr("/mes", "/mo")}
             </p>
-            <p className="mt-3 font-sans text-[13px] leading-relaxed text-text-2">{t.summary}</p>
+            <p className="mt-3 font-sans text-[13px] leading-relaxed text-text-2">{t.summary[lang]}</p>
           </div>
         ))}
       </div>
 
       <div className="rounded-card border border-line bg-surface/60 p-5">
         <p className="mb-4 font-sans text-[13px] font-semibold uppercase tracking-[0.12em] text-text-2">
-          En qué se va · escenario Base, al año
+          {tr("En qué se va · escenario Base, al año", "Where it goes · Base scenario, per year")}
         </p>
         <div className="flex flex-col gap-3">
           {BASE_BREAKDOWN.map((b) => (
-            <div key={b.label} className="flex items-center gap-4">
-              <span className="w-[46%] flex-none font-sans text-[13px] text-ink">{b.label}</span>
+            <div key={b.label.es} className="flex items-center gap-4">
+              <span className="w-[46%] flex-none font-sans text-[13px] text-ink">{b.label[lang]}</span>
               <div className="h-3 flex-1 overflow-hidden rounded-pill bg-surface-3">
                 <span
                   className={cn("block h-full rounded-pill", b.kind === "growth" ? "bg-grana" : "bg-ocre")}
@@ -168,8 +173,8 @@ function FinanceSlide({ slide }: { slide: Slide }) {
 
       <div className="grid gap-2 sm:grid-cols-3">
         {FINANCE_NOTES.map((n) => (
-          <p key={n} className="rounded-lg border border-line bg-surface/50 px-3 py-2 font-sans text-[12px] leading-snug text-text-2">
-            {n}
+          <p key={n.es} className="rounded-lg border border-line bg-surface/50 px-3 py-2 font-sans text-[12px] leading-snug text-text-2">
+            {n[lang]}
           </p>
         ))}
       </div>
@@ -201,6 +206,8 @@ function SlideView({ slide, theme, active }: { slide: Slide; theme: "light" | "d
 export function Deck() {
   const { theme } = useTheme();
   const { play } = useSound();
+  const { lang } = useI18n();
+  const tr = (es: string, en: string) => (lang === "es" ? es : en);
   const [i, setI] = useState(0);
   const n = SLIDES.length;
   const touch = useRef<{ x: number; y: number } | null>(null);
@@ -246,8 +253,8 @@ export function Deck() {
     <div
       className="relative flex h-[100dvh] flex-col overflow-hidden"
       role="region"
-      aria-roledescription="carrusel"
-      aria-label="Pitch de FlowPub"
+      aria-roledescription={tr("carrusel", "carousel")}
+      aria-label={tr("Pitch de FlowPub", "FlowPub pitch")}
       onTouchStart={(e) => {
         touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }}
@@ -286,7 +293,10 @@ export function Deck() {
 
       {/* anuncio de cambio de slide para lectores de pantalla */}
       <p className="sr-only" aria-live="polite">
-        {`Diapositiva ${i + 1} de ${n}: ${slide.kicker} — ${slide.title}`}
+        {tr(
+          `Diapositiva ${i + 1} de ${n}: ${slide.kicker.es} — ${slide.title.es}`,
+          `Slide ${i + 1} of ${n}: ${slide.kicker.en} — ${slide.title.en}`,
+        )}
       </p>
 
       {/* glow tenue */}
@@ -304,12 +314,13 @@ export function Deck() {
         </Link>
         <div className="flex items-center gap-2">
           <span className="hidden font-mono text-[12px] text-text-3 sm:inline">Pitch · 2026</span>
+          <LangToggle />
           <ThemeToggle />
           <Link
             href="/"
             className="inline-flex items-center gap-1 rounded-pill border border-line-2 px-3.5 py-1.5 font-sans text-[13px] font-semibold text-ink transition-colors hover:bg-[var(--hover)]"
           >
-            Abrir la app <ArrowUpRight size={15} />
+            {tr("Abrir la app", "Open the app")} <ArrowUpRight size={15} />
           </Link>
         </div>
       </header>
@@ -327,7 +338,7 @@ export function Deck() {
           type="button"
           onClick={() => go(i - 1)}
           disabled={i === 0}
-          aria-label="Anterior"
+          aria-label={tr("Anterior", "Previous")}
           className="fp-hit grid h-11 w-11 place-items-center rounded-pill border border-line-2 text-ink transition-colors hover:bg-[var(--hover)] disabled:opacity-30"
         >
           <ArrowLeft size={18} />
@@ -339,7 +350,7 @@ export function Deck() {
               <button
                 key={s.id}
                 type="button"
-                aria-label={`Ir a ${s.kicker}`}
+                aria-label={tr(`Ir a ${s.kicker.es}`, `Go to ${s.kicker.en}`)}
                 aria-current={idx === i ? "true" : undefined}
                 onClick={() => go(idx)}
                 className={cn(
@@ -358,7 +369,7 @@ export function Deck() {
           type="button"
           onClick={() => go(i + 1)}
           disabled={i === n - 1}
-          aria-label="Siguiente"
+          aria-label={tr("Siguiente", "Next")}
           className="fp-hit grid h-11 w-11 place-items-center rounded-pill bg-grana text-white shadow-[var(--shadow-grana)] transition-transform hover:bg-grana-700 active:scale-95 disabled:opacity-30"
         >
           <ArrowRight size={18} />

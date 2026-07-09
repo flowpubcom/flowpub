@@ -2,7 +2,8 @@
 // Se dispara por dos Database Webhooks (INSERT en `notifications` y en `messages`).
 // Lee suscripciones + preferencias con service_role (Supabase las inyecta solas).
 // Secretos requeridos: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT
-// (mailto:…) y, opcional pero recomendado, WEBHOOK_SECRET (cabecera compartida).
+// (mailto:…) y WEBHOOK_SECRET (cabecera compartida, OBLIGATORIO: sin él la
+// función responde 401 a todo — fail-closed, porque corre con service_role).
 //
 // Deploy:  supabase functions deploy send-push
 // Secrets: supabase secrets set VAPID_PUBLIC_KEY=... VAPID_PRIVATE_KEY=... VAPID_SUBJECT=mailto:hola@flowpub.app WEBHOOK_SECRET=...
@@ -21,6 +22,22 @@ const WEBHOOK_SECRET = Deno.env.get("WEBHOOK_SECRET") || "";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC, VAPID_PRIVATE);
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE);
+
+// Compara el secreto en tiempo constante: se hashean ambos lados con SHA-256
+// (longitud fija) y se XOR-ea byte a byte, sin cortocircuito.
+async function secretMatches(given: string | null): Promise<boolean> {
+  if (!given || !WEBHOOK_SECRET) return false;
+  const enc = new TextEncoder();
+  const [a, b] = await Promise.all([
+    crypto.subtle.digest("SHA-256", enc.encode(given)),
+    crypto.subtle.digest("SHA-256", enc.encode(WEBHOOK_SECRET)),
+  ]);
+  const va = new Uint8Array(a);
+  const vb = new Uint8Array(b);
+  let diff = 0;
+  for (let i = 0; i < va.length; i++) diff |= va[i] ^ vb[i];
+  return diff === 0;
+}
 
 async function sendToUser(userId: string, payload: Record<string, unknown>) {
   const { data: subs } = await admin
@@ -66,8 +83,12 @@ async function prefsOf(id: string): Promise<Record<string, boolean>> {
 }
 
 Deno.serve(async (req) => {
-  // Verificación opcional de secreto compartido (defensa contra spam).
-  if (WEBHOOK_SECRET && req.headers.get("x-webhook-secret") !== WEBHOOK_SECRET) {
+  // Fail-closed: sin WEBHOOK_SECRET configurado NO se procesa nada (la
+  // función corre con service_role; sin candado aceptaría POSTs anónimos).
+  if (!WEBHOOK_SECRET) {
+    return new Response("unauthorized: WEBHOOK_SECRET no configurado", { status: 401 });
+  }
+  if (!(await secretMatches(req.headers.get("x-webhook-secret")))) {
     return new Response("unauthorized", { status: 401 });
   }
   try {

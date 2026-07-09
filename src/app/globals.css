@@ -66,12 +66,15 @@
   --ok: #2e9a5b;
   /* abismo de marca: fondo fijo del panel hipnótico (onboarding/reproductor) */
   --brand-abyss: #15110e;
+  /* grana COMO TEXTO sobre el abismo/paneles oscuros fijos (fijo en ambos temas):
+     el grana pleno no rinde ahí, así que va el grana-rosado legible. */
+  --grana-text-on-dark: #ec9da2;
 
   /* roles semánticos — CLARO */
   --ink: #1a1714;
   --ink-on: #f2efe8;
   --text-2: #6e685d;
-  --text-3: #9c968a;
+  --text-3: #797265; /* gris cálido apagado: 4.56:1 sobre --surface (AA); antes #9c968a daba 2.82:1 */
   --surface: #fbfaf6;
   --surface-2: #f8f5ef;
   --surface-3: #f2efe8;
@@ -86,6 +89,12 @@
      el grana pleno solo da 3.07:1 sobre superficies oscuras (medido). */
   --grana-text: #c0303a;
   --wave: rgba(26, 23, 20, 0.16);
+  /* scrims: velos de tinta para atenuar contenido bajo overlays (FIJOS en ambos
+     temas: un scrim siempre oscurece). Antes venían a mano como rgba(14,11,9…) /
+     rgba(10,8,6…); unificados a tinta. */
+  --scrim: rgba(26, 23, 20, 0.55); /* backdrop de modales */
+  --scrim-strong: rgba(26, 23, 20, 0.86); /* gradiente sobre portadas para texto */
+  --scrim-soft: rgba(26, 23, 20, 0.28); /* velo sutil bajo el avatar en banners */
 
   /* portadas — doble capa por tema (roles del lienzo; los ACENTOS quedan fijos
      en lib/covers.ts). Única extensión permitida de la capa de covers. */
@@ -107,6 +116,9 @@
   --shadow-glow: 0 0 0 1px rgba(26, 23, 20, 0.13), 0 0 28px -4px rgba(26, 23, 20, 0.25);
   --shadow-window: 0 30px 70px -28px rgba(26, 23, 20, 0.42);
   --shadow-grana: 0 8px 20px -8px rgba(192, 48, 58, 0.6);
+  /* realce chico de «pastillas»/perillas: segmento activo de segmented y knob
+     del Switch. En oscuro suma un anillo interior claro para seguir visible. */
+  --shadow-thumb: 0 1px 2px rgba(26, 23, 20, 0.12);
 
   color-scheme: light;
 }
@@ -116,7 +128,7 @@
   --ink: #f2efe8;
   --ink-on: #1a1714;
   --text-2: #b3ab9d;
-  --text-3: #867f72;
+  --text-3: #948d80; /* 5.26:1 sobre --surface oscuro (AA); antes #867f72 daba 4.36:1 */
   --surface: #1e1a16;
   --surface-2: #191510;
   --surface-3: #2a241d;
@@ -141,6 +153,7 @@
   --bg-3: #0e0c0a;
 
   --shadow-window: 0 30px 70px -28px rgba(0, 0, 0, 0.65);
+  --shadow-thumb: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(242, 239, 232, 0.12);
 
   color-scheme: dark;
 }
@@ -153,7 +166,7 @@
     --ink: #f2efe8;
     --ink-on: #1a1714;
     --text-2: #b3ab9d;
-    --text-3: #867f72;
+    --text-3: #948d80; /* 5.26:1 sobre --surface oscuro (AA); antes #867f72 daba 4.36:1 */
     --surface: #1e1a16;
     --surface-2: #191510;
     --surface-3: #2a241d;
@@ -175,6 +188,7 @@
     --bg-2: #141110;
     --bg-3: #0e0c0a;
     --shadow-window: 0 30px 70px -28px rgba(0, 0, 0, 0.65);
+    --shadow-thumb: 0 1px 2px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(242, 239, 232, 0.12);
     color-scheme: dark;
   }
 }

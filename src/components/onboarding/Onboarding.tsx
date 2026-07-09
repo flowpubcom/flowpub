@@ -333,7 +333,7 @@ export function Onboarding({
         "font-sans text-[11px] underline-offset-2 transition-colors hover:underline",
         !dark && "text-grana-text",
       )}
-      style={dark ? { color: "#EC9DA2" } : undefined}
+      style={dark ? { color: "var(--grana-text-on-dark)" } : undefined}
     >
       {t("credit")}
     </a>
@@ -346,7 +346,7 @@ export function Onboarding({
         role="status"
         className={cn(
           "font-sans text-[13px]",
-          dark ? "text-[#EC9DA2]" : "text-grana",
+          dark ? "text-[var(--grana-text-on-dark)]" : "text-grana",
         )}
       >
         {t(error)}
@@ -1010,7 +1010,7 @@ export function Onboarding({
                       setAuthMode("login");
                     }}
                     className="font-semibold"
-                    style={{ color: "#EC9DA2" }}
+                    style={{ color: "var(--grana-text-on-dark)" }}
                   >
                     {t("onb.login")}
                   </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -70,6 +70,13 @@ export function FlowReader({
   const isOwn = user?.id === flow.author.id;
   const canListen = !flow.adult || isOwn || (user?.isAdult ?? false);
 
+  // Candado in-flight por acción: ignora re-toques mientras la petición viaja,
+  // así insert/delete no llegan fuera de orden y desincronizan BD vs UI. La UI
+  // optimista se queda como está (no deshabilitamos el botón).
+  const likePending = useRef(false);
+  const savePending = useRef(false);
+  const followPending = useRef(false);
+
   const requireUser = () => {
     if (user) return true;
     play("soft");
@@ -78,34 +85,49 @@ export function FlowReader({
   };
 
   const toggleLike = async () => {
-    if (!requireUser()) return;
+    if (!requireUser() || likePending.current) return;
+    likePending.current = true;
     const n = !liked;
     setLiked(n);
     setLikes((x) => x + (n ? 1 : -1));
     play(n ? "pop" : "soft");
-    const res = await setFlowLike(flow.id, n);
-    if (!res.ok) {
-      setLiked(!n);
-      setLikes((x) => x + (n ? -1 : 1));
+    try {
+      const res = await setFlowLike(flow.id, n);
+      if (!res.ok) {
+        setLiked(!n);
+        setLikes((x) => x + (n ? -1 : 1));
+      }
+    } finally {
+      likePending.current = false;
     }
   };
 
   const toggleSave = async () => {
-    if (!requireUser()) return;
+    if (!requireUser() || savePending.current) return;
+    savePending.current = true;
     const n = !saved;
     setSaved(n);
     play(n ? "pop" : "soft");
-    const res = await setSave(flow.id, n);
-    if (!res.ok) setSaved(!n);
+    try {
+      const res = await setSave(flow.id, n);
+      if (!res.ok) setSaved(!n);
+    } finally {
+      savePending.current = false;
+    }
   };
 
   const toggleFollow = async () => {
-    if (!requireUser()) return;
+    if (!requireUser() || followPending.current) return;
+    followPending.current = true;
     const n = !following;
     setFollowing(n);
     play(n ? "pop" : "soft");
-    const res = await setFollow(flow.author.id, n);
-    if (!res.ok) setFollowing(!n);
+    try {
+      const res = await setFollow(flow.author.id, n);
+      if (!res.ok) setFollowing(!n);
+    } finally {
+      followPending.current = false;
+    }
   };
 
   const onShare = async () => {
@@ -306,7 +328,7 @@ export function FlowReader({
               className={cn(
                 "fp-hit-y rounded-pill px-4 py-1.5 font-sans text-[13px] font-semibold transition-colors duration-150",
                 view === v
-                  ? "bg-surface text-ink shadow-[0_1px_2px_rgba(26,23,20,.08)]"
+                  ? "bg-surface text-ink shadow-[var(--shadow-thumb)]"
                   : "text-text-2 hover:text-ink",
               )}
             >

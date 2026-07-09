@@ -51,7 +51,7 @@ export function Switch({
       >
         <span
           className={cn(
-            "ml-[3px] h-5 w-5 rounded-pill bg-papel shadow-[0_1px_2px_rgba(0,0,0,.25)] transition-transform duration-150 ease-flow",
+            "ml-[3px] h-5 w-5 rounded-pill bg-papel shadow-[var(--shadow-thumb)] transition-transform duration-150 ease-flow",
             checked && "translate-x-[18px]",
           )}
         />

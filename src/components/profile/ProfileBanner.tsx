@@ -64,7 +64,7 @@ export function ProfileBanner({
       {imageUrl && (
         <span
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(to_top,rgba(14,11,9,.28),transparent_45%)]"
+          className="absolute inset-0 bg-[linear-gradient(to_top,var(--scrim-soft),transparent_45%)]"
         />
       )}
       {/* barrido de luz al pasar cursor/dedo — pequeño saludo de la marca */}

@@ -166,7 +166,7 @@ export function CommentComposer({
             className={cn(
               "rounded-pill px-3.5 py-1 font-sans text-[12px] font-semibold transition-colors duration-150",
               tab === v
-                ? "bg-surface text-ink shadow-[0_1px_2px_rgba(26,23,20,.08)]"
+                ? "bg-surface text-ink shadow-[var(--shadow-thumb)]"
                 : "text-text-2 hover:text-ink",
             )}
           >

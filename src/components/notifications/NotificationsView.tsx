@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   AtSign,
   Heart,
@@ -190,7 +189,6 @@ function NotificationRow({
   onRead: () => void;
 }) {
   const { play } = useSound();
-  const router = useRouter();
   const [showTranscript, setShowTranscript] = useState(false);
   const [following, setFollowing] = useState(item.followingActor);
 
@@ -198,21 +196,28 @@ function NotificationRow({
   const actorName = item.actor?.displayName ?? "";
   const actorHref = item.actor ? `/@${item.actor.username}` : null;
 
-  // Avatar y nombre llevan al perfil del actor (y marcan leído), sin disparar
-  // la navegación del resto del item (que va al Flow según el tipo).
+  // Destino de la fila (lo que antes resolvía goTo): follow → perfil del actor,
+  // el resto → el Flow. Sin destino, no hay navegación (solo marcar leído).
+  const rowHref =
+    item.type === "follow" && item.actor
+      ? `/@${item.actor.username}`
+      : item.flowId
+        ? `/flow/${item.flowId}`
+        : null;
+  const rowLabel = `${actorName} ${t(ACTION_KEY[item.type])}`.trim();
+
+  // Interactuar con la fila la marca leída (conserva el onRead de goTo).
+  const activateRow = () => {
+    if (!item.read) onRead();
+  };
+
+  // Avatar y nombre llevan al perfil del actor (y marcan leído). Como ya no son
+  // hijos de un contenedor clickeable sino hermanos del link estirado, no hace
+  // falta stopPropagation, pero se mantiene inofensivo.
   const goActor = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (!item.read) onRead();
     play("click");
-  };
-
-  const goTo = () => {
-    if (!item.read) onRead();
-    if (item.type === "follow" && item.actor) {
-      router.push(`/@${item.actor.username}`);
-    } else if (item.flowId) {
-      router.push(`/flow/${item.flowId}`);
-    }
   };
 
   const toggleFollow = async (e: React.MouseEvent) => {
@@ -228,24 +233,39 @@ function NotificationRow({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={goTo}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") goTo();
-      }}
       data-unread={item.read ? "0" : "1"}
       className={cn(
-        "flex cursor-pointer items-start gap-[13px] rounded-[14px] p-[13px] transition-colors duration-200 ease-flow hover:bg-[var(--hover)]",
+        "relative flex items-start gap-[13px] rounded-[14px] p-[13px] transition-colors duration-200 ease-flow hover:bg-[var(--hover)]",
         !item.read && "bg-grana-wash",
       )}
     >
+      {/* Link estirado: un solo interactivo real cubre toda la fila (inset-0)
+          para el click/teclado de navegación. Los demás controles (avatar,
+          nombre, seguir, audio, transcript) van por ENCIMA como hermanos con
+          z-10, así siguen siendo operables por separado. El hover del contenedor
+          se conserva porque :hover en el div se dispara desde cualquier hijo. */}
+      {rowHref ? (
+        <Link
+          href={rowHref}
+          onClick={activateRow}
+          aria-label={rowLabel}
+          className="absolute inset-0 z-0 cursor-pointer rounded-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grana"
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={activateRow}
+          aria-label={rowLabel}
+          className="absolute inset-0 z-0 cursor-pointer rounded-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grana"
+        />
+      )}
+
       {actorHref ? (
         <Link
           href={actorHref}
           onClick={goActor}
           aria-label={actorName}
-          className="relative flex-none rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grana"
+          className="relative z-10 flex-none rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-grana"
         >
           <Avatar name={actorName} src={item.actor?.avatarUrl} size={46} />
           <span
@@ -259,7 +279,7 @@ function NotificationRow({
           </span>
         </Link>
       ) : (
-        <span className="relative flex-none">
+        <span className="pointer-events-none relative flex-none">
           <Avatar name={actorName} src={item.actor?.avatarUrl} size={46} />
           <span
             className={cn(
@@ -279,7 +299,7 @@ function NotificationRow({
             <Link
               href={actorHref}
               onClick={goActor}
-              className="font-semibold hover:underline"
+              className="relative z-10 font-semibold hover:underline"
             >
               {actorName}
             </Link>
@@ -299,7 +319,7 @@ function NotificationRow({
         )}
 
         {item.type === "voice" && (
-          <div className="mt-2 max-w-[300px]">
+          <div className="relative z-10 mt-2 max-w-[300px]">
             <AudioPlayer
               src={item.commentAudioUrl ?? undefined}
               durationSeconds={item.commentDurationSeconds ?? 0}
@@ -334,7 +354,7 @@ function NotificationRow({
           aria-pressed={following}
           onClick={toggleFollow}
           className={cn(
-            "flex-none rounded-pill border px-[18px] py-[8px] font-sans text-[13px] font-semibold transition-colors duration-150 ease-flow",
+            "relative z-10 flex-none rounded-pill border px-[18px] py-[8px] font-sans text-[13px] font-semibold transition-colors duration-150 ease-flow",
             following
               ? "border-ink bg-ink text-ink-on"
               : "border-line-2 bg-transparent text-ink hover:bg-ink hover:text-ink-on",

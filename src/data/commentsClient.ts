@@ -109,6 +109,9 @@ export async function postVoiceComment(
 
   // Sin transcript no hay comentario de voz (regla: siempre ofrece transcript).
   if (!transcript) return { ok: false, error: "transcribe" };
+  // Si la subida del audio falló, NO insertamos: una nota de voz sin audio_url
+  // sería muda para siempre. Mejor avisar del error y que reintente.
+  if (!audioUrl) return { ok: false, error: "generic" };
 
   const base = {
     flow_id: flowId,
