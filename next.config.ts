@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // La «webxperience» de brag es una pieza estática autocontenida en
+  // `public/brag/` (HTML + Three.js + assets). El rewrite deja que la URL
+  // limpia `flowpub.app/brag` sirva su index sin exponer el `.html`.
+  async rewrites() {
+    return [{ source: "/brag", destination: "/brag/index.html" }];
+  },
 };
 
 export default nextConfig;

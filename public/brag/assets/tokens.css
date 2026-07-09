@@ -1,0 +1,39 @@
+/* FlowPub — tokens de marca. Paleta «tinta, grana y amate». */
+:root {
+  --tinta: #1A1714;
+  --grana: #C0303A;
+  --grana-700: #9A2530;
+  --grana-wash: #F6E6E4;
+  --ocre: #D98A3D;
+  --amate: #F2EFE8;
+  --amate-2: #E6DFD0;
+  --papel: #FBFAF6;
+  --champagne: #F6D49A;
+  --ok: #2E9A5B;
+}
+:root, [data-theme="light"] {
+  --ink: #1A1714;
+  --ink-on: #F2EFE8;
+  --text-2: #6E685D;
+  --text-3: #9C968A;
+  --surface: #FBFAF6;
+  --surface-2: #F8F5EF;
+  --surface-3: #F2EFE8;
+  --grana-text: #C0303A;
+  --bg-1: #F4F1EA;
+  --bg-2: #ECE7DA;
+  --bg-3: #E6DFD0;
+}
+[data-theme="dark"] {
+  --ink: #F2EFE8;
+  --ink-on: #1A1714;
+  --text-2: #B3AB9D;
+  --text-3: #867F72;
+  --surface: #1E1A16;
+  --surface-2: #191510;
+  --surface-3: #2A241D;
+  --grana-text: #EC9DA2;
+  --bg-1: #1E1913;
+  --bg-2: #141110;
+  --bg-3: #0E0C0A;
+}
