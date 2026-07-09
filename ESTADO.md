@@ -2,8 +2,31 @@
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
 > Última actualización: **sesión 10 — 2026-07-08 (audit integral multi-agente +
-> fixes: i18n/tema globales en las 4 superficies, seguridad, correctness, a11y.
-> Deploy `a9d4b54` VIVO; ⚠️ 3 pasos manuales de backend pendientes de Julio)**.
+> fixes: i18n/tema globales en las 4 superficies, seguridad, correctness, a11y;
+> comentarios voice-first; brag pack en `marketing/brag/`. Deploy `043faba` VIVO;
+> ⚠️ 3 pasos manuales de backend YA CORRIDOS por Julio: migration_23, migration_24
+> y redeploy de send-push)**.
+
+## Sesión 10 (cont.) — 2026-07-08: comentarios voice-first + brag pack
+
+- **Comentarios voice-first** (deploy `043faba`): el `CommentComposer` abre en la
+  pestaña de voz y la pone primera. NO auto-graba (el permiso de mic solo salta al
+  tocar Grabar), así que escribir queda a un tap. **DMs se quedan en texto** por
+  default a propósito. Cambio de 1 línea de default + reorden del segmented.
+- **Brag pack** en `D:\FlowPub\marketing\brag\` (entregables LOCALES, no se
+  despliegan — el repo de la app quedó intacto):
+  - `redes/`: 30 PNGs @2× (hero, pipeline, features, screenshot enmarcado, quote,
+    carrusel 01–05), ES/EN + claro/oscuro, con `captions.md` y generador
+    `src/gen.mjs` re-editable.
+  - `webxperience/`: pieza web autocontenida (index.html, cero CDNs) con partículas
+    Three.js, glass, narrativa por scroll en 6 actos, toggles ES/EN + claro/oscuro
+    reales, CTA «¡Saca el Flow!». Corre con `servir.cmd`. Verificada en los 4 combos.
+    Pendiente si se hostea: convertir los ~10 PNG reales a WebP (pesa ~22 MB).
+  - **Abierto**: dónde vive la webxperience si se publica (¿`flowpub.app/brag`,
+    subdominio, Vercel aparte?). Julio no ha decidido.
+- **backend de la sesión 10 YA CORRIDO por Julio**: migration_23 (candado de
+  featured/reported), migration_24 (notifications en Realtime → campana en vivo) y
+  redeploy de `send-push` (fail-closed) — confirmado por él el 2026-07-08.
 
 ## Sesión 10 — 2026-07-08: audit integral multi-agente (deploy `a9d4b54`)
 
