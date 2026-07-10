@@ -19,10 +19,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const flow = await fetchFlow(id); // cache(): misma consulta que la página
-  // Soft-404 fix: como `loading.tsx` mete la página en un Suspense, el shell se
-  // manda con status 200 ANTES de que el cuerpo llegue a su `notFound()`, y ya
-  // no se puede cambiar a 404. `generateMetadata` se resuelve completa antes de
-  // streamear un solo byte, así que aquí sí sale un 404 real.
+  // Flow inexistente → a la pantalla de no-encontrado (no generamos metadata de
+  // algo que no existe). OJO: esto NO cambia el status HTTP a 404. En Next 16 el
+  // `loading.tsx` de la ruta abre un Suspense y los metadatos van en streaming,
+  // así que el shell ya salió con 200 antes de esto → queda como soft-404 (200).
+  // Es una decisión de producto consciente (impacto SEO bajo: estas URLs no se
+  // enlazan ni se crawlean); el 404 duro exigiría quitar el `loading.tsx` de la
+  // ruta y perder el skeleton instantáneo al abrir un Flow.
   if (!flow) notFound();
 
   const description = flow.excerpt || `${flow.title} — un Flow en FlowPub.`;

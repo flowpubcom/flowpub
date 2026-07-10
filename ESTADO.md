@@ -7,6 +7,26 @@
 > ⚠️ 3 pasos manuales de backend YA CORRIDOS por Julio: migration_23, migration_24
 > y redeploy de send-push)**.
 
+## Sesión 11 — 2026-07-09: OpenGraph (audit + fixes)
+
+- **Audit OG integral**: casi todo estaba bien. Los Flows YA comparten con imagen
+  propia (título+autor+portada, desde sesión 8); `/`, perfiles, `/splash`,
+  `/design`, `/deck` (noindex + OG), `/explorar`, `/tema/[slug]` todos ✓.
+- **`/brag` OG** (deploy `bed23e0`): era el único share roto (HTML estático sin
+  tags). Ya trae og:*/twitter: completos con la tarjeta de marca `og.png`
+  (1200×630, copiada a `public/brag/assets/` y al original de `marketing/`).
+  Verificado en producción: 15 tags + imagen 200.
+- **Soft-404 de `/flow/<inexistente>` — DECISIÓN: se deja como está (200).** En
+  Next 16 el `loading.tsx` de la ruta abre streaming y los metadatos van en
+  streaming, así que `notFound()` (ni en la página ni en `generateMetadata`) puede
+  fijar el 404 — el shell 200 ya salió. El 404 duro exigiría quitar el `loading.tsx`
+  y perder el skeleton instantáneo al abrir Flows; Julio prefirió conservarlo
+  (impacto SEO bajo: esas URLs no se enlazan ni se crawlean). **No re-intentar.**
+- eslint ahora ignora `public/**` (arregla lint del Three.js vendorizado en
+  `public/brag/`; `public/` se sirve verbatim, nunca es superficie de lint).
+- **Idea abierta (no pedida aún)**: OG por perfil (`[username]/opengraph-image.tsx`
+  con avatar+bio, análogo al del Flow). Hoy los perfiles usan la site card genérica.
+
 ## Sesión 10 (cont.) — 2026-07-08: comentarios voice-first + brag pack
 
 - **Comentarios voice-first** (deploy `043faba`): el `CommentComposer` abre en la
