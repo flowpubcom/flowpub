@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
@@ -8,7 +9,6 @@ import { ImageResponse } from "next/og";
 // e independiente de la sesión. Los hex son la paleta bloqueada: aquí no existen
 // los tokens CSS (esto rasteriza a PNG con satori).
 
-export const alt = "Perfil en FlowPub";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -93,6 +93,29 @@ async function fetchOgProfile(username: string): Promise<OgProfile | null> {
   }
 }
 
+// cache(): generateImageMetadata y el componente corren en el mismo request;
+// así comparten una sola consulta en vez de pegarle dos veces a la REST.
+const getOgProfile = cache(fetchOgProfile);
+
+function normalizeUsername(raw: string): string {
+  const r = decodeURIComponent(raw);
+  return (r.startsWith("@") ? r.slice(1) : r).toLowerCase();
+}
+
+// alt dinámico: el `alt` exportado es estático (no ve params), así que el texto
+// alternativo de la tarjeta se arma aquí con el nombre real del perfil.
+export async function generateImageMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  const profile = await getOgProfile(normalizeUsername((await params).username));
+  const who = profile?.displayName
+    ? `${profile.displayName} (@${profile.username})`
+    : "FlowPub";
+  return [{ id: "og", alt: `Perfil de ${who} en FlowPub`, size, contentType }];
+}
+
 /** Descarga el avatar y lo vuelve data-URI. Cualquier fallo → null (cae a la
  *  inicial), para que la imagen OG nunca truene por un avatar caído. */
 async function avatarDataUri(src: string | null): Promise<string | null> {
@@ -123,9 +146,7 @@ export default async function ProfileOgImage({
 }: {
   params: Promise<{ username: string }>;
 }) {
-  const raw = decodeURIComponent((await params).username);
-  const username = raw.startsWith("@") ? raw.slice(1).toLowerCase() : raw.toLowerCase();
-  const profile = await fetchOgProfile(username);
+  const profile = await getOgProfile(normalizeUsername((await params).username));
 
   const dir = join(process.cwd(), "src", "app", "_og");
   const [frauncesItalic, fraunces, hanken] = await Promise.all([

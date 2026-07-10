@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
@@ -8,7 +9,6 @@ import { ImageResponse } from "next/og";
 // así queda cacheable e independiente de la sesión. Los hex son la paleta
 // bloqueada: aquí no existen los tokens CSS (esto rasteriza a PNG con satori).
 
-export const alt = "FlowPub";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -73,13 +73,27 @@ function clampTitle(t: string, max = 96): string {
   return `${(sp > 40 ? cut.slice(0, sp) : cut).trim()}…`;
 }
 
+// cache(): generateImageMetadata y el componente comparten la consulta.
+const getOgFlow = cache(fetchOgFlow);
+
+// alt dinámico con el título real del Flow (el `alt` exportado no ve params).
+export async function generateImageMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const flow = await getOgFlow((await params).id);
+  const alt = flow?.title ? `${clampTitle(flow.title, 70)} — FlowPub` : "FlowPub";
+  return [{ id: "og", alt, size, contentType }];
+}
+
 export default async function FlowOgImage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const flow = await fetchOgFlow(id);
+  const flow = await getOgFlow(id);
 
   const dir = join(process.cwd(), "src", "app", "_og");
   const [frauncesItalic, fraunces, hanken] = await Promise.all([
