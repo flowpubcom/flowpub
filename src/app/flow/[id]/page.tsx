@@ -19,7 +19,11 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id } = await params;
   const flow = await fetchFlow(id); // cache(): misma consulta que la página
-  if (!flow) return { title: "Flow" };
+  // Soft-404 fix: como `loading.tsx` mete la página en un Suspense, el shell se
+  // manda con status 200 ANTES de que el cuerpo llegue a su `notFound()`, y ya
+  // no se puede cambiar a 404. `generateMetadata` se resuelve completa antes de
+  // streamear un solo byte, así que aquí sí sale un 404 real.
+  if (!flow) notFound();
 
   const description = flow.excerpt || `${flow.title} — un Flow en FlowPub.`;
   const authorUrl = absoluteUrl(`/@${flow.author.username}`);

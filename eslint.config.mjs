@@ -11,6 +11,9 @@ const eslintConfig = [
       ".claude/**",
       "node_modules/**",
       "design_handoff_flowpub/**",
+      // Assets estáticos servidos verbatim (Three.js vendorizado de la
+      // webxperience de /brag, etc.): no son superficie de lint.
+      "public/**",
       "next-env.d.ts",
     ],
   },
