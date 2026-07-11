@@ -1,11 +1,46 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 10 — 2026-07-08 (audit integral multi-agente +
-> fixes: i18n/tema globales en las 4 superficies, seguridad, correctness, a11y;
-> comentarios voice-first; brag pack en `marketing/brag/`. Deploy `043faba` VIVO;
-> ⚠️ 3 pasos manuales de backend YA CORRIDOS por Julio: migration_23, migration_24
-> y redeploy de send-push)**.
+> Última actualización: **sesión 11 — 2026-07-11 (tooling: tsgo/TS7 nativo como typecheck
+> rápido del día a día, aditivo; tsc 6 sigue siendo el gate autoritativo). Antes: OG por
+> perfil/Flow (2026-07-09) y audit integral multi-agente (sesión 10). Sin SQL ni deploy
+> pendientes de esta sesión.**
+
+## Sesión 11 (cont.) — 2026-07-11: typecheck rápido con tsgo (TS7 nativo, aditivo)
+
+**Solo tooling — cero cambios de producto, nada de SQL/deploy.** Adoptado el compilador
+nativo de TypeScript 7 (**tsgo**, del paquete `@typescript/native-preview`) como typecheck del
+día a día, **de forma aditiva**: `tsc` 6.0.3 sigue siendo el gate autoritativo.
+
+- **Qué se adoptó:**
+  - `npm i -D @typescript/native-preview` (bin `tsgo`). **No se tocó** la dep `typescript`
+    6.0.3 — el preview convive sin conflicto (no se usó `typescript@7` porque sus bins
+    `tsc`/`tsserver` chocarían con los de v6 en `.bin`).
+  - Scripts: `typecheck` → `tsgo --noEmit --tsBuildInfoFile .tsbuildinfo.tsgo` (el rápido,
+    diario); `typecheck:tsc` → `tsc --noEmit` (el autoritativo, mismo comando de antes).
+  - `.gitignore`: `.tsbuildinfo.tsgo` (el `*.tsbuildinfo` de siempre ya cubría el de tsc, pero
+    NO el `.tsgo` porque no termina en `.tsbuildinfo`).
+  - CLAUDE.md: bloque de comandos + nota de dos pistas + gotcha del tsbuildinfo compartido.
+- **Por qué tsgo, con evidencia del trial:** paridad EXACTA de errores en este repo, ~5–12×
+  más rápido, cero conflictos con build/lint. **Gotcha clave neutralizado:** tsgo y tsc
+  comparten `tsconfig.tsbuildinfo` por default y se invalidan la caché mutuamente → se les
+  separó el archivo (`.tsbuildinfo.tsgo` vía flag).
+- **Por qué por FASES (tsgo diario, tsc como gate) y no reemplazar TS6 aún:** el TS 7.0 GA
+  (2026-07-08) **no trae la API programática en JS**, y eso es lo que hoy consumen `next build`,
+  typescript-eslint y el default de VS Code. Esa API llega en **7.1 (~octubre 2026)**. Hasta
+  entonces, tsc 6 tiene que seguir siendo la verdad para el pipeline.
+- **Verificación (todo limpio):** `typecheck` (tsgo) 0 errores, crea `.tsbuildinfo.tsgo`; 1ª
+  corrida (fría) ~2.7 s, 2ª (caliente) **~0.4–0.8 s** (sub-segundo); `typecheck:tsc` 0 errores;
+  `lint` limpio; `next build` verde. `git status` NO incluye ningún `.tsbuildinfo` (ambos
+  ignorados, confirmado con `git check-ignore`).
+
+**🎯 Hito de revisita:** cuando salga **TS 7.1** con la API programática + soporte de Next y
+typescript-eslint, evaluar **reemplazar typescript 6 por 7 de lleno** (quitar el paquete
+preview, colapsar los dos scripts en uno).
+
+**👉 Julio:** es solo tooling — commit + push cuando gustes. En el día a día corre
+`npm run typecheck` (tsgo, casi instantáneo); ante cualquier duda o rareza, `npm run
+typecheck:tsc` manda.
 
 ## Sesión 11 — 2026-07-09: OpenGraph (audit + fixes)
 

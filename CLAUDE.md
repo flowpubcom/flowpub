@@ -41,11 +41,19 @@ Turnstile** (signup/login) · **Google Gemini** (STT, pulido, portada/translate)
 
 ```bash
 npm run dev          # next dev (Turbopack, :3000)
-npm run typecheck    # tsc --noEmit — CORRE ESTO antes de dar por hecho un cambio
+npm run typecheck    # tsgo --noEmit (TS7 nativo, ~sub-segundo en caliente) — el del día a día
+npm run typecheck:tsc # tsc --noEmit (TS6, el GATE autoritativo) — ante CUALQUIER duda, manda ESTE
 npm run lint         # eslint
 npm run build        # next build (compila + chequea tipos de rutas)
 npm run start        # next start (sirve el build)
 ```
+
+> **Typecheck en dos pistas (aditivo):** `npm run typecheck` corre **tsgo** (compilador nativo
+> TS7, `@typescript/native-preview`) — rápido, para iterar. `npm run typecheck:tsc` corre el
+> **tsc 6.0.3** de siempre, que sigue siendo la **fuente de verdad**. Paridad de errores
+> verificada en este repo, pero si tsgo y tsc discrepan **gana tsc** (y avísalo). El build de
+> Vercel y typescript-eslint siguen usando tsc 6. (Revisita cuando salga TS 7.1 con API
+> programática — ver `ESTADO.md`.)
 
 - **Backend:** las **migraciones SQL y el deploy de Edge Functions los corre Julio** a mano
   (yo escribo el SQL/código). El SQL vive en `supabase/` (`schema.sql` + `migration_*.sql`
@@ -200,6 +208,11 @@ políticas RLS escritas y probadas.
 - **PowerShell 5.1 (Windows):** sin `&&`/`||`; encoding raro con acentos al llamar exes; para
   servidores usa las herramientas `preview_*`, no Bash.
 - **Secretos:** jamás en `NEXT_PUBLIC_*` (se hornean en el bundle público).
+- **tsgo vs tsc comparten `tsconfig.tsbuildinfo`:** por default ambos escriben el MISMO archivo
+  de caché incremental y se **invalidan mutuamente** (cada corrida obliga a la otra a rehacer
+  todo). Ya está neutralizado en los scripts: `typecheck` (tsgo) usa `--tsBuildInfoFile
+  .tsbuildinfo.tsgo` aparte. **Si invocas `tsgo` a mano, pásale ese flag** o volverás a pisar
+  la caché de tsc.
 
 ## Memoria y handoff
 

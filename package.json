@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsgo --noEmit --tsBuildInfoFile .tsbuildinfo.tsgo",
+    "typecheck:tsc": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.171.0",
     "@typescript-eslint/parser": "^8.62.1",
+    "@typescript/native-preview": "^7.0.0-dev.20260707.2",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.9",
     "puppeteer-core": "^23.11.1",
