@@ -1,10 +1,139 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 11 — 2026-07-11 (tooling: tsgo/TS7 nativo como typecheck
-> rápido del día a día, aditivo; tsc 6 sigue siendo el gate autoritativo). Antes: OG por
-> perfil/Flow (2026-07-09) y audit integral multi-agente (sesión 10). Sin SQL ni deploy
-> pendientes de esta sesión.**
+> Última actualización: **sesión 12 — 2026-07-29 (auditoría integral: 2 fugas reales
+> confirmadas EN VIVO contra producción → `migration_25` ⚠️ PENDIENTE de correr, + bump
+> de Next por 9 advisories). Antes: tooling tsgo (sesión 11) y OG por perfil/Flow.**
+
+## Sesión 12 — 2026-07-29: auditoría integral (⚠️ `migration_25` pendiente)
+
+Auditoría pedida por Julio. Arrancó como workflow multi-agente de 9 dimensiones, pero los
+10 subagentes murieron por tope de sesión → se completó **inline**, con verificación EN VIVO
+contra producción (anon key, solo lectura). **Base verde:** `typecheck` (tsgo) y
+`typecheck:tsc` 0 errores, `lint` limpio, `next build` compila 31 rutas, `/api/version`
+responde `be5f2f1` (= `main`), headers de seguridad sirviéndose bien.
+
+**🔴 ALTO — buckets de storage ENUMERABLES por cualquier anónimo (verificado en vivo).**
+La policy `storage_read` de `schema.sql` pedía solo `bucket_id in ('audio','avatars','covers')`,
+sin acotar por dueño → un `POST /storage/v1/object/list/audio` sin sesión listaba las carpetas
+(uid por carpeta) y, descendiendo, todos los archivos. **Medido: 30 audios enumerables, 21 de
+ellos NO referenciados por ningún Flow ni comentario público** (borradores, ocultos,
+grabaciones abandonadas) — descargables sin llave (HEAD 200, `audio/webm`, 1.3 MB). En una app
+voice-first eso es la voz de la gente. `messages` sí estaba bien cerrado (devolvió `[]`).
+→ **`migration_25`** acota el SELECT al dueño de la carpeta. No rompe nada: la app nunca lista
+buckets, y los buckets públicos se sirven por `/object/public/…` **sin pasar por RLS**
+(comprobado con HEAD sin apikey). Cierra el descubrimiento, no el acceso por URL directa
+(paths UUID, no adivinables); el cierre total = `audio` privado + signed URLs como `messages`.
+
+**🟠 MEDIO — `profiles.push_prefs` sin GRANT SELECT (bug vivo, verificado: 42501).**
+`migration_22` solo granteó UPDATE, y `profiles` tiene grants partidos por columna desde la 15/20.
+`fetchPushPrefs()` se traga el error y cae a defaults en true → **/configuración siempre pinta
+los 3 switches de push encendidos**, aunque el usuario los haya apagado (guardar sí servía; el
+Edge Function sí los respetaba — el usuario veía una mentira). → arreglado en `migration_25`,
+que además **re-lista el set COMPLETO** de columnas (select y update) para blindar el orden:
+si se re-corre la `migration_20`, ya no se pierden los grants de `push_prefs`.
+
+**🔴 ALTO (deps) — Next 16.2.9 con 9 advisories, TODOS parcheados en 16.2.11.**
+Cae dentro de `^16.2.9`, así que es un bump de parche: `npm i next@latest` (16.2.12) +
+`npm audit fix` (también sube postcss/sharp/brace-expansion). El único directamente aplicable
+es **middleware bypass en App Router con Turbopack** (FlowPub compila con Turbopack y usa
+`middleware.ts` para gatear `/componer`, `/mensajes`, `/notificaciones`); el impacto real es
+bajo porque el gate de verdad es RLS (esas páginas leen con las cookies del usuario), pero el
+bump es gratis. No aplican: Server Actions (no hay `"use server"`), SVG en Image Optimization
+(la app no usa `next/image`), SSRF en rewrites (el `/brag` no es controlable).
+
+**🟠 MEDIO — `lang: "es"` HARDCODEADO en `publishFlow`** (`src/data/publishApi.ts:42`; ningún
+call site del Composer manda idioma). Todo Flow nace marcado como español. Esto **deshace en
+la escritura** lo que la sesión 8 arregló en la lectura: `inLanguage` del `Article` y del
+`AudioObject`, el `lang=` del reader y el `isEn` de `flow/[id]/page.tsx:33` quedan mintiendo
+para Flows en inglés (SEO + lectores de pantalla leyendo inglés con voz española).
+**Sin arreglar** — necesita decidir cómo se detecta (Gemini ya ve el transcript en `polish`;
+lo natural es que devuelva el idioma junto con título y tags).
+
+**🟠 MEDIO — el OG de perfil descarga cualquier URL** (`[username]/opengraph-image.tsx`,
+`avatarDataUri`): `avatar_url` es editable por REST (está en el grant de update), y la función
+le hace `fetch` sin allowlist de host, además de bufferear la respuesta COMPLETA (`arrayBuffer`)
+antes de checar el tope de 3 MB. SSRF ciega (solo se embebe si el content-type es `image/`) +
+agotamiento de memoria con una respuesta enorme. **Sin arreglar** — fix: exigir que el host sea
+el de Supabase Storage y cortar por `content-length` antes de descargar.
+
+**🟡 BAJO (sin tocar):** `flows.duration_s` sin CHECK en BD (el tope de 3 min es solo cliente;
+por REST entra 9999) · `/configuracion` fuera del disallow de `robots.ts` (cosmético: ya trae
+`noindex` en metadata).
+
+**✅ Salió limpio (verificado, no de memoria):** i18n 305/305 keys ES↔EN con paridad forzada
+por tipos (`Record<DictKey, string>`) y cero placeholders desalineados · XSS: `safeJsonLd` en
+las 4 páginas con JSON-LD, `react-markdown` sin `rehype-raw`, `safeHref` parsea con `new URL`,
+el SW no inyecta HTML · secretos: solo valores públicos en `NEXT_PUBLIC_*` y **cero** secretos
+en `.next/static` · el OG del Flow no hace fetch remoto y clampa título y autor ·
+`auth/callback` sin open redirect (`next` acotado a rutas internas) · listeners/canales
+Realtime con cleanup balanceado (24 add / 24 remove) · nombres accesibles: 10 candidatos de
+botón solo-ícono, **todos falsos positivos** (llevan `{t(...)}`) · tokens: los únicos hex
+fuera de la capa son el logo de Google (su marca) y `theme-color`/manifest, que sí son tokens
+(`--bg-1 #f4f1ea`, `--bg-2 #141110`).
+
+**🔴 HALLAZGO EXTRA (salió al correr la migración) — `migration_20` NUNCA CORRIÓ.**
+La v1 de la 25 tronó con `42703: column "city" ... does not exist`. Verificado contra
+producción columna por columna: `city/state/country/website/instagram/x/tiktok/youtube`
+**no existen**. O sea que **la función de origen + redes + web del perfil (sesión 7,
+2026-07-08) lleva ~3 semanas muerta en producción** y nadie se enteró, porque el front trae
+la cascada tolerante `SEL_FULL→PRE20→LEGACY` y degrada en silencio (justo la defensa que se
+puso en esa sesión). Y como el SQL Editor envuelve el script en UNA transacción, ese error
+**tiró TODO para atrás, incluida la parte de storage** — la fuga siguió abierta (recomprobado).
+→ La `migration_25` v2 ya arma los grants **dinámicamente** (intersección con las columnas
+que existen), así que corre haya corrido o no la 20.
+
+**Estado real de las migraciones (verificado por REST, no de memoria):** corrieron la 10, 15,
+16, 17, 18, 21 y 22; la 23 y 24 las confirmó Julio en su día; **falta la 20**; la 19 no se
+puede ver desde fuera. → Nuevo **`supabase/verificar_estado.sql`** (solo SELECTs) que dice
+migración por migración si corrió, lista los grants por columna de `profiles` y caza tablas
+sin RLS. Correrlo de vez en cuando evita otro hueco de 3 semanas.
+
+### ✅ Cerrado en esta sesión (Julio ya corrió la `migration_25`)
+
+- **Fuga de storage: CERRADA y verificada en vivo.** Listado anónimo de `audio`, `covers` y
+  `avatars` → **0 carpetas** en los tres. **Sin regresión:** los 22 archivos públicos
+  (audios + portadas + avatares de contenido publicado) se siguen sirviendo **sin ninguna
+  llave** (22/22 HTTP 200) — como se esperaba, `/object/public/…` no pasa por RLS.
+- **`push_prefs`: legible.** `select username,push_prefs` → 200. `birthdate` sigue devolviendo
+  42501 (privada, correcto) y `role` quedó con SELECT pero **sin UPDATE** (nadie se auto-promueve).
+- **Next 16.2.9 → 16.2.12** (+ `npm audit fix`): los 9 advisories que aplicaban, cerrados.
+  Quedan 12 advisories `high` **de build/dev nada más** y sin ruta explotable aquí: `sharp`
+  0.34.5 y `postcss` 8.4.31 son copias internas de Next (y la app **no usa `next/image`**, así
+  que sharp ni se ejercita), y `brace-expansion` cuelga de la cadena de eslint. Cerrarlos
+  exigiría `--force` con eslint@10 (breaking) — **no vale la pena**.
+- **OG de perfil: fetch acotado.** `avatarDataUri` ahora exige host de confianza y corta por
+  `content-length` **antes** de bajar el archivo. **Hallazgo al verificar:** la reja inicial
+  (solo nuestro Storage) **habría dejado sin foto a 7 de los 11 avatares**, porque vienen de
+  `lh3.googleusercontent.com` (Google OAuth; `handle_new_user` copia la URL tal cual). El
+  allowlist final son los dos orígenes: Supabase + `*.googleusercontent.com` (con el punto del
+  sufijo, para que `evilgoogleusercontent.com` y `…googleusercontent.com.evil.com` NO pasen).
+  Verificado en vivo: las dos tarjetas rinden con foto (Google y Storage, PNG 200) y las 8
+  URLs hostiles de prueba (metadata 169.254.169.254, localhost, `file://`, los 3 lookalikes)
+  se rechazan. typecheck/lint/`next build` verdes.
+
+### ✅ `migration_20` + `migration_25` (2ª pasada) corridas — perfil ENCENDIDO
+
+Julio corrió la 20 y enseguida la 25. Verificado en vivo: las 8 columnas
+(`city/state/country/website/instagram/x/tiktok/youtube`) ya tienen SELECT+UPDATE junto con
+`push_prefs`; `birthdate` sigue UPDATE-only (privada) y `role` SELECT-only. El **`SEL_FULL`**
+de `fetchProfileByUsername` ya responde 200 → **la cascada cae en la rama completa y
+`hasLinks` es true en producción** (el código lleva desplegado desde la sesión 7; la migración
+fue lo único que faltaba). Los perfiles de prod cargan 200. Storage sigue cerrado (0 carpetas
+en los 3 buckets). Con los campos aún vacíos **no se pinta bloque huérfano**: el origen va tras
+un guard `originText &&` y `SocialLinks` hace `return null` si no hay web ni redes.
+
+**👉 Julio — lo que queda:**
+1. **Commit + push** (= deploy): bump de Next 16.2.12, fix del OG de perfil, `migration_25` y
+   `verificar_estado.sql`. Está todo verde (typecheck/lint/build) y listo para irse.
+2. **Prueba humana del perfil** (2 min): edita el tuyo → ciudad/estado/país con la cascada de
+   dropdowns, una red y una web → guarda → recarga. Esa ruta se escribió en la sesión 7 pero
+   **nunca se había ejercido con las columnas presentes** (lo que sí se verificó entonces fue
+   la ruta degradada). El código se ve sano, pero es revisión, no prueba de vida.
+3. **Decisión pendiente: el `lang` hardcodeado** (`publishApi.ts:42`). Propuesta: que
+   `/api/polish` devuelva el idioma detectado (Gemini ya está leyendo el transcript) acotado a
+   `es|en` con default `es`, y que `publishFlow` lo persista. Cambia lo que se guarda, por eso
+   no lo toqué.
 
 ## Sesión 11 (cont.) — 2026-07-11: typecheck rápido con tsgo (TS7 nativo, aditivo)
 

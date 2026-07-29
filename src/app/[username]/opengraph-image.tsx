@@ -116,17 +116,49 @@ export async function generateImageMetadata({
   return [{ id: "og", alt: `Perfil de ${who} en FlowPub`, size, contentType }];
 }
 
+const MAX_AVATAR_BYTES = 3_000_000;
+
+/** ¿La URL apunta a un origen en el que confiamos?
+ *
+ *  `avatar_url` es editable por REST (está en el grant de update de profiles),
+ *  así que sin esta reja el servidor haría fetch a CUALQUIER host que el
+ *  usuario escriba: SSRF a ciegas contra la red interna.
+ *
+ *  Dos orígenes legítimos, y los dos importan: nuestro Storage (avatares
+ *  subidos por el usuario) y `*.googleusercontent.com` (la foto que trae
+ *  Google OAuth — `handle_new_user` la copia tal cual del token). Medido en
+ *  prod: 7 de 11 avatares son de Google, así que dejar fuera ese host
+ *  significaría tarjetas sociales sin foto para la mayoría. */
+function isTrustedAvatarHost(src: string): boolean {
+  try {
+    const u = new URL(src);
+    if (u.protocol !== "https:") return false;
+    // El punto del sufijo es la parte importante: «evilgoogleusercontent.com»
+    // no matchea, y «googleusercontent.com.evil.com» tampoco.
+    if (u.hostname.endsWith(".googleusercontent.com")) return true;
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return !!base && u.origin === new URL(base).origin;
+  } catch {
+    return false;
+  }
+}
+
 /** Descarga el avatar y lo vuelve data-URI. Cualquier fallo → null (cae a la
  *  inicial), para que la imagen OG nunca truene por un avatar caído. */
 async function avatarDataUri(src: string | null): Promise<string | null> {
-  if (!src) return null;
+  if (!src || !isTrustedAvatarHost(src)) return null;
   try {
     const res = await fetch(src, { next: { revalidate: 3600 } });
     if (!res.ok) return null;
     const type = res.headers.get("content-type") || "";
     if (!type.startsWith("image/")) return null;
+    // Corta ANTES de bajar: sin esto, `arrayBuffer()` se traga la respuesta
+    // completa (un archivo enorme tumba la función por memoria) y el tope de
+    // abajo llegaba tarde.
+    const declared = Number(res.headers.get("content-length"));
+    if (Number.isFinite(declared) && declared > MAX_AVATAR_BYTES) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    if (buf.byteLength > 3_000_000) return null; // avatar patológico → inicial
+    if (buf.byteLength > MAX_AVATAR_BYTES) return null; // sin content-length, la red final
     return `data:${type};base64,${buf.toString("base64")}`;
   } catch {
     return null;
