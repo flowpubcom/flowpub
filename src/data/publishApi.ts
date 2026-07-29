@@ -22,6 +22,8 @@ export async function publishFlow(input: {
   durationSeconds: number;
   tagNames: string[];
   audioUrl?: string | null;
+  /** Idioma detectado por /api/polish. Sin pulido no hay detección → «es». */
+  lang?: "es" | "en";
   /** 'published' (default) o 'draft' («Guardar borrador»). */
   status?: "published" | "draft";
 }): Promise<PublishResult> {
@@ -39,7 +41,11 @@ export async function publishFlow(input: {
     cover_kind: input.coverKind,
     cover_url: input.coverUrl ?? null,
     audio_url: input.audioUrl ?? null,
-    lang: "es",
+    // El idioma lo detecta Gemini al pulir (ver /api/polish). Estuvo fijo en
+    // "es" y eso hacía mentir a todo lo que lo consume: el `inLanguage` del
+    // JSON-LD (Article y AudioObject), el `lang=` del reader —que los lectores
+    // de pantalla usan para elegir voz— y el `isEn` de la página del Flow.
+    lang: input.lang ?? "es",
     status: input.status ?? "published",
     duration_s: Math.round(input.durationSeconds),
   };
