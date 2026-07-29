@@ -1,9 +1,14 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 12 — 2026-07-29 (auditoría integral: 2 fugas reales
-> confirmadas EN VIVO contra producción → `migration_25` ⚠️ PENDIENTE de correr, + bump
-> de Next por 9 advisories). Antes: tooling tsgo (sesión 11) y OG por perfil/Flow.**
+> Última actualización: **sesión 12 — 2026-07-29 (auditoría integral: CERRADA y DESPLEGADA.
+> PR #1 mergeado a `main` → prod sirve `35c2046`. SQL corrido, sin pendientes de Julio).
+> Antes: tooling tsgo (sesión 11) y OG por perfil/Flow.**
+
+> **⚠️ Nota de flujo (nueva):** esta sesión estrenó **pull requests** en el repo —antes era
+> commit directo a `main`—. `gh` quedó instalado (2.96.0) y autenticado como `flowpubcom`.
+> El PR #1 se mergeó con **`--rebase`** a propósito: la historia del repo es 100% lineal y un
+> merge commit habría sido el primero. Si se sigue usando PR, conservar ese criterio.
 
 ## Sesión 12 — 2026-07-29: auditoría integral (⚠️ `migration_25` pendiente)
 
@@ -155,9 +160,30 @@ copia) y mandándolos a Gemini: EN→en con cuerpo en inglés, ES→es. typechec
 default de siempre. Ahora el `inLanguage` del JSON-LD, el `lang=` del reader (voz de los
 lectores de pantalla) y el `isEn` de la página del Flow por fin dicen la verdad.
 
-**Pendiente menor:** los Flows en inglés YA publicados quedaron con `lang='es'` y su cuerpo
-traducido al español por el pulido viejo. Si hay alguno, se corrige a mano (la columna `lang`
-está en el grant de update de `flows`).
+**Sin deuda que arrastrar:** se revisaron los 8 Flows publicados con análisis de palabras y
+**ninguno está en inglés** (lo confirmó Julio y lo verificó el barrido), así que no hay Flows
+viejos con `lang` mal ni cuerpos traducidos por el pulido anterior.
+
+### 🚀 Desplegado y verificado en producción (`35c2046`)
+
+PR #1 mergeado con `--rebase`; Vercel desplegó en ~100 s. Verificado EN VIVO tras el deploy:
+
+- **Storage:** 0 carpetas visibles para anónimos en `audio`, `covers` y `avatars`.
+- **`push_prefs`** legible · **`birthdate`** sigue privada (401) · **origen/redes del perfil**
+  activo (`city,website,instagram` → 200).
+- **Rutas** `/`, `/explorar`, `/splash`, `/design`, `/@usuario`, `/feed.xml`, `/sitemap.xml`
+  → todas 200. **Headers** de seguridad sirviéndose (HSTS, X-Frame-Options, CSP, nosniff,
+  Permissions-Policy).
+- **OG de perfil** con el fetch acotado ya vivo: PNG 200, 132 KB, con la foto de Google.
+
+**Lo único que queda es prueba humana, no código:** graba un Flow hablando **en inglés** con
+mic real y confirma el end-to-end — el artículo debe salir EN INGLÉS (no traducido) y guardarse
+con `lang='en'`. La detección se verificó contra Gemini (4/4), pero la última milla —mic,
+transcripción, publicación— solo se cierra a mano.
+
+**Siguiente paso grande sugerido (no urgente):** volver el bucket `audio` privado + signed URLs,
+como `messages`. Hoy un audio de borrador sigue siendo accesible por URL directa (path UUID, no
+adivinable); eso cerraría el caso por completo. Toca reader, feed, radio, OG y RSS.
 
 ## Sesión 11 (cont.) — 2026-07-11: typecheck rápido con tsgo (TS7 nativo, aditivo)
 
