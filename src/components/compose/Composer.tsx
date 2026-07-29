@@ -39,6 +39,9 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [tags, setTags] = useState<string[]>([]);
+  // Idioma del Flow, detectado al pulir. Se persiste tal cual: lo consumen el
+  // JSON-LD, el `lang=` del reader y el toggle de traducción.
+  const [lang, setLang] = useState<"es" | "en">("es");
   const [coverIndex, setCoverIndex] = useState(0);
   // Portada con foto propia (opcional): null = portada generativa.
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
@@ -90,7 +93,12 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
   const runPolish = useCallback(
     async (transcriptText: string) => {
       setProc("polish");
-      let result: { title: string; bodyMd: string; tags: string[] } | null = null;
+      let result: {
+        title: string;
+        bodyMd: string;
+        tags: string[];
+        lang?: "es" | "en";
+      } | null = null;
       try {
         const [res] = await Promise.all([
           fetch("/api/polish", {
@@ -108,6 +116,9 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
       setTitle(result?.title ?? "");
       setBody(result?.bodyMd ?? transcriptText);
       setTags(result?.tags ?? []);
+      // Sin pulido no hay idioma detectado: se queda en «es» (el default de
+      // siempre) y el autor lo corrige editando el Flow.
+      setLang(result?.lang === "en" ? "en" : "es");
       setCoverIndex(0);
       play("pop");
       setStep("edit");
@@ -211,6 +222,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
         durationSeconds: duration,
         tagNames: tags,
         audioUrl,
+        lang,
       }),
       new Promise((r) => setTimeout(r, 1200)),
     ]);
@@ -247,6 +259,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
       durationSeconds: duration,
       tagNames: tags,
       audioUrl,
+      lang,
       status: "draft",
     });
     if (res.ok) {
@@ -269,6 +282,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
     setTitle("");
     setBody("");
     setTags([]);
+    setLang("es");
     setCoverIndex(0);
     setCoverUrl(null);
     setExplicitLang(false);

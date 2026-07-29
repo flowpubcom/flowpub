@@ -130,10 +130,34 @@ un guard `originText &&` y `SocialLinks` hace `return null` si no hay web ni red
    dropdowns, una red y una web → guarda → recarga. Esa ruta se escribió en la sesión 7 pero
    **nunca se había ejercido con las columnas presentes** (lo que sí se verificó entonces fue
    la ruta degradada). El código se ve sano, pero es revisión, no prueba de vida.
-3. **Decisión pendiente: el `lang` hardcodeado** (`publishApi.ts:42`). Propuesta: que
-   `/api/polish` devuelva el idioma detectado (Gemini ya está leyendo el transcript) acotado a
-   `es|en` con default `es`, y que `publishFlow` lo persista. Cambia lo que se guarda, por eso
-   no lo toqué.
+### ✅ `lang` del Flow — arreglado, y destapó un bug MAYOR
+
+Julio dio luz verde a detectar el idioma en `/api/polish`. Al probarlo contra Gemini de verdad
+salió algo peor que el campo `lang`:
+
+**🔴 El pulido llevaba traduciendo al español los Flows en inglés.** Como el system prompt está
+íntegramente en español, ante un transcript en inglés el modelo escribía **título y cuerpo en
+español** y luego se autoetiquetaba «es» — coherente consigo mismo y traicionando a quien habló.
+Medido: **0/2** corridas respetaban el inglés con el prompt viejo; ni reforzando el texto del
+prompt mejoraba (**1/3**). Para una app cuya promesa es «conserva la VOZ», esto era grave, y era
+**preexistente** — mi cambio solo lo hizo visible.
+
+**La causa y el fix:** en un `responseSchema` el modelo genera los campos **en el orden en que
+se declaran**. Con `lang` al final, redactaba en español y etiquetaba después. Poniendo **`lang`
+PRIMERO** decide el idioma antes de redactar y todo lo demás se condiciona a esa decisión.
+Eso + la regla del idioma movida arriba y en las dos lenguas (la línea en mayúsculas en inglés
+es la que rompe el arrastre del prompt español) → **4/4 casos correctos** (2 EN + 2 ES), y los
+tags siguen saliendo en español, que es lo que exige el filtro contra `CATEGORIES`.
+Verificado además extrayendo el prompt y el orden del SCHEMA **del archivo real** (no de una
+copia) y mandándolos a Gemini: EN→en con cuerpo en inglés, ES→es. typecheck/lint/build verdes.
+
+`publishFlow` recibe `lang` y lo persiste; sin pulido (timeout/fallo) se queda en `es`, el
+default de siempre. Ahora el `inLanguage` del JSON-LD, el `lang=` del reader (voz de los
+lectores de pantalla) y el `isEn` de la página del Flow por fin dicen la verdad.
+
+**Pendiente menor:** los Flows en inglés YA publicados quedaron con `lang='es'` y su cuerpo
+traducido al español por el pulido viejo. Si hay alguno, se corrige a mano (la columna `lang`
+está en el grant de update de `flows`).
 
 ## Sesión 11 (cont.) — 2026-07-11: typecheck rápido con tsgo (TS7 nativo, aditivo)
 
