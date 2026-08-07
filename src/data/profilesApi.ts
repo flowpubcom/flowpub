@@ -26,6 +26,10 @@ export interface PublicProfile {
     tiktok: string | null;
     youtube: string | null;
   };
+  /** Presentación por voz: la persona se presenta HABLANDO (≤ 60 s). Sin
+   *  transcript a propósito — es voz cruda, no contenido publicado. */
+  introAudioUrl: string | null;
+  introDurationS: number;
   /** Fecha de alta ISO («En FlowPub desde el {fecha}»); formatear con fullDate(). */
   sinceDate: string | null;
   /** Temas elegidos, con slug para enlazar a su hub (/tema/[slug]). */
@@ -36,6 +40,9 @@ export interface PublicProfile {
    *  Si es false (lectura degradada), el editor NO debe reescribir esos campos
    *  para no borrar datos reales por una lectura incompleta. */
   hasLinks: boolean;
+  /** ¿La lectura trajo la presentación por voz (migración 27 + grant)? Si es
+   *  false, la UI de grabar no se ofrece: no tendría dónde guardarla. */
+  hasIntro: boolean;
 }
 
 export interface ProfileStats {
@@ -48,10 +55,13 @@ export const fetchProfileByUsername = cache(
   async (username: string): Promise<PublicProfile | null> => {
     const supabase = await createClient();
     const TAGS = "profile_tags(tags(name_es,slug))";
-    // Cascada tolerante por columnas (grant por columna): full (migración 20) →
-    // pre-20 (con banner) → legacy (sin banner). 42501 = columna sin grant,
-    // 42703 = columna inexistente — ambas caen al select más chico.
-    const SEL_FULL = `id,username,display_name,avatar_url,banner_url,bio,location,city,state,country,website,instagram,x,tiktok,youtube,created_at,${TAGS}`;
+    // Cascada tolerante por columnas (grant por columna): full (migración 27) →
+    // pre-27 (sin la presentación por voz) → pre-20 (con banner) → legacy (sin
+    // banner). 42501 = columna sin grant, 42703 = columna inexistente — ambas
+    // caen al select de abajo.
+    const LINKS = `city,state,country,website,instagram,x,tiktok,youtube`;
+    const SEL_FULL = `id,username,display_name,avatar_url,banner_url,bio,location,${LINKS},intro_audio_url,intro_duration_s,created_at,${TAGS}`;
+    const SEL_PRE27 = `id,username,display_name,avatar_url,banner_url,bio,location,${LINKS},created_at,${TAGS}`;
     const SEL_PRE20 = `id,username,display_name,avatar_url,banner_url,bio,location,created_at,${TAGS}`;
     const SEL_LEGACY = `id,username,display_name,avatar_url,bio,location,created_at,${TAGS}`;
     const missing = (code?: string) => code === "42703" || code === "42501";
@@ -60,7 +70,14 @@ export const fetchProfileByUsername = cache(
       supabase.from("profiles").select(sel).eq("username", username).maybeSingle();
 
     let { data, error } = await run(SEL_FULL);
-    let hasLinks = !missing(error?.code); // ¿el select con las columnas nuevas pasó?
+    // ¿Pasó el select con la presentación por voz (migración 27)?
+    let hasIntro = !missing(error?.code);
+    let hasLinks = hasIntro;
+    if (missing(error?.code)) {
+      hasIntro = false;
+      ({ data, error } = await run(SEL_PRE27));
+      hasLinks = !missing(error?.code); // ¿y las de origen/redes (migración 20)?
+    }
     if (missing(error?.code)) {
       hasLinks = false;
       ({ data, error } = await run(SEL_PRE20));
@@ -93,6 +110,8 @@ export const fetchProfileByUsername = cache(
         tiktok: (row.tiktok as string | null) ?? null,
         youtube: (row.youtube as string | null) ?? null,
       },
+      introAudioUrl: (row.intro_audio_url as string | null) ?? null,
+      introDurationS: Number(row.intro_duration_s ?? 0),
       sinceDate: (row.created_at as string | null) ?? null,
       topics: (row.profile_tags ?? [])
         .map((pt: any) =>
@@ -103,6 +122,7 @@ export const fetchProfileByUsername = cache(
         .filter((t: { name: string; slug: string } | null): t is { name: string; slug: string } => t !== null),
       inviteRedemptions: redErr ? 0 : Number(redemptions ?? 0),
       hasLinks,
+      hasIntro,
     };
   },
 );

@@ -7,7 +7,7 @@ import { ChevronDown, ImagePlus, Mic, Pause, Play, RefreshCw, Square, X } from "
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/format";
 import { useRecorder, type Recorder } from "@/lib/useRecorder";
-import { COVER_KINDS } from "@/lib/covers";
+import { COVER_KINDS, kindFromSeed } from "@/lib/covers";
 import { Logo, FlowMark } from "@/components/brand";
 import { AudioPlayer, Button, Switch } from "@/components/ui";
 import { Cover } from "@/components/cover";
@@ -119,7 +119,13 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
       // Sin pulido no hay idioma detectado: se queda en «es» (el default de
       // siempre) y el autor lo corrige editando el Flow.
       setLang(result?.lang === "en" ? "en" : "es");
-      setCoverIndex(0);
+      // Siembra la dirección de arte DESDE el Flow. Antes se fijaba en 0, que
+      // es «escher» (los cubos isométricos): como nadie toca «regenerar»,
+      // TODOS los Flows salían con cubos y las otras tres direcciones no se
+      // usaban nunca. Con el hash del contenido, cada Flow estrena la suya y
+      // sigue siendo determinista (el mismo texto → la misma portada).
+      const seed = `${result?.title ?? ""}|${transcriptText}`;
+      setCoverIndex(Math.max(0, COVER_KINDS.indexOf(kindFromSeed(seed))));
       play("pop");
       setStep("edit");
     },
@@ -661,6 +667,47 @@ function ProcessingStep({
 }
 
 // ── edit ─────────────────────────────────────────────────────────────────────
+
+/** Pastilla toggleable para declarar contenido sensible. Mismo lenguaje visual
+ *  que los chips de temas: apagada es un contorno; encendida se rellena. NO usa
+ *  grana — está reservada a grabar/publicar/like/CTAs, y esto no es un error ni
+ *  una alerta, es una declaración del autor. */
+function SensitiveChip({
+  active,
+  onToggle,
+  label,
+  disabled,
+}: {
+  active: boolean;
+  onToggle: () => void;
+  label: string;
+  disabled?: boolean;
+}) {
+  const { play } = useSound();
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      disabled={disabled}
+      onClick={() => {
+        if (disabled) return;
+        onToggle();
+        play("tick");
+      }}
+      className={cn(
+        "fp-hit-y rounded-pill border px-3 py-1.5 font-sans text-[13px] font-medium transition-colors duration-150 ease-flow",
+        active
+          ? "border-ink bg-ink text-ink-on"
+          : "border-line-2 text-text-2 hover:border-ink hover:text-ink",
+        disabled && "cursor-not-allowed opacity-60 hover:border-line-2",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 function ViewToggle({
   view,
   onChange,
@@ -898,46 +945,33 @@ function EditStep({
           />
         </div>
 
-        {/* contenido sensible: el autor declara; Hot fija 18+ */}
-        <div className="mt-6 flex flex-col gap-1 rounded-[14px] border border-line bg-surface p-4">
-          <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-text-2">
-            Contenido sensible
-          </p>
-          <div className="flex items-center justify-between gap-4 py-1.5">
-            <div>
-              <p className="font-sans text-[14px] font-semibold text-ink">
-                Palabras altisonantes
-              </p>
-              <p className="font-sans text-[12.5px] text-text-2">
-                {explicitLang
-                  ? "Se detectaron en tu transcript — puedes corregir la marca."
-                  : "Márcalo si tu Flow trae groserías."}
-              </p>
-            </div>
-            <Switch
-              checked={explicitLang}
-              onCheckedChange={setExplicitLang}
-              label="Palabras altisonantes"
-            />
-          </div>
-          <div className="flex items-center justify-between gap-4 py-1.5">
-            <div>
-              <p className="font-sans text-[14px] font-semibold text-ink">
-                Para mayores de 18
-              </p>
-              <p className="font-sans text-[12.5px] text-text-2">
-                {hotLocked
-                  ? "El tema Hot siempre es para mayores de 18."
-                  : "Solo quien confirme su edad podrá escucharlo."}
-              </p>
-            </div>
-            <Switch
-              checked={adult}
-              onCheckedChange={setAdult}
-              disabled={hotLocked}
-              label="Para mayores de 18"
-            />
-          </div>
+        {/* Contenido sensible: el autor declara; el tema Hot fija 18+.
+            Aplica a una minoría de Flows, así que vive como dos pastillas del
+            mismo lenguaje que los chips de temas — no como una caja con
+            encabezado y descripciones (ocupaba ~160px del paso de publicar).
+            La explicación aparece SOLO cuando hace falta: al encender una, o
+            cuando el pipeline detectó groserías y hay que poder corregirlo. */}
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <SensitiveChip
+            active={explicitLang}
+            onToggle={() => setExplicitLang(!explicitLang)}
+            label="Groserías"
+          />
+          <SensitiveChip
+            active={adult}
+            onToggle={() => setAdult(!adult)}
+            disabled={hotLocked}
+            label="18+"
+          />
+          {(explicitLang || adult || hotLocked) && (
+            <p className="w-full font-sans text-[12.5px] leading-snug text-text-2">
+              {hotLocked
+                ? "El tema Hot siempre es para mayores de 18."
+                : adult
+                  ? "Solo quien confirme su edad podrá escucharlo."
+                  : "Se detectaron groserías en tu transcript — puedes corregir la marca."}
+            </p>
+          )}
         </div>
 
         {error && (

@@ -114,7 +114,14 @@ export function FlowCard({ flow }: { flow: Flow }) {
     if (!userToggled.current) return;
     userToggled.current = false;
     if (document.activeElement === document.body) {
-      (expanded ? lessRef : readRef).current?.focus();
+      // `preventScroll` es lo que hace que el texto se expanda HACIA ABAJO.
+      // Al expandir, el botón «Leer aquí» se desmonta y el foco cae al body;
+      // este effect lo pasa al control equivalente («Mostrar menos»), que vive
+      // al FINAL del artículo. Sin preventScroll, `.focus()` lo trae a la vista
+      // y el navegador salta al final del texto — había que subir para empezar
+      // a leer. Se conserva el traspaso de foco (teclado y lector de pantalla
+      // siguen donde estaban) y se quita el salto.
+      (expanded ? lessRef : readRef).current?.focus({ preventScroll: true });
     }
   }, [expanded]);
 
@@ -190,9 +197,37 @@ export function FlowCard({ flow }: { flow: Flow }) {
           </h3>
         </Link>
 
+        {/* La voz, junto al título. En una app voice-first «de quién es» es un
+            filtro tan fuerte como el tema: tiene que llegar ANTES de decidir si
+            le picas play, no debajo del reproductor. El pie conserva el tema y
+            las acciones. */}
+        <Link
+          href={`/@${flow.author.username}`}
+          className="group/author mt-2.5 flex min-w-0 items-center gap-2"
+        >
+          <Avatar
+            name={flow.author.displayName}
+            color={flow.author.avatarColor}
+            size={24}
+          />
+          <span className="min-w-0 truncate font-sans text-[13px] font-semibold text-ink transition-colors group-hover/author:text-grana">
+            {flow.author.displayName}
+          </span>
+          <span className="flex-none font-sans text-[12px] text-text-2">
+            · {relativeTime(flow.ageMinutes, lang)}
+          </span>
+        </Link>
+
         {/* extracto → artículo completo ahí mismo (Flow, baby) */}
         {expanded ? (
-          <div id={proseId} className="[animation:fp-rise_.24s_var(--ease-flow)]">
+          // overflow-anchor:none — el scroll anchoring del navegador compensa
+          // el crecimiento moviendo el scroll, y el artículo «subía» al
+          // expandirse. Apagado, la tarjeta crece hacia abajo y lo que ya
+          // estabas leyendo se queda quieto.
+          <div
+            id={proseId}
+            className="[overflow-anchor:none] [animation:fp-rise_.24s_var(--ease-flow)]"
+          >
             <FlowProse source={body} className="mt-3" demoteHeadings />
             <div className="mt-2 flex items-center gap-3">
               <button
@@ -246,24 +281,15 @@ export function FlowCard({ flow }: { flow: Flow }) {
         </div>
 
         <div className="mt-5 flex items-center justify-between gap-3 border-t border-line pt-4">
-          <Link
-            href={`/@${flow.author.username}`}
-            className="flex min-w-0 items-center gap-2.5"
-          >
-            <Avatar
-              name={flow.author.displayName}
-              color={flow.author.avatarColor}
-              size={34}
-            />
-            <span className="min-w-0">
-              <span className="block truncate font-sans text-[14px] font-semibold text-ink">
-                {flow.author.displayName}
-              </span>
-              <span className="block truncate font-sans text-[12px] text-text-2">
-                {relativeTime(flow.ageMinutes, lang)} · {flow.tag}
-              </span>
+          {/* El autor y la hora se subieron junto al título; aquí queda el tema
+              como ancla izquierda para que el pie no se vea cojo. */}
+          {flow.tag ? (
+            <span className="min-w-0 truncate font-sans text-[12px] text-text-2">
+              {flow.tag}
             </span>
-          </Link>
+          ) : (
+            <span />
+          )}
 
           <div className="flex flex-none items-center gap-0.5">
             {isOwn && (

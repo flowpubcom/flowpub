@@ -14,6 +14,21 @@ async function me() {
   return { supabase, user };
 }
 
+/**
+ * Resultado común de las mutaciones. `23505` = la fila ya existía (doble
+ * click): el estado deseado ya está, así que cuenta como éxito.
+ *
+ * Cualquier otro error se AVISA en consola antes de devolver ok:false. Antes se
+ * descartaba en silencio y un fallo real (RLS, red, columna) se veía solo como
+ * un botón que se revertía solo — imposible de diagnosticar desde el reporte
+ * de un usuario.
+ */
+function settle(error: { code?: string; message?: string } | null, what: string): Result {
+  if (!error || error.code === "23505") return { ok: true };
+  console.warn(`[engagement] ${what} falló:`, error.code, error.message);
+  return { ok: false };
+}
+
 export async function setFlowLike(flowId: string, on: boolean): Promise<Result> {
   const { supabase, user } = await me();
   if (!user) return { ok: false };
@@ -21,8 +36,7 @@ export async function setFlowLike(flowId: string, on: boolean): Promise<Result> 
     ? supabase.from("likes").insert({ user_id: user.id, flow_id: flowId })
     : supabase.from("likes").delete().eq("user_id", user.id).eq("flow_id", flowId);
   const { error } = await q;
-  // 23505 = ya existía el like (doble click): el estado deseado ya está.
-  return { ok: !error || error.code === "23505" };
+  return settle(error, "setFlowLike");
 }
 
 export async function setCommentLike(
@@ -39,7 +53,7 @@ export async function setCommentLike(
         .eq("user_id", user.id)
         .eq("comment_id", commentId);
   const { error } = await q;
-  return { ok: !error || error.code === "23505" };
+  return settle(error, "setCommentLike");
 }
 
 export async function setFollow(
@@ -58,7 +72,7 @@ export async function setFollow(
         .eq("follower_id", user.id)
         .eq("followee_id", followeeId);
   const { error } = await q;
-  return { ok: !error || error.code === "23505" };
+  return settle(error, "setFollow");
 }
 
 export async function setSave(flowId: string, on: boolean): Promise<Result> {
@@ -68,7 +82,7 @@ export async function setSave(flowId: string, on: boolean): Promise<Result> {
     ? supabase.from("saves").insert({ user_id: user.id, flow_id: flowId })
     : supabase.from("saves").delete().eq("user_id", user.id).eq("flow_id", flowId);
   const { error } = await q;
-  return { ok: !error || error.code === "23505" };
+  return settle(error, "setSave");
 }
 
 /** Compartir un Flow: Web Share API con caída a portapapeles. */

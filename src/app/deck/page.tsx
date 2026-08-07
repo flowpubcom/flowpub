@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Deck } from "@/components/deck/Deck";
+import { LangOverride } from "@/providers/I18nProvider";
 
 // Pitch deck ejecutivo (/deck): presentación interactiva para conseguir recursos.
 // No indexable (activo de fundraising que se comparte por enlace).
@@ -11,5 +12,11 @@ export const metadata: Metadata = {
 };
 
 export default function DeckPage() {
-  return <Deck />;
+  // LangOverride: el toggle de idioma del deck cambia SOLO esta página (es un
+  // activo de fundraising que se enseña en ambos idiomas, no una preferencia).
+  return (
+    <LangOverride>
+      <Deck />
+    </LangOverride>
+  );
 }

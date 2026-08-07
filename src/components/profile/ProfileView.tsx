@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, MapPin, MessageCircle, Mic, PenLine, Pencil, Share2, Star } from "lucide-react";
@@ -11,6 +11,7 @@ import { FlowCover } from "@/components/cover";
 import { FlowEditModal } from "@/components/flow/FlowEditModal";
 import { ImageCropper } from "./ImageCropper";
 import { SocialLinks } from "./SocialLinks";
+import { VoiceIntro } from "./VoiceIntro";
 import { InvitesCard } from "./InvitesCard";
 import { OriginSelect } from "./OriginSelect";
 import { BirthdateSelect } from "./BirthdateSelect";
@@ -56,6 +57,7 @@ export function ProfileView({
 
   const [tab, setTab] = useState<Tab>("flows");
   const [following, setFollowing] = useState(initialFollowing);
+  const followPending = useRef(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editFlow, setEditFlow] = useState<Flow | null>(null);
   // Ediciones recién guardadas: se pintan al instante (tiles + modal) mientras
@@ -65,17 +67,28 @@ export function ProfileView({
     Record<string, { title: string; bodyMd: string }>
   >({});
 
+  // El servidor manda: si un refresh trae otro estado, gana él (sin esto, el
+  // estado local viejo sobrevivía a una navegación entre perfiles).
+  useEffect(() => setFollowing(initialFollowing), [initialFollowing, profile.id]);
+
   const toggleFollow = async () => {
     if (!user) {
       play("soft");
       router.push("/entrar");
       return;
     }
+    if (followPending.current) return;
+    followPending.current = true;
     const n = !following;
     setFollowing(n);
     play(n ? "pop" : "soft");
-    const res = await setFollow(profile.id, n);
-    if (!res.ok) setFollowing(!n);
+    try {
+      const res = await setFollow(profile.id, n);
+      if (!res.ok) setFollowing(!n);
+      else router.refresh();
+    } finally {
+      followPending.current = false;
+    }
   };
 
   const onShare = async () => {
@@ -195,6 +208,16 @@ export function ProfileView({
       <p className="mb-3.5 mt-1 font-sans text-[15px] text-text-2">
         @{profile.username}
       </p>
+      {/* La voz va ANTES de la bio escrita: en una app voice-first, la primera
+          impresión debe poder oírse, no leerse. */}
+      <div className="mb-3.5 -mt-1 max-w-[62ch]">
+        <VoiceIntro
+          audioUrl={profile.introAudioUrl}
+          durationSeconds={profile.introDurationS}
+          isOwn={isOwn}
+          enabled={profile.hasIntro}
+        />
+      </div>
       {profile.bio && (
         <p className="mb-3.5 max-w-[62ch] font-serif text-[18px] leading-[1.55] text-ink">
           {profile.bio}
@@ -557,9 +580,15 @@ function EditProfileModal({
       play("pop");
     } else {
       setBannerUrl(profile.bannerUrl); // revierte a lo que había
+      // `pending` = falta la migración del banner en la base. Es una condición
+      // NUESTRA, no del usuario: se le dice que aún no está disponible (y el
+      // detalle técnico va a consola, que es donde sirve).
+      if (res.pending) {
+        console.warn("[perfil] banner_url no disponible: falta la migración 14");
+      }
       setError(
         res.pending
-          ? "El banner necesita la migración 14 en la base. Avísale a Claude."
+          ? "Todavía no podemos guardar la portada del perfil. Ya lo estamos arreglando."
           : "No se pudo subir el banner. Intenta con otra imagen.",
       );
       play("soft");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
 import { useI18n } from "@/providers/I18nProvider";
@@ -22,6 +22,13 @@ export function FollowButton({
   const { user } = useAuth();
   const router = useRouter();
   const [following, setFollowing] = useState(initial);
+  // Candado in-flight: sin él, un doble tap dispara insert y delete en paralelo
+  // y el que aterrice al último gana — la UI podía quedar en «Siguiendo» con la
+  // fila borrada en la base.
+  const pending = useRef(false);
+
+  // Si el servidor manda un estado nuevo (p. ej. tras router.refresh()), gana él.
+  useEffect(() => setFollowing(initial), [initial, followeeId]);
 
   const toggle = async () => {
     if (!user) {
@@ -29,11 +36,25 @@ export function FollowButton({
       router.push("/entrar");
       return;
     }
+    if (pending.current) return;
+    pending.current = true;
     const n = !following;
     setFollowing(n);
     play(n ? "pop" : "soft");
-    const res = await setFollow(followeeId, n);
-    if (!res.ok) setFollowing(!n);
+    try {
+      const res = await setFollow(followeeId, n);
+      if (!res.ok) {
+        setFollowing(!n);
+        return;
+      }
+      // Invalida el caché de rutas de Next. Sin esto, abrir el perfil de quien
+      // acabas de seguir servía la copia previa (el segment cache tiene piso de
+      // 30 s, y en back/forward el bfcache ignora la caducidad por diseño), así
+      // que el perfil decía «Seguir» aunque la fila ya existiera.
+      router.refresh();
+    } finally {
+      pending.current = false;
+    }
   };
 
   return (

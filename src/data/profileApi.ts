@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/client";
 import { normalizeHandle, normalizeWebsite } from "@/lib/links";
+import { uploadIntroAudio } from "@/data/storage";
 
 // Escrituras del onboarding desde el cliente (como el usuario autenticado; RLS
 // exige que profile_id / id == auth.uid()).
@@ -164,6 +165,50 @@ export async function uploadBanner(
     return { url: null, pending: true }; // columna/grant sin migrar (14)
   }
   return { url: pErr ? null : url };
+}
+
+/**
+ * Guarda la presentación por voz del perfil: sube el audio al bucket `audio` y
+ * apunta las columnas del perfil. Mismo patrón tolerante que el banner: si la
+ * migración 27 no ha corrido, devuelve `pending` en vez de tronar.
+ *
+ * `blob = null` BORRA la presentación (deja las columnas en null/0). El archivo
+ * viejo se queda en Storage a propósito: borrarlo exigiría parsear el path y
+ * arriesgarse a tumbar el audio de alguien más si la URL viniera rara.
+ */
+export async function saveVoiceIntro(
+  blob: Blob | null,
+  durationSeconds: number,
+): Promise<{ ok: boolean; url?: string | null; pending?: boolean }> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { ok: false };
+
+  let url: string | null = null;
+  if (blob) {
+    url = await uploadIntroAudio(blob);
+    if (!url) return { ok: false };
+  }
+
+  // El tope de 60 s también se aplica aquí (el CHECK de la BD lo vuelve a
+  // exigir; esto evita un round-trip fallido por un redondeo de más).
+  const secs = blob ? Math.max(1, Math.min(60, Math.round(durationSeconds))) : 0;
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ intro_audio_url: url, intro_duration_s: secs })
+    .eq("id", user.id);
+
+  if (
+    error?.code === "PGRST204" ||
+    error?.code === "42703" ||
+    error?.code === "42501"
+  ) {
+    return { ok: false, pending: true }; // falta la migración 27 (o su grant)
+  }
+  return { ok: !error, url };
 }
 
 export async function completeOnboarding(input: {

@@ -1,12 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { cn } from "@/lib/cn";
+import { useEffect, useRef, useState } from "react";
 import { useSound } from "@/providers/SoundProvider";
 import {
   COVER_PALETTE as P,
+  geometricKindFromSeed,
   hashSeed,
-  kindFromSeed,
   mulberry32,
   sanitizeId,
 } from "@/lib/covers";
@@ -14,12 +13,20 @@ import {
 // Banner del perfil: una de las 4 direcciones de arte de la marca (el MISMO
 // sistema que las portadas de Flow — Escher/Turrell/Flavin/collage), elegida
 // por seed → determinista y distinta por persona. Nocturno y fijo en ambos
-// temas (es un encabezado, no contenido de Flow). Al pasar el cursor o el
-// dedo, un barrido de luz + un blip celebran el encabezado — reusa fp-shine
-// (ya definido para el shimmer de carga) en un contexto nuevo.
+// temas (es un encabezado, no contenido de Flow).
+//
+// Al pasar el cursor o tocar, el encabezado SUENA: un pulso de sonar se abre
+// desde donde está la mano y una línea-vírgula viaja de lado a lado — el mismo
+// idioma del reproductor (la línea que ondula, nunca barritas de waveform).
+// Antes era un barrido de luz genérico, que no decía nada del producto.
+// La capa entera solo existe mientras hay contacto: al soltar se DESMONTA y no
+// queda rastro. En táctil se auto-apaga sola porque no hay «salir».
 
 const W = 1180;
 const H = 150;
+
+/** Cuánto dura el saludo en táctil (no hay pointerleave que lo apague). */
+const TOUCH_MS = 1800;
 
 export function ProfileBanner({
   seed,
@@ -30,25 +37,54 @@ export function ProfileBanner({
   imageUrl?: string | null;
 }) {
   const { play } = useSound();
-  const [sweep, setSweep] = useState(false);
+  const [live, setLive] = useState(false);
+  // Origen del sonar, en % del contenedor. Default al centro por si el saludo
+  // entra por teclado/táctil sin coordenadas útiles.
+  const [origin, setOrigin] = useState({ x: 50, y: 50 });
   const lastFire = useRef(0);
+  const touchTimer = useRef<number | null>(null);
 
-  const trigger = () => {
+  useEffect(
+    () => () => {
+      if (touchTimer.current) window.clearTimeout(touchTimer.current);
+    },
+    [],
+  );
+
+  const wake = (e: React.PointerEvent<HTMLDivElement>) => {
+    const box = e.currentTarget.getBoundingClientRect();
+    setOrigin({
+      x: ((e.clientX - box.left) / box.width) * 100,
+      y: ((e.clientY - box.top) / box.height) * 100,
+    });
+    setLive(true);
+    // Un blip por saludo: sin el freno, mover el cursor sobre el borde
+    // dispararía el sonido en ráfaga.
     const now = Date.now();
-    // Evita doble disparo (hover + click) en pantallas táctiles/híbridas.
-    if (now - lastFire.current < 500) return;
-    lastFire.current = now;
-    play("pop");
-    setSweep(true);
+    if (now - lastFire.current > 900) {
+      lastFire.current = now;
+      play("soft");
+    }
+    if (e.pointerType === "touch") {
+      if (touchTimer.current) window.clearTimeout(touchTimer.current);
+      touchTimer.current = window.setTimeout(() => setLive(false), TOUCH_MS);
+    }
   };
 
   return (
     <div
       className="relative h-[150px] overflow-hidden bg-[var(--brand-abyss)]"
-      onPointerEnter={(e) => {
-        if (e.pointerType !== "touch") trigger();
+      onPointerEnter={wake}
+      onPointerDown={wake}
+      onPointerMove={(e) => {
+        if (!live || e.pointerType === "touch") return;
+        const box = e.currentTarget.getBoundingClientRect();
+        setOrigin({
+          x: ((e.clientX - box.left) / box.width) * 100,
+          y: ((e.clientY - box.top) / box.height) * 100,
+        });
       }}
-      onClick={trigger}
+      onPointerLeave={() => setLive(false)}
     >
       {imageUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -67,22 +103,66 @@ export function ProfileBanner({
           className="absolute inset-0 bg-[linear-gradient(to_top,var(--scrim-soft),transparent_45%)]"
         />
       )}
-      {/* barrido de luz al pasar cursor/dedo — pequeño saludo de la marca */}
-      <span
-        aria-hidden
-        onAnimationEnd={() => setSweep(false)}
-        className={cn(
-          "pointer-events-none absolute inset-0 [background-image:linear-gradient(115deg,transparent_35%,rgba(255,255,255,.4)_50%,transparent_65%)] [background-position:-120%_0] [background-size:250%_100%]",
-          sweep && "[animation:fp-shine_.9s_ease]",
-        )}
-      />
+      {live && <SoundGreeting x={origin.x} y={origin.y} />}
     </div>
   );
 }
 
+/** La capa que «suena»: sonar desde la mano + la línea-vírgula viajando.
+ *  Se monta solo mientras hay contacto, así que en reposo no cuesta nada. */
+function SoundGreeting({ x, y }: { x: number; y: number }) {
+  return (
+    <span
+      aria-hidden
+      className="pointer-events-none absolute inset-0 [animation:fp-wave-in_.24s_var(--ease-flow)]"
+    >
+      {/* tres anillos escalonados: se abren desde donde está la mano */}
+      {[0, 0.45, 0.9].map((delay) => (
+        <span
+          key={delay}
+          className="absolute h-[220px] w-[220px] rounded-pill border-2 border-[var(--cover-champagne,#F6D49A)] [animation:fp-sonar_1.35s_var(--ease-flow)_infinite]"
+          style={{ left: `${x}%`, top: `${y}%`, animationDelay: `${delay}s` }}
+        />
+      ))}
+      {/* la línea que ondula: el path se repite, así el viaje no tiene costura */}
+      <svg
+        viewBox={`0 0 ${W * 2} ${H}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 h-full w-full opacity-70"
+      >
+        <path
+          d={travelingWave()}
+          fill="none"
+          stroke="#F6D49A"
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          className="[animation:fp-wave-travel_3.2s_linear_infinite]"
+        />
+      </svg>
+    </span>
+  );
+}
+
+/** Sinusoide de dos ciclos idénticos: al recorrer la mitad del ancho, el dibujo
+ *  vuelve a coincidir consigo mismo y el bucle empalma sin salto. */
+function travelingWave(): string {
+  const mid = H / 2;
+  const amp = 26;
+  const step = W / 4; // 4 medias ondas por ancho → 8 en el doble
+  let d = `M 0 ${mid}`;
+  for (let i = 0; i < 8; i++) {
+    const dir = i % 2 === 0 ? -1 : 1;
+    d += ` q ${step / 2} ${amp * dir} ${step} 0`;
+  }
+  return d;
+}
+
 function GenerativeBanner({ seed }: { seed: string }) {
   const seedInt = hashSeed(`banner-${seed}`);
-  const kind = kindFromSeed(`banner-${seed}`);
+  // Solo las cuatro geométricas: en una franja de 150px las atmosféricas
+  // (riley/eliasson/saraceno) se leen como una mancha, y además aquí no hay
+  // componentes para ellas.
+  const kind = geometricKindFromSeed(`banner-${seed}`);
   const uid = `pb-${sanitizeId(seed)}`;
   return (
     <svg

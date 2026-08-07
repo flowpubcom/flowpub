@@ -1,8 +1,36 @@
 // Generación determinista de portadas: el MISMO seed → la MISMA portada.
 // RNG sembrado (mulberry32) + hash de string (FNV-1a).
 
-export type CoverKind = "escher" | "turrell" | "flavin" | "collage";
+// Siete direcciones de arte, todas con la paleta bloqueada. Las cuatro
+// primeras son geométricas y duras (modernistas); las tres últimas son
+// ORGÁNICAS y atmosféricas — ondas, partículas a la deriva y capas
+// translúcidas con profundidad. Se agregaron porque el sistema se sentía puro
+// ángulo recto, y la voz humana no es un cubo.
+//
+// ⚠️ `flows.cover_kind` tiene un CHECK en la base con esta misma lista: si
+// agregas una, va acompañada de su migración (ver migration_28).
+export type CoverKind =
+  | "escher"
+  | "turrell"
+  | "flavin"
+  | "collage"
+  | "riley"
+  | "eliasson"
+  | "saraceno";
+
 export const COVER_KINDS: CoverKind[] = [
+  "escher",
+  "turrell",
+  "flavin",
+  "collage",
+  "riley",
+  "eliasson",
+  "saraceno",
+];
+
+/** Las cuatro geométricas originales. El banner del perfil se queda con estas:
+ *  es una franja de 150px de alto donde la atmósfera no se lee. */
+export const GEOMETRIC_KINDS: CoverKind[] = [
   "escher",
   "turrell",
   "flavin",
@@ -44,6 +72,11 @@ export function mulberry32(seedInt: number) {
 
 export function kindFromSeed(seed: string | number): CoverKind {
   return COVER_KINDS[hashSeed(seed) % COVER_KINDS.length];
+}
+
+/** Igual, pero acotado a las geométricas (banner del perfil). */
+export function geometricKindFromSeed(seed: string | number): CoverKind {
+  return GEOMETRIC_KINDS[hashSeed(seed) % GEOMETRIC_KINDS.length];
 }
 
 /** Id seguro para sufijar filtros/gradientes (evita colisiones entre Covers). */

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { BrandGuide } from "@/components/design/BrandGuide";
+import { LangOverride } from "@/providers/I18nProvider";
 import { RSS_ALT } from "@/lib/seo";
 
 // Manual de marca público (/design): identidad + guía de uso, bilingüe, con
@@ -19,5 +20,11 @@ export const metadata: Metadata = {
 };
 
 export default function DesignPage() {
-  return <BrandGuide />;
+  // LangOverride: el switch ES/EN del manual cambia SOLO esta página. Antes
+  // llamaba al setLang global y dejaba la app entera en inglés, persistido.
+  return (
+    <LangOverride>
+      <BrandGuide />
+    </LangOverride>
+  );
 }

@@ -70,7 +70,15 @@ const SEMANTIC = [
 ];
 
 const TAGS = ["Todos", "Arte", "Ciencia", "Libros", "Cultura", "Tecnología"];
-const KINDS: CoverKind[] = ["escher", "turrell", "flavin", "collage"];
+const KINDS: CoverKind[] = [
+  "escher",
+  "turrell",
+  "flavin",
+  "collage",
+  "riley",
+  "eliasson",
+  "saraceno",
+];
 
 function Swatch({ name, varName }: { name: string; varName: string }) {
   return (

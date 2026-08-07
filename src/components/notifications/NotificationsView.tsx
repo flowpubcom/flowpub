@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AtSign,
@@ -189,8 +190,10 @@ function NotificationRow({
   onRead: () => void;
 }) {
   const { play } = useSound();
+  const router = useRouter();
   const [showTranscript, setShowTranscript] = useState(false);
   const [following, setFollowing] = useState(item.followingActor);
+  const followPending = useRef(false);
 
   const { Icon, className: badgeClass } = BADGE[item.type];
   const actorName = item.actor?.displayName ?? "";
@@ -224,11 +227,20 @@ function NotificationRow({
     e.stopPropagation();
     if (!item.actor) return;
     if (!item.read) onRead(); // interactuar con la notif la marca leída
+    if (followPending.current) return;
+    followPending.current = true;
     const n = !following;
     setFollowing(n);
-    play(n ? "soft" : "pop");
-    const res = await setFollow(item.actor.id, n);
-    if (!res.ok) setFollowing(!n);
+    // «pop» al seguir, «soft» al dejar de seguir — como en el resto de la app
+    // (aquí estaba invertido).
+    play(n ? "pop" : "soft");
+    try {
+      const res = await setFollow(item.actor.id, n);
+      if (!res.ok) setFollowing(!n);
+      else router.refresh();
+    } finally {
+      followPending.current = false;
+    }
   };
 
   return (

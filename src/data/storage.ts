@@ -53,6 +53,31 @@ export async function uploadAudio(blob: Blob): Promise<string | null> {
 }
 
 /**
+ * Presentación por voz del perfil: bucket público `audio`, carpeta del propio
+ * usuario (la RLS de storage exige `<uid>/…`). Es público a propósito — vive en
+ * un perfil público, como el avatar. Devuelve la URL o null.
+ */
+export async function uploadIntroAudio(blob: Blob): Promise<string | null> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const ext = extFromMime(blob.type || "audio/webm");
+  const path = `${user.id}/intro-${crypto.randomUUID()}.${ext}`;
+
+  const { error } = await supabase.storage.from("audio").upload(path, blob, {
+    contentType: blob.type || "audio/webm",
+    upsert: false,
+  });
+  if (error) return null;
+
+  const { data } = supabase.storage.from("audio").getPublicUrl(path);
+  return data.publicUrl;
+}
+
+/**
  * Nota de voz de DM: bucket PRIVADO `messages` (path <convId>/<uid>/...).
  * Devuelve el PATH (no URL); se reproduce vía signed URL (resolveMessageAudio).
  * Cascada tolerante: si el bucket no existe aún (migration_16 pendiente), cae

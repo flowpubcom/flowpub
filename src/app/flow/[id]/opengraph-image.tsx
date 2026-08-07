@@ -28,7 +28,16 @@ interface OgFlow {
   title: string;
   author: string;
   tag: string;
+  lang: "es" | "en";
 }
+
+// La leyenda del botón es chrome, así que sí se traduce (el contenido del
+// Flow no). Cualquier cosa que no sea 'en' se va a español, como el default
+// de la columna.
+const PLAY_LABEL: Record<"es" | "en", string> = {
+  es: "¡Dale play a este Flow!",
+  en: "Play this Flow",
+};
 
 async function fetchOgFlow(id: string): Promise<OgFlow | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -36,7 +45,7 @@ async function fetchOgFlow(id: string): Promise<OgFlow | null> {
   if (!url || !key) return null;
   try {
     const sel =
-      "title,author:profiles!author_id(display_name,username),flow_tags(tags(name_es,sort))";
+      "title,lang,author:profiles!author_id(display_name,username),flow_tags(tags(name_es,sort))";
     // encodeURIComponent en el id: sin él, un id hostil (p. ej. «x&or=(…)»)
     // inyectaría filtros de PostgREST y podría saltarse el filtro de status.
     const res = await fetch(
@@ -58,6 +67,7 @@ async function fetchOgFlow(id: string): Promise<OgFlow | null> {
       title: (r.title as string) || "Flow",
       author: (r.author?.display_name || r.author?.username || "") as string,
       tag: (tags[0]?.name_es as string) || "",
+      lang: r.lang === "en" ? "en" : "es",
     };
   } catch {
     return null;
@@ -65,7 +75,7 @@ async function fetchOgFlow(id: string): Promise<OgFlow | null> {
 }
 
 /** Corta un título largo por límite de caracteres, en frontera de palabra. */
-function clampTitle(t: string, max = 96): string {
+function clampTitle(t: string, max = 88): string {
   const s = t.trim();
   if (s.length <= max) return s;
   const cut = s.slice(0, max);
@@ -106,6 +116,12 @@ export default async function FlowOgImage({
   // El autor también va clampado: sin esto, un display_name patológico (editable
   // por REST) infla el layout de satori igual que un título largo.
   const author = (flow?.author ?? "").slice(0, 60);
+  const playLabel = PLAY_LABEL[flow?.lang === "en" ? "en" : "es"];
+  // Tres escalones de título: entre más largo, más chico, para que el botón de
+  // play siempre quepa completo debajo. El bloque del título además va con
+  // maxHeight + overflow oculto — es el seguro por si una tipografía ancha
+  // gana una línea de más; el botón nunca se sale de la tarjeta.
+  const titleSize = title.length > 52 ? 58 : title.length > 34 ? 68 : 78;
 
   return new ImageResponse(
     (
@@ -181,19 +197,82 @@ export default async function FlowOgImage({
             ) : null}
           </div>
 
-          {/* título del Flow */}
+          {/* título del Flow + la invitación a escucharlo */}
           <div
             style={{
               display: "flex",
-              fontFamily: "Fraunces",
-              fontSize: title.length > 60 ? 62 : 78,
-              lineHeight: 1.08,
-              letterSpacing: "-0.02em",
-              color: TINTA,
-              maxWidth: 980,
+              flexDirection: "column",
+              alignItems: "flex-start",
+              justifyContent: "center",
+              flexGrow: 1,
             }}
           >
-            {title}
+            <div
+              style={{
+                display: "flex",
+                fontFamily: "Fraunces",
+                fontSize: titleSize,
+                lineHeight: 1.08,
+                letterSpacing: "-0.02em",
+                color: TINTA,
+                maxWidth: 980,
+                maxHeight: 200,
+                overflow: "hidden",
+              }}
+            >
+              {title}
+            </div>
+
+            {/* botón de play: es gráfico, no interactivo — pero es el CTA de la
+                tarjeta, y por eso sí lleva grana. */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                flexShrink: 0,
+                marginTop: 26,
+                padding: "12px 32px 12px 12px",
+                borderRadius: 999,
+                backgroundColor: GRANA,
+                border: `1px solid ${GRANA_700}`,
+                boxShadow: "0 16px 32px -16px rgba(192,48,58,0.7)",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 42,
+                  height: 42,
+                  borderRadius: 999,
+                  backgroundColor: PAPEL,
+                }}
+              >
+                {/* triángulo dibujado a mano: nada de emoji ni fuente de íconos.
+                    El stroke del mismo color le redondea las puntas. */}
+                <svg width={20} height={22} viewBox="0 0 20 22" fill="none">
+                  <path
+                    d="M4 3 L16.5 11 L4 19 Z"
+                    fill={GRANA}
+                    stroke={GRANA}
+                    strokeWidth={3}
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+              <span
+                style={{
+                  marginLeft: 18,
+                  fontFamily: "Hanken Grotesk",
+                  fontSize: 26,
+                  letterSpacing: "0.01em",
+                  color: PAPEL,
+                }}
+              >
+                {playLabel}
+              </span>
+            </div>
           </div>
 
           {/* pie: autor + marca de tres tiempos */}

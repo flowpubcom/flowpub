@@ -483,6 +483,249 @@ function Collage({ seed, uid }: { seed: number; uid: string }) {
   );
 }
 
+// ── riley — campo de ondas que respira ──────────────────────────────────────
+// Bridget Riley: líneas que ondulan hasta volverse superficie. Aquí son la voz
+// hecha agua: capas de onda con distinta amplitud y opacidad, así el ojo lee
+// PROFUNDIDAD. Las de atrás derivan lento (fp-drift ya existe en la marca); las
+// de enfrente se quedan quietas para que no maree.
+function Riley({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
+  const gid = `rl-${uid}`;
+  const hue = pick(r, [P.grana, P.ocre, P.grana700] as const);
+  const layers = 7 + Math.floor(r() * 3);
+  const phase = range(r, 0, Math.PI * 2);
+  const waves: React.ReactNode[] = [];
+
+  // Una banda rellena entre dos ondas le da MASA: sin ella el dibujo es puro
+  // alambre y se lee aguado junto a las geométricas, que son macizas.
+  const bandTop = H * range(r, 0.42, 0.56);
+  const step = W / 3;
+  const bandAmp = range(r, 14, 24);
+  let bandD = `M -40 ${bandTop}`;
+  for (let s = 0; s < 4; s++) {
+    bandD += ` q ${step / 2} ${bandAmp * (s % 2 === 0 ? -1 : 1)} ${step} 0`;
+  }
+  bandD += ` L ${W + 40} ${H + 40} L -40 ${H + 40} Z`;
+
+  for (let i = 0; i < layers; i++) {
+    const depth = i / (layers - 1); // 0 = al fondo, 1 = al frente
+    const y = H * (0.16 + depth * 0.7);
+    const amp = range(r, 12, 26) * (0.5 + depth * 0.9);
+    let d = `M -40 ${y}`;
+    for (let s = 0; s < 4; s++) {
+      const dir = (s + i) % 2 === 0 ? -1 : 1;
+      d += ` q ${step / 2} ${amp * dir} ${step} 0`;
+    }
+    // Los trazos del frente van en acento; los del fondo en tinta. Ambos con
+    // cuerpo suficiente para leerse en la tarjeta chica del feed.
+    waves.push(
+      <path
+        key={i}
+        d={d}
+        fill="none"
+        stroke={depth > 0.55 ? hue : LINE}
+        strokeWidth={1.4 + depth * 3.4}
+        strokeLinecap="round"
+        opacity={0.42 + depth * 0.5}
+        style={
+          depth < 0.5
+            ? {
+                animation: `fp-drift ${13 + i}s ease-in-out ${i * 0.4}s infinite`,
+              }
+            : undefined
+        }
+      />,
+    );
+  }
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={CANVAS} />
+          <stop offset="100%" stopColor={hue} stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+      <rect width={W} height={H} fill={`url(#${gid})`} />
+      <g transform={`rotate(${range(r, -7, 7)} ${W / 2} ${H / 2})`}>
+        <path d={bandD} fill={hue} opacity={0.22} />
+        {waves}
+      </g>
+      {/* el eco: un arco suelto que rompe la regularidad */}
+      <circle
+        cx={W * range(r, 0.2, 0.8)}
+        cy={H * range(r, 0.25, 0.75)}
+        r={range(r, 26, 46)}
+        fill="none"
+        stroke={hue}
+        strokeWidth={2.4}
+        opacity={0.7}
+        style={{
+          transformOrigin: "center",
+          animation: `fp-breathe ${9 + phase}s ease-in-out infinite`,
+        }}
+      />
+    </>
+  );
+}
+
+// ── eliasson — atmósfera, luz y capas translúcidas ──────────────────────────
+// Olafur Eliasson: niebla de color que se atraviesa. Tres velos con blur y
+// mezcla, uno encima de otro: la profundidad sale del apilamiento, no del
+// dibujo. Es la más «cara» de las tres, por eso solo tres capas y un blur.
+function Eliasson({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
+  const soft = `el-b-${uid}`;
+  const sky = `el-s-${uid}`;
+  // TRES acentos distintos, no uno repetido: al traslaparse translúcidos se
+  // mezclan y ahí nace la profundidad. Con un solo tono quedaba una mancha.
+  //
+  // Cada velo es un GRADIENTE RADIAL (centro encendido → transparente), no una
+  // elipse sólida con blur: desenfocar un relleno plano apaga el color y todo
+  // acababa gris. Así conservan luminosidad y además cuestan menos (cero
+  // filtros SVG, que es lo caro de pintar en cada tarjeta del feed).
+  const trio = [P.grana, P.ocre, P.champagne].sort(() => r() - 0.5);
+  const veilDefs = trio.map((color, i) => (
+    <radialGradient key={i} id={`${soft}-${i}`} cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stopColor={color} stopOpacity="0.85" />
+      <stop offset="55%" stopColor={color} stopOpacity="0.34" />
+      <stop offset="100%" stopColor={color} stopOpacity="0" />
+    </radialGradient>
+  ));
+  const veils = trio.map((_, i) => {
+    const cx = W * range(r, 0.18, 0.82);
+    const cy = H * range(r, 0.22, 0.78);
+    return (
+      <ellipse
+        key={i}
+        cx={cx}
+        cy={cy}
+        rx={range(r, 110, 190)}
+        ry={range(r, 70, 125)}
+        fill={`url(#${soft}-${i})`}
+        style={{
+          transformOrigin: `${cx}px ${cy}px`,
+          animation: `fp-breathe ${15 + i * 3}s ease-in-out ${i * 1.6}s infinite`,
+        }}
+      />
+    );
+  });
+  return (
+    <>
+      <defs>
+        {/* Nada de viñeta oscura aquí. Cualquier velo de NIGHT sobre el amate
+            da un gris cálido que se come la escena: probado, quedaba plomizo.
+            La base es un baño de OCRE bajito — mantiene la temperatura del
+            códice y deja que los velos pongan la luz. */}
+        <linearGradient id={sky} x1="0" y1="0" x2="0.35" y2="1">
+          <stop offset="0%" stopColor={P.champagne} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={P.ocre} stopOpacity="0.22" />
+        </linearGradient>
+        {veilDefs}
+      </defs>
+      <rect width={W} height={H} fill={CANVAS} />
+      <rect width={W} height={H} fill={`url(#${sky})`} />
+      {veils}
+      {/* la línea del horizonte: un solo trazo que ancla la niebla */}
+      <line
+        x1={0}
+        y1={H * range(r, 0.52, 0.66)}
+        x2={W}
+        y2={H * range(r, 0.52, 0.66)}
+        stroke={LINE}
+        strokeWidth={1}
+        opacity={0.45}
+      />
+    </>
+  );
+}
+
+// ── saraceno — partículas a la deriva, con profundidad de campo ─────────────
+// Tomás Saraceno: constelaciones flotando. Tres planos de partículas; las del
+// fondo van borrosas y lentas, las del frente nítidas — el desenfoque hace la
+// profundidad. Se limita el conteo a propósito: esto se pinta en CADA tarjeta
+// del feed y tiene que seguir siendo barato.
+function Saraceno({ seed, uid }: { seed: number; uid: string }) {
+  const r = mulberry32(seed);
+  const soft = `sa-b-${uid}`;
+  const gid = `sa-g-${uid}`;
+  const hue = pick(r, [P.grana, P.ocre, P.champagne] as const);
+  const hue2 = pick(r, [P.grana700, P.ocre, P.champagne] as const);
+  // Tres planos: el del fondo grande y borroso, el del frente chico y nítido.
+  // La mitad de las partículas van en acento — con solo tinta se veía apagado.
+  const planes = [
+    { n: 8, rad: [7, 15], op: 0.4, blur: true, dur: 16 },
+    { n: 11, rad: [3, 7], op: 0.72, blur: false, dur: 13 },
+    { n: 8, rad: [1.4, 3.2], op: 1, blur: false, dur: 0 },
+  ] as const;
+
+  const dots: React.ReactNode[] = [];
+  planes.forEach((pl, pi) => {
+    for (let i = 0; i < pl.n; i++) {
+      const cx = range(r, 8, W - 8);
+      const cy = range(r, 8, H - 8);
+      const roll = r();
+      dots.push(
+        <circle
+          key={`${pi}-${i}`}
+          cx={cx}
+          cy={cy}
+          r={range(r, pl.rad[0], pl.rad[1])}
+          fill={roll < 0.32 ? hue : roll < 0.55 ? hue2 : LINE}
+          opacity={pl.op}
+          filter={pl.blur ? `url(#${soft})` : undefined}
+          style={
+            pl.dur
+              ? {
+                  transformOrigin: `${cx}px ${cy}px`,
+                  animation: `fp-drift ${pl.dur + i}s ease-in-out ${i * 0.3}s infinite`,
+                }
+              : undefined
+          }
+        />,
+      );
+    }
+  });
+
+  // Hilos que insinúan la red sin dibujarla: anclan las partículas entre sí.
+  const threads: React.ReactNode[] = [];
+  for (let i = 0; i < 4; i++) {
+    threads.push(
+      <line
+        key={i}
+        x1={range(r, 0, W)}
+        y1={range(r, 0, H)}
+        x2={range(r, 0, W)}
+        y2={range(r, 0, H)}
+        stroke={LINE}
+        strokeWidth={0.8}
+        opacity={0.4}
+      />,
+    );
+  }
+
+  return (
+    <>
+      <defs>
+        {/* Un halo de acento detrás de todo: da temperatura y separa los planos
+            sin agrisar el lienzo (antes iba a SHADOW y quedaba gris). */}
+        <radialGradient id={gid} cx="50%" cy="45%" r="72%">
+          <stop offset="0%" stopColor={hue} stopOpacity="0.2" />
+          <stop offset="65%" stopColor={CANVAS} />
+          <stop offset="100%" stopColor={SHADOW} stopOpacity="0.1" />
+        </radialGradient>
+        <filter id={soft} x="-70%" y="-70%" width="240%" height="240%">
+          <feGaussianBlur stdDeviation="5" />
+        </filter>
+      </defs>
+      <rect width={W} height={H} fill={CANVAS} />
+      <rect width={W} height={H} fill={`url(#${gid})`} />
+      {threads}
+      {dots}
+    </>
+  );
+}
+
 /** Portada generativa 16:9 — paleta bloqueada, determinista por seed. */
 export function Cover({
   kind = "auto",
@@ -508,6 +751,9 @@ export function Cover({
       {k === "turrell" && <Turrell seed={seedInt} uid={uid} />}
       {k === "flavin" && <Flavin seed={seedInt} uid={uid} />}
       {k === "collage" && <Collage seed={seedInt} uid={uid} />}
+      {k === "riley" && <Riley seed={seedInt} uid={uid} />}
+      {k === "eliasson" && <Eliasson seed={seedInt} uid={uid} />}
+      {k === "saraceno" && <Saraceno seed={seedInt} uid={uid} />}
       {grain && (
         <>
           <defs>

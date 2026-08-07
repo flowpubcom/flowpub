@@ -466,6 +466,43 @@
   }
 }
 
+/* ── el saludo sonoro del encabezado de perfil ──────────────────────────────
+   Al pasar el cursor o tocar el banner, la superficie «suena»: un pulso de
+   sonar se abre desde donde está la mano y una línea-vírgula viaja de lado a
+   lado. Es el mismo idioma del reproductor (la línea que ondula, no un
+   waveform de barritas). Solo vive mientras hay contacto: al soltar, el
+   elemento se desmonta y no queda nada. */
+@keyframes fp-sonar {
+  from {
+    transform: translate(-50%, -50%) scale(0.15);
+    opacity: 0.5;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* la onda viaja: el path se repite cada 50% del ancho, así el ciclo empalma */
+@keyframes fp-wave-travel {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* entrada/salida suave de la capa de onda (sin bounce, como todo aquí) */
+@keyframes fp-wave-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .fp-breathe {
   animation: fp-breathe 6s var(--ease-flow) infinite;
 }
