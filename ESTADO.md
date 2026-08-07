@@ -1,9 +1,67 @@
 # ESTADO — FlowPub (handoff entre sesiones)
 
 > Dónde nos quedamos y cómo seguir. Léelo al retomar (junto con `CLAUDE.md`).
-> Última actualización: **sesión 12 — 2026-07-29 (auditoría integral: CERRADA y DESPLEGADA.
-> PR #1 mergeado a `main` → prod sirve `35c2046`. SQL corrido, sin pendientes de Julio).
-> Antes: tooling tsgo (sesión 11) y OG por perfil/Flow.**
+> Última actualización: **sesión 13 — 2026-07-29 (pulido pedido por Julio tras usar la app
+> en su Android: 6 arreglos, 3 features nuevas y portadas WYSIWYG. TODO DESPLEGADO, prod
+> sirve `f5a7324`; migraciones 27/28/29 corridas. Sin pendientes de Julio).
+> Antes: auditoría integral (sesión 12) y tooling tsgo (sesión 11).**
+
+## Sesión 13 — 2026-07-29: pulido de producto (desplegado, `f5a7324`)
+
+Tanda que salió de que Julio usara la app en su teléfono. Migraciones **27, 28 y 29
+corridas y verificadas**. typecheck/lint/build verdes; portadas verificadas en claro y
+oscuro con puppeteer.
+
+**Arreglos**
+- **Idioma:** `detect()` solo miraba `navigator.language` —el idioma de la INTERFAZ del
+  navegador—, así que un Android con Chrome en inglés mandaba la app a inglés con la
+  preferencia en «Auto». Era lo que le pasaba a Julio. Ahora recorre `navigator.languages`.
+- **El switch ES/EN de `/design` y `/deck` era GLOBAL y persistente**: un clic en «EN»
+  dejaba la app entera en inglés para siempre. Nuevo `LangOverride` (en `I18nProvider`) que
+  sombrea el contexto solo para ese subárbol; cero cambios en los 13 puntos que leen `lang`.
+- **Seguir:** `FollowButton` no llamaba `router.refresh()` —el único mutador que no lo
+  hacía— y Next servía el perfil cacheado. + candado in-flight, resync con el prop, y las
+  mutaciones de `engagement` dejaron de tragarse el error en silencio.
+- **Portadas: todos los Flows salían con cubos** (7 de 9 en prod). El composer fijaba la
+  dirección en el índice 0 = `escher` y la re-fijaba tras el pulido. Ahora se siembra del
+  contenido.
+- **«Leer aquí» expandía hacia arriba:** al desmontarse el botón el foco caía al body y un
+  effect lo pasaba a «Mostrar menos», que vive al FINAL del artículo; `.focus()` arrastraba
+  el scroll hasta allá. Fix: `preventScroll: true` + `overflow-anchor: none`.
+- Fuera de la UI de producción el mensaje que decía «Avísale a Claude».
+
+**Diseño**
+- El **autor subió junto al título** en la tarjeta del Pub (el pie conserva tema y acciones).
+- El bloque de **contenido sensible** pasó de caja con encabezado y dos filas (~160px) a dos
+  pastillas; la explicación solo aparece cuando aplica.
+- El **encabezado del perfil ahora SUENA**: pulso de sonar desde la mano + línea-vírgula que
+  viaja, con blip. Vive solo mientras hay contacto (en táctil se apaga a los 1.8 s).
+
+**Nuevo**
+- **Presentación por voz en el perfil** (`migration_27`): audio de ≤ 60 s arriba de la bio,
+  **sin transcript a propósito** (es voz cruda, no un Flow). Tope aplicado en cliente,
+  servidor y CHECK. Componente `components/profile/VoiceIntro.tsx`.
+- **Tres direcciones de arte ORGÁNICAS** (`migration_28`): `riley` (ondas con profundidad),
+  `eliasson` (atmósfera translúcida), `saraceno` (partículas con profundidad de campo). Ya
+  son **7 en total**; el banner del perfil se queda con las 4 geométricas
+  (`geometricKindFromSeed`) porque en 150px de alto la atmósfera no se lee.
+- **Botón de play bilingüe en la tarjeta OG** del Flow (usa `flow.lang`).
+- **Portada WYSIWYG** (`migration_29`): `flows.cover_seed` guarda la semilla que el autor vio
+  en la previa. Antes la previa usaba semilla fija y la tarjeta el id del Flow → coincidía el
+  estilo pero no la composición. Los Flows viejos caen al id (= su semilla de siempre), así
+  que **no cambió nada de lo ya publicado**. «Regenerar portada» ahora cambia estilo Y
+  composición.
+
+**Verificado:** las portadas son deterministas de verdad — `/styleguide` renderizado en dos
+procesos de página distintos dio las 11 portadas **byte por byte idénticas** entre cargas y
+las 11 distintas entre sí (si algo usara `Math.random()`, guardar la semilla no serviría).
+
+**Deuda conocida que sigue abierta:** el **barrido de i18n** — `/componer` tiene ~40 strings
+hardcodeados en español (es el flujo central del producto y un usuario EN lo ve en español),
+más `/tema/[slug]`, el rail del Pub, `EmojiButton`, `MarkdownToolbar`, y los **nombres de
+temas** que siempre salen en español (existe `tagName(tag, lang)` pero casi nadie lo usa).
+También: `profiles.lang` es una columna huérfana (nadie la lee ni la escribe) y la metadata
+SEO está fija en español incluso para Flows en inglés. Merece su propia sesión.
 
 > **⚠️ Nota de flujo (nueva):** esta sesión estrenó **pull requests** en el repo —antes era
 > commit directo a `main`—. `gh` quedó instalado (2.96.0) y autenticado como `flowpubcom`.
