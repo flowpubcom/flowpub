@@ -25,6 +25,10 @@ export interface Flow {
   /** Todos los temas del Flow (máx 3), para keywords/og:tags de SEO. */
   tagNames?: string[];
   coverKind: CoverKind;
+  /** Semilla con la que se dibujó la portada generativa. Es la que el autor vio
+   *  en la previa al publicar, así que la tarjeta sale IDÉNTICA. Si falta (Flows
+   *  anteriores a migration_29), se usa el id — que fue su semilla de siempre. */
+  coverSeed?: string | null;
   /** Foto subida por el autor; null = portada generativa (coverKind). */
   coverUrl?: string | null;
   /** El autor marcó lenguaje altisonante. */

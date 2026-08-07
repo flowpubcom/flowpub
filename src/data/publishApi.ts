@@ -14,6 +14,9 @@ export async function publishFlow(input: {
   bodyMd: string;
   transcriptRaw?: string;
   coverKind: CoverKind;
+  /** Semilla con la que se dibujó la previa: se persiste para que la tarjeta
+   *  publicada salga IDÉNTICA a lo que el autor vio. */
+  coverSeed?: string;
   /** Foto subida por el autor; null/undefined = portada generativa. */
   coverUrl?: string | null;
   /** Flags de contenido sensible (casillas del composer). */
@@ -49,11 +52,13 @@ export async function publishFlow(input: {
     status: input.status ?? "published",
     duration_s: Math.round(input.durationSeconds),
   };
-  // Cascada tolerante: sin migración 15, reintenta sin los flags.
+  // Cascada tolerante: sin las migraciones 15 y 29, reintenta sin los flags ni
+  // la semilla (el Flow se publica igual; la portada cae a sembrarse con el id).
   let { data: flow, error } = await supabase
     .from("flows")
     .insert({
       ...base,
+      cover_seed: input.coverSeed || null,
       explicit_lang: input.explicitLang ?? false,
       adult: input.adult ?? false,
     })

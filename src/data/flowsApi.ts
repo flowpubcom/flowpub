@@ -17,7 +17,10 @@ const SELECT =
   "flow_tags(tags(slug,name_es,name_en,sort))";
 // V2 = V1 + flags de contenido sensible. Cascada tolerante: si la migración 15
 // no ha corrido (42703), se reintenta con V1 y los flags caen a false.
-export const FLOW_SELECT_V2 = SELECT.replace(",lang,status,", ",lang,status,explicit_lang,adult,");
+export const FLOW_SELECT_V2 = SELECT.replace(
+  ",cover_kind,cover_url,",
+  ",cover_kind,cover_seed,cover_url,",
+).replace(",lang,status,", ",lang,status,explicit_lang,adult,");
 export const FLOW_SELECT_V1 = SELECT;
 
 function ageMinutesFrom(createdAt: string | null): number {
@@ -56,6 +59,7 @@ function mapRow(r: any): Flow | null {
     tagSlug: primary?.slug ?? undefined,
     tagNames: tags.map((t: any) => t.name_es as string).filter(Boolean),
     coverKind: (r.cover_kind ?? "collage") as CoverKind,
+    coverSeed: r.cover_seed ?? null,
     coverUrl: r.cover_url ?? null,
     explicitLang: r.explicit_lang ?? false,
     adult: r.adult ?? false,
@@ -124,7 +128,10 @@ const SELECT_BY_TAG =
   "id,title,body_md,transcript_raw,audio_url,duration_s,cover_kind,cover_url,like_count,comment_count,created_at,lang,status," +
   "author:profiles!author_id(id,username,display_name,avatar_url)," +
   "flow_tags!inner(tags!inner(slug,name_es,name_en,sort))";
-const SELECT_BY_TAG_V2 = SELECT_BY_TAG.replace(",lang,status,", ",lang,status,explicit_lang,adult,");
+const SELECT_BY_TAG_V2 = SELECT_BY_TAG.replace(
+  ",cover_kind,cover_url,",
+  ",cover_kind,cover_seed,cover_url,",
+).replace(",lang,status,", ",lang,status,explicit_lang,adult,");
 
 /** Flows de un tema (páginas /tema/[slug]); el embed !inner filtra por slug. */
 export const fetchFlowsByTag = cache(async (slug: string): Promise<Flow[]> => {

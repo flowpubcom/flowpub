@@ -317,6 +317,7 @@ export function ProfileView({
           initialBody={editFlow.bodyMd ?? editFlow.excerpt}
           initialCoverUrl={editFlow.coverUrl}
           initialCoverKind={editFlow.coverKind}
+          initialCoverSeed={editFlow.coverSeed}
           onSaved={(newTitle, newBody) => {
             setPatches((prev) => ({
               ...prev,
@@ -451,7 +452,7 @@ function FlowTile({ flow, onEdit }: { flow: Flow; onEdit?: () => void }) {
         <FlowCover
           coverUrl={flow.coverUrl}
           kind={flow.coverKind}
-          seed={flow.id}
+          seed={flow.coverSeed ?? flow.id}
           title={flow.title}
           className="aspect-[16/11] h-full"
         />

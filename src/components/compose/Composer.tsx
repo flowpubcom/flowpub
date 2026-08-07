@@ -7,7 +7,7 @@ import { ChevronDown, ImagePlus, Mic, Pause, Play, RefreshCw, Square, X } from "
 import { cn } from "@/lib/cn";
 import { formatDuration } from "@/lib/format";
 import { useRecorder, type Recorder } from "@/lib/useRecorder";
-import { COVER_KINDS, kindFromSeed } from "@/lib/covers";
+import { COVER_KINDS, hashSeed, kindFromSeed } from "@/lib/covers";
 import { Logo, FlowMark } from "@/components/brand";
 import { AudioPlayer, Button, Switch } from "@/components/ui";
 import { Cover } from "@/components/cover";
@@ -43,6 +43,9 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
   // JSON-LD, el `lang=` del reader y el toggle de traducción.
   const [lang, setLang] = useState<"es" | "en">("es");
   const [coverIndex, setCoverIndex] = useState(0);
+  // Semilla de la portada generativa: define la COMPOSICIÓN (posiciones,
+  // tamaños, qué acento va en cada capa). Se persiste con el Flow.
+  const [coverSeed, setCoverSeed] = useState("");
   // Portada con foto propia (opcional): null = portada generativa.
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverUploading, setCoverUploading] = useState(false);
@@ -126,6 +129,11 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
       // sigue siendo determinista (el mismo texto → la misma portada).
       const seed = `${result?.title ?? ""}|${transcriptText}`;
       setCoverIndex(Math.max(0, COVER_KINDS.indexOf(kindFromSeed(seed))));
+      // La semilla se GUARDA: es la que dibuja la previa y la que se persiste,
+      // así la tarjeta publicada sale idéntica a lo que el autor vio. Antes la
+      // previa usaba «compose-0» y la tarjeta el id del Flow (que aún no
+      // existe), así que coincidía el estilo pero no la composición.
+      setCoverSeed(String(hashSeed(seed)));
       play("pop");
       setStep("edit");
     },
@@ -222,6 +230,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
         bodyMd: body,
         transcriptRaw: transcript,
         coverKind: COVER_KINDS[coverIndex],
+        coverSeed,
         coverUrl,
         explicitLang,
         adult: effectiveAdult,
@@ -259,6 +268,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
       bodyMd: body,
       transcriptRaw: transcript,
       coverKind: COVER_KINDS[coverIndex],
+      coverSeed,
       coverUrl,
       explicitLang,
       adult: effectiveAdult,
@@ -290,6 +300,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
     setTags([]);
     setLang("es");
     setCoverIndex(0);
+    setCoverSeed("");
     setCoverUrl(null);
     setExplicitLang(false);
     setAdult(false);
@@ -301,8 +312,12 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
     setStep("record");
   };
 
+  // «Regenerar portada» regenera de verdad: cambia la dirección de arte Y la
+  // semilla, así cada toque da una portada nueva de veras (antes solo rotaba
+  // entre los estilos y la composición venía atada al índice).
   const cycleCover = () => {
     setCoverIndex((i) => (i + 1) % COVER_KINDS.length);
+    setCoverSeed(crypto.randomUUID().slice(0, 12));
     play("pop");
   };
 
@@ -397,6 +412,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
             tags={tags}
             setTags={setTags}
             coverIndex={coverIndex}
+            coverSeed={coverSeed}
             cycleCover={cycleCover}
             coverUrl={coverUrl}
             coverUploading={coverUploading}
@@ -421,6 +437,7 @@ export function Composer({ availableTags }: { availableTags?: string[] } = {}) {
           <PublishedStep
             title={title}
             coverIndex={coverIndex}
+            coverSeed={coverSeed}
             duration={duration}
             flowId={newFlowId}
             onAnother={recordAnother}
@@ -753,6 +770,7 @@ interface EditStepProps {
   tags: string[];
   setTags: (v: string[]) => void;
   coverIndex: number;
+  coverSeed: string;
   cycleCover: () => void;
   coverUrl: string | null;
   coverUploading: boolean;
@@ -783,6 +801,7 @@ function EditStep({
   tags,
   setTags,
   coverIndex,
+  coverSeed,
   cycleCover,
   coverUrl,
   coverUploading,
@@ -824,7 +843,7 @@ function EditStep({
                 className="block aspect-[16/9] w-full object-cover"
               />
             ) : (
-              <Cover kind={COVER_KINDS[coverIndex]} seed={`compose-${coverIndex}`} />
+              <Cover kind={COVER_KINDS[coverIndex]} seed={coverSeed} />
             )}
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -996,12 +1015,14 @@ function EditStep({
 function PublishedStep({
   title,
   coverIndex,
+  coverSeed,
   duration,
   flowId,
   onAnother,
 }: {
   title: string;
   coverIndex: number;
+  coverSeed: string;
   duration: number;
   flowId: string | null;
   onAnother: () => void;
@@ -1017,7 +1038,7 @@ function PublishedStep({
       </p>
 
       <div className="mt-8 w-full max-w-sm overflow-hidden rounded-card border border-line bg-surface text-left shadow-[var(--shadow-card)]">
-        <Cover kind={COVER_KINDS[coverIndex]} seed={`compose-${coverIndex}`} />
+        <Cover kind={COVER_KINDS[coverIndex]} seed={coverSeed} />
         <div className="p-5">
           <h3 className="font-serif text-[20px] font-medium text-ink">
             {title || "Tu Flow"}

@@ -170,7 +170,12 @@ export function FlowCard({ flow }: { flow: Flow }) {
         className="relative block"
         aria-label={title}
       >
-        <FlowCover coverUrl={flow.coverUrl} kind={flow.coverKind} seed={flow.id} title={title} />
+        <FlowCover
+          coverUrl={flow.coverUrl}
+          kind={flow.coverKind}
+          seed={flow.coverSeed ?? flow.id}
+          title={title}
+        />
         <div className="absolute bottom-3 left-3 flex items-center gap-2">
           <span className={cn(BADGE, "font-sans text-[12px] font-semibold")}>
             <span className="h-1.5 w-1.5 rounded-pill bg-grana" />
@@ -404,6 +409,7 @@ export function FlowCard({ flow }: { flow: Flow }) {
           initialBody={body}
           initialCoverUrl={flow.coverUrl}
           initialCoverKind={flow.coverKind}
+          initialCoverSeed={flow.coverSeed}
           onSaved={(newTitle, newBody) => {
             setTitle(newTitle);
             setBody(newBody);

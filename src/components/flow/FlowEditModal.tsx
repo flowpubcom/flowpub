@@ -25,6 +25,7 @@ export function FlowEditModal({
   initialBody,
   initialCoverUrl,
   initialCoverKind,
+  initialCoverSeed,
   onSaved,
 }: {
   open: boolean;
@@ -34,6 +35,7 @@ export function FlowEditModal({
   initialBody: string;
   initialCoverUrl?: string | null;
   initialCoverKind?: CoverKind;
+  initialCoverSeed?: string | null;
   onSaved: (title: string, bodyMd: string) => void;
 }) {
   const { t } = useI18n();
@@ -43,6 +45,11 @@ export function FlowEditModal({
   const [coverUrl, setCoverUrl] = useState<string | null>(initialCoverUrl ?? null);
   const [coverKind, setCoverKind] = useState<CoverKind>(
     initialCoverKind ?? "collage",
+  );
+  // Semilla de la portada: define la composición. Arranca con la que trae el
+  // Flow (o su id, que fue la semilla de los Flows anteriores a migration_29).
+  const [coverSeed, setCoverSeed] = useState<string>(
+    initialCoverSeed ?? flowId,
   );
   const [coverUploading, setCoverUploading] = useState(false);
   const [pickedCoverFile, setPickedCoverFile] = useState<File | null>(null);
@@ -100,9 +107,12 @@ export function FlowEditModal({
     play("soft");
   };
 
+  // Regenera de verdad: nueva dirección de arte Y nueva composición. Lo que se
+  // ve en la previa es exactamente lo que se guarda.
   const cycleCover = () => {
     const i = COVER_KINDS.indexOf(coverKind);
     setCoverKind(COVER_KINDS[(i + 1) % COVER_KINDS.length]);
+    setCoverSeed(crypto.randomUUID().slice(0, 12));
     play("pop");
   };
 
@@ -117,6 +127,7 @@ export function FlowEditModal({
       bodyMd: cleanBody,
       coverUrl,
       coverKind,
+      coverSeed,
       tagNames: tags,
     });
     setSaving(false);
@@ -164,7 +175,7 @@ export function FlowEditModal({
           {t("flow.editCover")}
         </span>
         <div className="overflow-hidden rounded-[12px] border border-line">
-          <FlowCover coverUrl={coverUrl} kind={coverKind} seed={flowId} title={title} />
+          <FlowCover coverUrl={coverUrl} kind={coverKind} seed={coverSeed} title={title} />
         </div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           {!coverUrl && (

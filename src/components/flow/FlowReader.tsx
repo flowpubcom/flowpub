@@ -279,7 +279,12 @@ export function FlowReader({
 
         {/* portada */}
         <div className="mt-6 overflow-hidden rounded-card border border-line">
-          <FlowCover coverUrl={flow.coverUrl} kind={flow.coverKind} seed={flow.id} title={title} />
+          <FlowCover
+            coverUrl={flow.coverUrl}
+            kind={flow.coverKind}
+            seed={flow.coverSeed ?? flow.id}
+            title={title}
+          />
         </div>
 
         {/* audio (con compuerta de edad para 18+) */}
@@ -458,6 +463,7 @@ export function FlowReader({
           initialBody={body}
           initialCoverUrl={flow.coverUrl}
           initialCoverKind={flow.coverKind}
+          initialCoverSeed={flow.coverSeed}
           onSaved={(newTitle, newBody) => {
             setTitle(newTitle);
             setBody(newBody);

@@ -12,6 +12,8 @@ export interface UpdateFlowFields {
   coverUrl?: string | null;
   /** Presente = actualiza la dirección de arte de la portada generativa. */
   coverKind?: CoverKind;
+  /** Semilla de la portada generativa (la composición que vio el autor). */
+  coverSeed?: string;
   /** Presente = reemplaza los temas del Flow (máx 3, por name_es). */
   tagNames?: string[];
 }
@@ -41,6 +43,7 @@ export async function updateFlow(
     fields.coverKind !== undefined || fields.coverUrl !== undefined;
   const withCover: Record<string, unknown> = { ...base };
   if (fields.coverKind !== undefined) withCover.cover_kind = fields.coverKind;
+  if (fields.coverSeed !== undefined) withCover.cover_seed = fields.coverSeed;
   if (fields.coverUrl !== undefined) withCover.cover_url = fields.coverUrl;
 
   let coverDegraded = false;
